@@ -1,92 +1,152 @@
 ---
 name: devops
-description:
-    Generates DevOps configurations and scripts for deploying and managing
-    Laravel applications. Run local commands to debug and deploy.
+description: >-
+    DevOps for Node.js/TypeScript applications. Docker setup, CI/CD pipelines,
+    GitHub Actions, PM2 process management, environment configuration, deployment.
 
-    Українською: DevOps, деплой, розгортання, інфраструктура, CI/CD, сервер,
-    конфігурація, моніторинг, налаштувати сервер, автоматизація деплою,
-    керування інфраструктурою, збірка та випуск.
+    Українською: DevOps, деплой, Docker, CI/CD, GitHub Actions, PM2,
+    інфраструктура, конфігурація середовища, налаштування контейнера.
 ---
 
-# Devops
+# DevOps — Node.js/TypeScript
 
-## Instructions
-
-### Environment Setup
-
-#### Option 1: Docker Development (Recommended)
+## Docker Development Setup
 
 ```bash
-# Copy environment file
-cp .env.example .env
-
 # Start all services
 docker compose up -d
 
-# Install PHP dependencies
-docker compose exec app composer install
-
-# Install Node dependencies
-docker compose exec app yarn install
-
-# Generate application key
-docker compose exec app php artisan key:generate
+# Install dependencies (always npm ci)
+docker compose exec app npm ci
 
 # Run migrations
-docker compose exec app php artisan migrate
+docker compose exec app npx prisma migrate dev
 
-# Build frontend assets
-docker compose exec app yarn dev
+# Start dev server
+docker compose exec app npm run dev
 ```
 
-#### Option 2: Local Development
+### Multi-Stage Dockerfile
 
-Ensure PHP 8.4+ is installed, then:
+```dockerfile
+# Build stage
+FROM node:22-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
 
-```bash
-# Install dependencies
-composer install
-yarn install
-
-# Setup environment
-cp .env.example .env
-php artisan key:generate
-
-# Configure database and run migrations
-php artisan migrate
-
-# Start development servers
-composer run dev  # Starts Laravel Octane, queue worker, logs, and Vite
+# Production stage
+FROM node:22-alpine AS production
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --production
+COPY --from=builder /app/dist ./dist
+EXPOSE 3000
+CMD ["node", "dist/main.js"]
 ```
 
-### Development Scripts
+### docker-compose.yml Services
 
-All commands should run from a Docker container. The project includes several
-useful Composer scripts:
+- `app` — Node.js (port 3000)
+- `postgres` — PostgreSQL 17 (port 5432)
+- `redis` — Redis 7 (port 6379)
 
-- `composer run dev` - Start all development services (Octane, queue, logs,
-  Vite)
-- `composer run ide-helper` - Generate IDE helper files
-- `composer run phpstan` - Run static analysis
-- `composer run pint` - Check code style
-- `composer run pint:fix` - Fix code style issues
-- `composer run rector` - Check for code modernization opportunities
-- `composer run rector:fix` - Apply code modernization
+## npm Scripts
 
-### CI/CD Pipeline
+Standard `package.json` scripts:
 
-The project uses GitHub Actions with:
+```json
+{
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc",
+    "start": "node dist/main.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "migrate": "prisma migrate deploy"
+  }
+}
+```
 
-- **Linting**: PHPStan, Laravel Pint, Rector
-- **Testing**: Pest with coverage and mutation testing
-- **Code Coverage**: Codecov integration
-- **Parallel Execution**: Tests run in parallel for faster feedback
+## GitHub Actions CI Pipeline
 
-### Environment-Specific Notes
+```yaml
+name: CI
 
-- **Local Development**: Use Docker Compose for consistent environment
-- **Testing**: Separate PostgreSQL instance for tests
-- **Production**: Optimized for Laravel Octane with FrankenPHP
-- **Debugging**: Xdebug available in development, Telescope for application
-  debugging
+on: [push, pull_request]
+
+jobs:
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci
+      - run: npx tsc --noEmit
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci
+      - run: npx eslint .
+      - run: npx prettier --check .
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+      redis:
+        image: redis:7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+      - run: npm ci
+      - run: npx vitest run --coverage
+```
+
+Cache key: `${{ hashFiles('package-lock.json') }}` — always lock to lockfile.
+
+## Environment Configuration
+
+Use a typed config service — never raw `process.env` in application code:
+
+```typescript
+export class Config {
+  readonly port = parseInt(process.env.PORT ?? '3000', 10);
+  readonly databaseUrl = this.require('DATABASE_URL');
+  readonly redisUrl = this.require('REDIS_URL');
+
+  private require(key: string): string {
+    const value = process.env[key];
+    if (!value) throw new Error(`Required env var missing: ${key}`);
+    return value;
+  }
+}
+```
+
+Validate all required env vars on startup — fail fast before accepting requests.
+
+## Production
+
+- **PM2** cluster mode: `pm2 start dist/main.js -i max`
+- **Health check**: `GET /health` endpoint returning `{ status: 'ok' }`
+- **Graceful shutdown**: handle `SIGTERM` — close HTTP server, drain queue workers, disconnect DB

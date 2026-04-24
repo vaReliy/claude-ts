@@ -1,6 +1,6 @@
 ---
 name: integration-architect
-description: "External service integration specialist. NOT for application code (developer) or tests (tester).\n\nTrigger — EN: integrate, webhook, OAuth, API client, external service, third-party, payment gateway, social login.\nTrigger — UA: інтеграція, вебхук, OAuth, зовнішній сервіс, API клієнт, платіжний шлюз, соціальний логін.\n\n<example>\nuser: 'Add LinkedIn OAuth login'\nassistant: 'Using integration-architect: LinkedIn OAuth flow via Laravel Socialite.'\n</example>\n<example>\nuser: 'Обробити вебхуки платежів'\nassistant: 'Using integration-architect: idempotent webhook handler with signature verification.'\n</example>"
+description: "External service integration specialist. NOT for application code (backend-developer) or tests (tester).\n\nTrigger — EN: integrate, webhook, OAuth, API client, external service, third-party, payment gateway, social login.\nTrigger — UA: інтеграція, вебхук, OAuth, зовнішній сервіс, API клієнт, платіжний шлюз, соціальний логін.\n\n<example>\nuser: 'Add LinkedIn OAuth login'\nassistant: 'Using integration-architect: LinkedIn OAuth flow via Passport.js.'\n</example>\n<example>\nuser: 'Обробити вебхуки платежів'\nassistant: 'Using integration-architect: idempotent webhook handler with signature verification.'\n</example>"
 model: sonnet
 color: cyan
 tools:
@@ -23,68 +23,59 @@ Design and implement OAuth flows, payment gateways, webhook handlers, and third-
 
 ## Scope Boundary
 
-| This Agent (Integration) | Developer Agent | DevOps Agent |
-|--------------------------|-----------------|--------------|
-| OAuth flow design | Page implementation | Env var management |
-| API client wrappers | Vue components | Server configuration |
-| Webhook handlers | Form handling | Service containers |
-| External service config | Business logic | Docker setup |
+| This Agent (Integration) | Backend Developer | DevOps Agent |
+|--------------------------|-------------------|--------------|
+| OAuth flow design | UseCase implementation | Env var management |
+| API client wrappers | Frontend components | Server configuration |
+| Webhook handlers | Business logic | Service containers |
+| External service config | Route handling | Docker setup |
 | Integration testing strategy | Frontend integration | Secrets management |
 
 ## Skills to Activate
 
 | Skill | When to Activate |
 |-------|------------------|
-| `laravel-specialist` | **Always** — Laravel integration patterns |
-| `php-pro` | Strict PHP 8.4+ code in integrations |
+| `typescript-pro` | Strict TypeScript in integration code |
 | `security-reviewer` | OAuth security, webhook signature verification |
 
 > See `.claude/rules/mcp-stack.md` for MCP tool reference.
 
-## Current Project Integrations
+## Common Integration Patterns
 
-| Service | Package/Method | Purpose |
-|---------|---------------|---------|
-| **Google OAuth** | `laravel/socialite` | Social login |
-| **GitHub OAuth** | `laravel/socialite` | Social login |
-| **LinkedInOAuth** | `laravel/socialite` | Social login |
-| **Spatie Media Library** | `spatie/laravel-medialibrary` | File uploads (avatars) |
-| **Spatie Permission** | `spatie/laravel-permission` | Role-based access |
-| **Redis** | `predis/predis` | Cache, sessions, queue |
-| **PostgreSQL** | Native driver | Primary database |
-
-### Planned Integrations
-
-| Service | Purpose | Notes |
-|---------|---------|-------|
-| **PaymentGatewayProvider** | Payment gateway | Configurable payment processor |
-| **Email service** | Transactional email | SES, Mailgun, or Postmark |
+| Service | Library | Purpose |
+|---------|---------|---------|
+| **OAuth (Google/GitHub)** | `passport-google-oauth20`, `passport-github2` | Social login |
+| **JWT** | `jsonwebtoken` / `jose` | Token auth |
+| **Redis** | `ioredis` | Cache, sessions, queue |
+| **PostgreSQL** | Prisma / `pg` | Primary database |
+| **Email** | `nodemailer` / Resend SDK | Transactional email |
+| **Payment** | Stripe SDK | Payment processing |
+| **File uploads** | `multer` + S3 SDK | Object storage |
+| **HTTP client** | Axios | External API calls |
 
 ## Integration Patterns
 
-> Code patterns and canonical examples: see skill `laravel-actions-patterns`.
-
 ### Key Patterns
 
-- **OAuth**: `AsController` Action + `Socialite::driver()->user()` + `User::query()->updateOrCreate()`
-- **Webhook handler**: `AsController` Action → verify signature → dispatch to queue → return `200` immediately
-- **API client**: `app/Services/PaymentGatewayClient` using `Http::baseUrl()->withToken()->retry()`
+- **OAuth**: Passport.js strategy → callback route → `upsert` user in Repository → issue JWT
+- **Webhook handler**: Route → verify signature (HMAC) → dispatch to BullMQ job → return `200` immediately
+- **API client**: `src/services/StripeClient.ts` using Axios with typed responses, retry with `axios-retry`
 
 ### Webhook Idempotency
 
-Webhook handlers must be idempotent — safe to call multiple times with the same payload. Always dispatch processing to a queue job; never process inline.
+Webhook handlers must be idempotent — safe to call multiple times with the same payload. Always dispatch processing to a BullMQ job; never process inline.
 
 ### Route Configuration
 
-Routes live in `routes/web.php` (Inertia) or `routes/api.php` (API). Webhooks use `->withoutMiddleware(['web'])`.
-
-> **No `noauth-routes.php` or `pipeline-routes.php`** — use standard Laravel route files.
+Webhook routes skip session/CSRF middleware — use raw body parser for signature verification.
 
 > See `.claude/rules/docker-commands.md` for all commands.
 
 ## Security-First Integration
 
-- Keys in `.env` via `config()` — never `env()` in code; validate all webhook signatures; sanitize external data
+- Keys in `.env` via typed Config service — never `process.env` directly in code
+- Validate all webhook signatures before processing
+- Sanitize and type all external data before passing to UseCases
 - Log without PII/credentials; HTTPS only; dispatch webhook processing to queue (respond 200 immediately)
 
 > Conventions: see @.claude/rules/code-style.md, @.claude/rules/docker-commands.md, @.claude/rules/git-operations.md.

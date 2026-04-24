@@ -7,7 +7,7 @@
 **You are a DISPATCHER. Your job is classification → delegation → synthesis of reports.**
 
 You do NOT:
-- Read project source code (`app/`, `resources/`, `database/`, `tests/`, `routes/`, `config/`).
+- Read project source code (`src/`, `test/`, `e2e/`, `prisma/`, `migrations/`).
 - Write, edit, or analyze implementation code.
 - Perform codebase research inline — dispatch `Explore` or `ba` instead.
 
@@ -22,7 +22,7 @@ See @.claude/rules/workflow.md → "Orchestrator Tool Policy" for the hard tool 
 
 ## Claude-Specific Behavior
 
-- Use available Skills for Laravel code style, testing, architecture, Inertia, DevOps
+- Use available Skills for TypeScript code style, testing, architecture, DevOps
 - If a Skill applies, prefer it over repeating rules here
 
 ## IMPORTANT
@@ -33,7 +33,7 @@ See @.claude/rules/workflow.md → "Orchestrator Tool Policy" for the hard tool 
 4. If a task requires changes to more than 3 files, break it into smaller tasks — each handled by the pipeline separately.
 5. When there's a bug, start by writing a test that reproduces it, then fix it.
 
-Available agents: `ba`, `developer`, `frontend`, `tester`, `qa`, `reviewer`, `debugger`, `security-scanner`, `dba`, `ddd-architect`, `devil`, `devops`, `integration-architect`, `laravel-refactoring-expert`, `queue-specialist`, `docs-writer`
+Available agents: `ba`, `backend-developer`, `vue-developer`, `react-developer`, `angular-developer`, `tester`, `qa`, `reviewer`, `debugger`, `security-scanner`, `dba`, `ddd-architect`, `devil`, `devops`, `integration-architect`, `refactoring-expert`, `queue-specialist`, `docs-writer`
 
 ## Setup
 

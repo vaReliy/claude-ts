@@ -1,106 +1,109 @@
 # Testing Rules
 
-## Models Testing Policy
+## Entities/Models Testing Policy
 
-**DO NOT** create unit tests for Laravel Eloquent models.
+**DO NOT** create unit tests for basic ORM entity CRUD or simple relationships.
 
-Rationale:
-- Laravel's Eloquent ORM is extensively tested by the Laravel team
-- Testing basic CRUD, relationships, and standard functionality provides no value
-- Models are excluded from code coverage metrics (see phpunit.xml)
+Rationale: ORM libraries (Prisma, TypeORM, Drizzle) are extensively tested by their maintainers. Testing basic CRUD provides no value.
 
 What NOT to test:
-- Basic relationships (hasOne, hasMany, belongsTo, etc.)
-- Simple CRUD operations
-- Standard Eloquent functionality
-- Factory creation without custom logic
-- Basic fillable/guarded attributes, standard casting
+- Basic ORM relations
+- Simple CRUD via repository
+- Standard ORM casting/transformations
+- Factory/seed creation without custom logic
 
-Exceptions — What TO test:
-- Custom business logic methods
-- Complex accessors/mutators with business rules
-- Custom scopes with specific logic
-- Observer behavior and side effects
-
-Where to test model functionality instead:
-- Feature tests via HTTP endpoints and workflows
-- Integration tests for model interactions
-- Observer tests for event handlers
-- Action/Service tests for business logic
+What TO test:
+- Custom business logic in UseCases/Services
+- Complex validators with business rules
+- Guards and authorization logic
+- Event handlers and side effects
+- Custom repository methods with complex queries
 
 ## Framework & Tools
 
-- **Pest PHP** — BDD-style syntax (`describe()` + `it()` + `expect()`)
-- **Mutation Testing** with Infection — `--mutate --covered-only --parallel --min=100`
-- **Architectural Testing** — enforced via `tests/Unit/ArchTest.php`
+- **Vitest** (preferred) or Jest with ts-jest — BDD-style syntax: `describe()` + `it()` + `expect()`
+- **Mutation Testing** with Stryker Mutator — `npx stryker run`
+- **E2E Testing** — Playwright (handled exclusively by `qa` agent)
 
 ## Test Structure
 
 ```
-tests/
-├── Feature/          # Integration tests (Auth, Posts, Pages)
-├── Unit/             # Unit tests (Actions, Models, Observers, Support)
-├── Pest.php          # Pest configuration
-└── TestCase.php      # Base test case
+test/
+├── unit/         # Unit tests (UseCases, Services, validators, guards)
+├── integration/  # Integration tests (HTTP endpoints, DB queries)
 ```
 
-## Running Tests
+E2E tests live in `e2e/` and are owned by the `qa` agent.
 
-All tests run in Docker. Feature tests do not need to mutate.
+## Running Tests (all in Docker)
 
 ```bash
-docker compose exec app php artisan test                    # all tests
-docker compose exec app php artisan test --coverage         # with coverage
-docker compose exec app php artisan test --mutate --covered-only --parallel --min=100  # mutation
-docker compose exec app php artisan test tests/Unit/ExampleTest.php  # specific file
+docker compose exec app npx vitest run                    # all tests
+docker compose exec app npx vitest run --coverage         # with coverage
+docker compose exec app npx vitest run --reporter=verbose test/unit/create-post.spec.ts
+docker compose exec app npx stryker run                   # mutation testing
+```
+
+## Writing Tests
+
+```typescript
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { CreatePostUseCase } from '@/use-cases/create-post/create-post.usecase';
+
+describe('CreatePostUseCase', () => {
+  let useCase: CreatePostUseCase;
+  let mockRepository: { save: ReturnType<typeof vi.fn>; existsBySlug: ReturnType<typeof vi.fn> };
+
+  beforeEach(() => {
+    mockRepository = {
+      save: vi.fn().mockResolvedValue(undefined),
+      existsBySlug: vi.fn().mockResolvedValue(false),
+    };
+    useCase = new CreatePostUseCase(mockRepository as any);
+  });
+
+  it('creates a post with valid data', async () => {
+    const result = await useCase.execute({ title: 'Test', body: 'Content' });
+    expect(result.title).toBe('Test');
+    expect(mockRepository.save).toHaveBeenCalledOnce();
+  });
+
+  it('throws ConflictError if slug exists', async () => {
+    mockRepository.existsBySlug.mockResolvedValue(true);
+    await expect(useCase.execute({ title: 'Test', body: 'Content' }))
+      .rejects.toThrow(ConflictError);
+  });
+});
+```
+
+## Testing HTTP Endpoints (Integration)
+
+```typescript
+import supertest from 'supertest';
+
+it('POST /posts returns 201', async () => {
+  const response = await supertest(app)
+    .post('/posts')
+    .set('Authorization', `Bearer ${testToken}`)
+    .send({ title: 'Test Post', body: 'Content' });
+
+  expect(response.status).toBe(201);
+  expect(response.body.title).toBe('Test Post');
+});
 ```
 
 ## Test Configuration
 
-- **Database**: RefreshDatabase trait for clean state
-- **Environment**: phpunit.xml with testing-specific settings
-- **Coverage**: reports in `coverage/` directory
-- **Memory Limit**: 512M
+- **Database**: use test containers or transaction rollback for isolation — never share DB state between tests
+- **Environment**: `vitest.config.ts` with test-specific settings
+- **Coverage**: c8/istanbul, reports in `coverage/` directory
 
-## Writing Tests
+## Mutation Testing
 
-```php
-<?php
+Minimum mutation score: **80%** for covered code.
 
-declare(strict_types=1);
-
-mutates(YourClass::class);
-
-describe('Feature Description', function (): void {
-    beforeEach(function (): void {
-        $this->user = User::factory()->create();
-    });
-
-    it('describes what it tests', function (): void {
-        $result = someFunction();
-        expect($result)->toBe('expected_value');
-    });
-});
+```bash
+docker compose exec app npx stryker run
 ```
 
-### Testing Actions
-
-```php
-it('handles the action correctly', function (): void {
-    $action = new YourAction();
-    $result = $action->handle($request, $parameters);
-
-    expect($result)
-        ->toBeInstanceOf(RedirectResponse::class)
-        ->and($result->getTargetUrl())
-        ->toBe(route('expected.route'));
-});
-```
-
-## Architectural Testing
-
-Enforced rules (`tests/Unit/ArchTest.php`):
-- No debugging functions in production code
-- Models must extend Eloquent Model
-- Page actions must have 'Page' suffix
-- Enums must be proper enum classes
+Fix surviving mutants by improving test assertions to test behavior, not implementation.

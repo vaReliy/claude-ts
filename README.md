@@ -1,12 +1,14 @@
-# Claude Code Configuration for Laravel Projects
+# Claude Code Configuration for Node.js/TypeScript Projects
 
-A comprehensive, production-ready Claude Code configuration for Laravel + Inertia.js + Vue 3 projects. Includes 17 specialized agents, 10 rule files, 23 skills, and a structured workflow pipeline that turns Claude Code into a full AI development team.
+> **Forked from** [AratKruglik/claude-laravel](https://github.com/AratKruglik/claude-laravel) — adapted from PHP/Laravel to Node.js/TypeScript targeting Vue/Angular/React environments.
 
-**Stack:** PHP 8.4 · Laravel 12 · Vue 3 · Inertia.js v2 · PostgreSQL 17 · Redis · Docker · Pest 4
+A comprehensive, production-ready Claude Code configuration for Node.js/TypeScript projects. Includes 18 specialized agents, 9 rule files, 23 skills, 2 commands, and a structured workflow pipeline that turns Claude Code into a full AI development team.
+
+**Stack:** Node.js 22+ · TypeScript 5 · Vue 3 / Angular 17+ / React 18+ · Prisma / TypeORM / Drizzle · PostgreSQL 17 · Redis · Docker · Vitest / Playwright · BullMQ
 
 ## What's Included
 
-### Agents (17)
+### Agents (18)
 
 Specialized AI agents that handle different aspects of development. Each agent has an explicit `tools:` list in its frontmatter — only the tools it actually needs (principle of least privilege).
 
@@ -14,37 +16,37 @@ Specialized AI agents that handle different aspects of development. Each agent h
 |-------|---------|-------|--------|------------|
 | `ba` | Business analysis, requirements, user stories | opus | — | Web, Context7, Agent |
 | `dba` | Database design, migrations, query optimization | sonnet | + | — |
-| `ddd-architect` | Domain modeling, business logic placement | opus | — | Context7, Agent |
+| `ddd-architect` | Domain modeling, Clean Architecture placement | opus | — | Context7, Agent |
 | `debugger` | Bug investigation, root-cause analysis | opus | + | — |
-| `developer` | Full-stack Laravel + Inertia.js features | sonnet | + | Context7, Figma, IDE, Agent |
-| `devil` | Devil's advocate in planning phase, challenges requirements and architecture | opus | — | SendMessage only |
-| `devops` | Docker, CI/CD, deployment, GitHub Actions, infrastructure | haiku | + | GitHub MCP |
+| `backend-developer` | Node.js/TypeScript backend features | sonnet | + | Context7, IDE, Agent |
+| `vue-developer` | Vue 3 components, Pinia, Tailwind, a11y | sonnet | + | Context7, Figma, IDE |
+| `react-developer` | React 18+ components, Zustand, TanStack Query | sonnet | + | Context7, Figma, IDE |
+| `angular-developer` | Angular 17+ standalone components, signals, RxJS | sonnet | + | Context7, Figma, IDE |
+| `devil` | Devil's advocate in planning phase | opus | — | SendMessage only |
+| `devops` | Docker, CI/CD, PM2, GitHub Actions, infrastructure | haiku | + | GitHub MCP |
 | `docs-writer` | Technical documentation, README, API docs | haiku | + | GitHub MCP |
-| `filament` | Filament v4 admin panel resources | sonnet | + | Context7 |
-| `frontend` | Vue 3 components, Pinia, Tailwind, a11y | sonnet | + | Context7, Figma, Stitch, IDE |
 | `integration-architect` | OAuth, webhooks, third-party services | sonnet | + | Web, Context7 |
-| `laravel-refactoring-expert` | Refactoring, N+1 fixes, code quality | sonnet | + | — |
+| `refactoring-expert` | Refactoring, N+1 fixes, code quality | sonnet | + | — |
 | `qa` | E2E testing, Playwright, visual regression | sonnet | + | All 21 Playwright tools |
-| `queue-specialist` | Redis queues, jobs, async processing | sonnet | + | — |
+| `queue-specialist` | BullMQ workers, jobs, async processing | sonnet | + | — |
 | `reviewer` | Code review, architecture audit | sonnet | — | GitHub MCP (review) |
 | `security-scanner` | OWASP, auth/authz, credential leaks | opus | — | Web (CVE lookup) |
-| `tester` | Unit/feature tests, Pest, mutation testing | sonnet | + | — |
+| `tester` | Unit/integration tests, Vitest, Stryker mutation | sonnet | + | — |
 
-### Rules (10)
+### Rules (9)
 
 Rule files loaded by agents and orchestrator on demand:
 
 | Rule | Purpose |
 |------|---------|
-| `architecture.md` | Actions pattern, Inertia.js, domain organization |
-| `code-style.md` | PHP 8.4 strict types, Eloquent conventions, Pint/PHPStan/Rector |
-| `docker-commands.md` | Docker-prefixed commands reference |
-| `forms-authorization.md` | Form Request + Policy + authorization patterns |
+| `architecture.md` | Clean Architecture layers, domain organization |
+| `code-style.md` | TypeScript strict mode, ESLint/Prettier/tsc conventions |
+| `docker-commands.md` | Docker-prefixed commands reference (Node.js/npm/Prisma) |
+| `validation-authorization.md` | js-validator-livr (primary) / Zod + Guards / CASL RBAC |
 | `git-operations.md` | Commit/push safety, PR description format |
-| `inertia-vue.md` | Inertia v2 + Vue 3 Composition API conventions |
-| `mcp-stack.md` | MCP tool usage guide (Laravel Boost, Context7, GitHub, Figma) |
-| `migrations-queue.md` | Migration conventions, AsJob queue pattern |
-| `testing.md` | Pest 4, mutation testing, model testing policy |
+| `mcp-stack.md` | MCP tool usage guide (Context7, GitHub, Figma) |
+| `migrations-queue.md` | Prisma migration conventions, BullMQ queue pattern |
+| `testing.md` | Vitest/Jest, Stryker mutation testing, ORM testing policy |
 | `workflow.md` | Agent pipeline orchestration + agent routing table |
 
 Three files (`workflow.md`, `code-style.md`, `git-operations.md`) are auto-imported in `CLAUDE.md` via `@`-imports — always in context. The rest are loaded by agents on demand via reference links.
@@ -53,9 +55,9 @@ Three files (`workflow.md`, `code-style.md`, `git-operations.md`) are auto-impor
 
 Reusable knowledge modules organized by category:
 
-**Laravel & PHP:** `laravel-architecture`, `php-pro`, `laravel-actions-patterns` *(custom)*
+**TypeScript & Node.js:** `typescript-pro`, `typescript-architecture`
 
-**Testing:** `pest-testing`, `test-master`, `playwright-expert`, `playwright-skill`
+**Testing:** `vitest-testing`, `test-master`, `playwright-expert`, `playwright-skill`
 
 **Database:** `database-optimizer`, `postgresql`, `postgres-best-practices`
 
@@ -65,9 +67,7 @@ Reusable knowledge modules organized by category:
 
 **Debugging & Security:** `debugging-wizard`, `security-reviewer`
 
-**Frontend:** `vue-expert`
-
-**Infrastructure:** `octane-frankenphp-gotchas` *(custom)*
+**Frontend:** `vue-expert`, `react-expert`, `angular-expert`
 
 **Planning:** `plan-writing`, `brainstorming`
 
@@ -76,43 +76,41 @@ Reusable knowledge modules organized by category:
 The configuration defines a mandatory agent pipeline for feature development:
 
 ```
-Standard Feature:  Planning Team → Developer → Quality Gate Team → DocsWriter
-Bug Fix:           Debugger → Developer → Verify Team
+Standard Feature:  Planning Team → Backend Developer → Quality Gate Team → DocsWriter
+Bug Fix:           Debugger → Backend Developer → Verify Team
 CI/CD:             DevOps → Reviewer + Security Scanner
 ```
 
 **Planning Team** (`plan-{slug}`) runs `ba`, `ddd-architect`, and `devil` in parallel. `devil` is a read-only devil's advocate that challenges requirements and architecture decisions via SendMessage before any code is written. For simple features with no arch decisions, `ba` runs sequentially alone.
 
-**Quality Gate Team** (`qg-{slug}`) runs `tester`, `reviewer`, `security-scanner`, and `qa` in parallel via TeamCreate. If any agent reports a Critical or Important issue, findings route back to Developer and the team reruns.
+**Quality Gate Team** (`qg-{slug}`) runs `tester`, `reviewer`, `security-scanner`, and `qa` in parallel via TeamCreate. If any agent reports a Critical or Important issue, findings route back to Backend Developer and the team reruns.
 
 ## Prerequisites
 
 - [Claude Code](https://code.claude.com) CLI installed
 - Node.js 18+ (for skills installation via `npx`)
-- A Laravel project (ideally with Docker)
+- A Node.js/TypeScript project (ideally with Docker)
 
 ## Quick Start
 
 ### Step 1: Copy Configuration
 
-Clone this repository and copy the configuration files into your Laravel project:
+Clone this repository and copy the configuration files into your Node.js project:
 
 ```bash
 # Clone the config repo
-git clone https://github.com/AlexGritsworker/claude-laravel.git /tmp/claude-laravel-config
+git clone https://github.com/your-org/claude-ts.git /tmp/claude-ts-config
 
 # Copy into your project
-cp -r /tmp/claude-laravel-config/.claude /path/to/your-laravel-project/
-cp /tmp/claude-laravel-config/CLAUDE.md /path/to/your-laravel-project/
+cp -r /tmp/claude-ts-config/.claude /path/to/your-project/
+cp /tmp/claude-ts-config/CLAUDE.md /path/to/your-project/
 ```
 
-Or add as a git subtree/submodule if you prefer to track updates.
-
-> **Agent Teams**: `settings.json` already includes `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` which enables parallel Quality Gate and Verify Team execution. This is an experimental feature — requires Claude Code with agent teams support.
+> **Agent Teams**: `settings.json` already includes `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` which enables parallel Quality Gate and Verify Team execution.
 
 ### Step 2: Install Superpowers Plugin
 
-[Superpowers](https://github.com/obra/superpowers) provides structured development workflows: brainstorming, planning, TDD, debugging, code review, and more.
+[Superpowers](https://github.com/obra/superpowers) provides structured development workflows.
 
 Run inside Claude Code:
 
@@ -121,34 +119,11 @@ Run inside Claude Code:
 /plugin install superpowers@superpowers-marketplace
 ```
 
-**Skills provided:** brainstorming, writing-plans, executing-plans, test-driven-development, systematic-debugging, requesting-code-review, verification-before-completion, using-git-worktrees, subagent-driven-development, finishing-a-development-branch
-
 ### Step 3: Install Additional Skills from skills.sh
-
-The configuration already includes 27 project skills in `.claude/skills/`. To install additional community skills from [skills.sh](https://skills.sh):
 
 ```bash
 npx skills add <owner/repo>
 ```
-
-Browse the [skills.sh leaderboard](https://skills.sh) to discover popular skills. Examples:
-
-```bash
-# Install a specific skill set
-npx skills add vercel-labs/skills
-
-# Install with options
-npx skills add <owner/repo> -a claude-code
-```
-
-### `CLAUDE.md`
-
-The main instructions file. Adapt this to your project:
-
-1. Update system requirements if your stack differs
-2. Adjust Docker commands to match your `compose.yml`
-3. Add project-specific rules in the "Core Principles" section
-4. Modify the agent list if you add/remove agents
 
 ## Customization
 
@@ -200,8 +175,6 @@ description: What this skill does and when to use it
 Instructions Claude follows when this skill is active...
 ```
 
-See the [Claude Code Skills documentation](https://code.claude.com/docs/en/skills) for advanced features: supporting files, subagent execution, dynamic context injection.
-
 ### Bilingual Agent Support
 
 All agents include trigger words in both English and Ukrainian. To add another language, extend the `description` field in the YAML frontmatter:
@@ -214,28 +187,22 @@ Trigger words — DE: schlüsselwort1, schlüsselwort2.
 
 ## Architecture Overview
 
-This configuration follows the **Laravel Actions** pattern (`lorisleiva/laravel-actions`):
+This configuration follows **Clean Architecture** for Node.js/TypeScript:
 
 | Layer | Pattern |
 |-------|---------|
-| HTTP entry | Page Actions (`AsController`) |
-| Form handling | Store/Update Actions (`AsController`) |
-| Business logic | Business Actions (`AsObject`) |
-| Authorization | Policies |
-| Validation | Form Requests |
-| Side effects | Observers |
+| HTTP entry | Route handler / Controller |
+| Business operation | UseCase |
+| Shared logic | Service |
+| Data access | Repository |
+| Domain model | Entity |
+| Authorization | Guard / Middleware / CASL |
+| Validation | js-validator-livr (primary) / Zod |
 | Value objects | Enums |
-| Async work | Jobs (`ShouldQueue`) |
-| Cross-cutting | Events / Listeners |
+| Async work | BullMQ Workers |
+| Cross-cutting | Events / Handlers |
 
-No traditional Controllers, no Repository pattern, no `app/Domain/` directory.
-
-
-## Few Claude Code Structure
-![scopes.png](scopes.png)
-![claude_guide.png](claude_guide.png)
-![commands.png](commands.png)
-
+**Strict role separation:** `backend-developer` handles Node.js API only. Each frontend framework has its own dedicated agent (`vue-developer`, `react-developer`, `angular-developer`) — no combined "fullstack" agents.
 
 ## License
 
