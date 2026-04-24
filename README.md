@@ -88,25 +88,33 @@ CI/CD:             DevOps → Reviewer + Security Scanner
 ## Prerequisites
 
 - [Claude Code](https://code.claude.com) CLI installed
-- Node.js 18+ (for skills installation via `npx`)
+- Node.js 18+ (only needed if using the optional `npx skills` CLI in Step 3)
 - A Node.js/TypeScript project (ideally with Docker)
 
 ## Quick Start
 
 ### Step 1: Copy Configuration
 
-Clone this repository and copy the configuration files into your Node.js project:
+Clone this repository:
 
 ```bash
-# Clone the config repo
-git clone https://github.com/your-org/claude-ts.git /tmp/claude-ts-config
+git clone git@github.com:vaReliy/claude-ts.git /tmp/claude-ts-config
+```
 
-# Copy into your project
+**Fresh project (no existing `.claude/` or `CLAUDE.md`):**
+
+```bash
 cp -r /tmp/claude-ts-config/.claude /path/to/your-project/
 cp /tmp/claude-ts-config/CLAUDE.md /path/to/your-project/
 ```
 
-> **Agent Teams**: `settings.json` already includes `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` which enables parallel Quality Gate and Verify Team execution.
+**Existing project (already has `CLAUDE.md` and/or `.claude/`):**
+
+1. **Merge `.claude/` subdirectories** — copy `agents/`, `rules/`, `skills/`, `commands/` from this repo into your project's `.claude/`. Do not overwrite existing files you want to keep.
+2. **Prepend `CLAUDE.md` content** — paste this repo's `CLAUDE.md` at the **top** of your existing `CLAUDE.md`. Keep the `@.claude/rules/*.md` imports intact; they resolve from the project root.
+3. **Merge `settings.json`** — if your project already has `.claude/settings.json`, add `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` to its `env` block rather than overwriting the file.
+
+> **All 23 skills** are already bundled in `.claude/skills/` and activate as soon as you copy the folder — no separate install needed.
 
 ### Step 2: Install Superpowers Plugin
 
@@ -119,11 +127,15 @@ Run inside Claude Code:
 /plugin install superpowers@superpowers-marketplace
 ```
 
-### Step 3: Install Additional Skills from skills.sh
+### Step 3 (Optional): Install Extra Community Skills
+
+The 23 bundled skills already cover TypeScript, testing, frontend, DevOps, architecture, and debugging. To pull **additional** skills from external GitHub repos, use the [`skills` CLI](https://www.npmjs.com/package/skills):
 
 ```bash
 npx skills add <owner/repo>
 ```
+
+Skip this step unless you have specific external skills to install.
 
 ## Customization
 
