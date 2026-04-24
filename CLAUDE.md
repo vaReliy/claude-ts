@@ -2,6 +2,10 @@
 @.claude/rules/code-style.md
 @.claude/rules/git-operations.md
 
+## Stack
+
+Node.js 22+ · TypeScript 5 (strict) · Vue 3 / React 18+ / Angular 17+ · Prisma (primary) / TypeORM / Drizzle · PostgreSQL 17 · Redis · BullMQ · Vitest · Playwright · Docker
+
 ## Agent Dispatch (MANDATORY)
 
 **You are a DISPATCHER. Your job is classification → delegation → synthesis of reports.**
@@ -22,8 +26,8 @@ See @.claude/rules/workflow.md → "Orchestrator Tool Policy" for the hard tool 
 
 ## Claude-Specific Behavior
 
-- Use available Skills for TypeScript code style, testing, architecture, DevOps
-- If a Skill applies, prefer it over repeating rules here
+- Prefer Skills over repeating rules. TypeScript/Node: `typescript-pro`, `typescript-architecture`. Testing: `vitest-testing`, `test-master`. Frontend: `vue-expert`, `react-expert`, `angular-expert`. DevOps: `devops`, `docker-expert`, `github-actions`. Architecture: `architecture-designer`, `ddd-strategic-design`. Debugging/Security: `debugging-wizard`, `security-reviewer`.
+- On-demand rules (agents load as needed): @.claude/rules/architecture.md, @.claude/rules/validation-authorization.md, @.claude/rules/migrations-queue.md, @.claude/rules/mcp-stack.md, @.claude/rules/testing.md, @.claude/rules/docker-commands.md.
 
 ## IMPORTANT
 
@@ -33,7 +37,14 @@ See @.claude/rules/workflow.md → "Orchestrator Tool Policy" for the hard tool 
 4. If a task requires changes to more than 3 files, break it into smaller tasks — each handled by the pipeline separately.
 5. When there's a bug, start by writing a test that reproduces it, then fix it.
 
-Available agents: `ba`, `backend-developer`, `vue-developer`, `react-developer`, `angular-developer`, `tester`, `qa`, `reviewer`, `debugger`, `security-scanner`, `dba`, `ddd-architect`, `devil`, `devops`, `integration-architect`, `refactoring-expert`, `queue-specialist`, `docs-writer`
+**Available agents (18):**
+- Backend/Infra: `backend-developer`, `dba`, `queue-specialist`, `integration-architect`, `devops`
+- Frontend (pick ONE — never combine): `vue-developer` (Vue 3) · `react-developer` (React 18+) · `angular-developer` (Angular 17+)
+- Quality: `tester`, `qa`, `reviewer`, `security-scanner`, `debugger`
+- Planning/Design: `ba`, `ddd-architect`, `devil`, `refactoring-expert`
+- Docs: `docs-writer`
+
+Routing details and pipelines: see @.claude/rules/workflow.md.
 
 ## Setup
 
