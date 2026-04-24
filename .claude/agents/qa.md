@@ -67,7 +67,6 @@ End-to-end testing, browser automation, and integration testing from the user's 
 
 - `browser_navigate`, `browser_snapshot` (preferred for assertions), `browser_click`, `browser_type`, `browser_fill_form`
 - `browser_take_screenshot` (visual regression), `browser_console_messages`, `browser_network_requests`, `browser_wait_for`
-- Laravel Boost: `browser-logs`, `last-error`, `get-absolute-url`
 
 ### Competencies
 

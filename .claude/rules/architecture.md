@@ -2,34 +2,51 @@
 
 ## Business Logic
 
-- **Laravel Actions** (`lorisleiva/laravel-actions`) — all business logic in Action classes
-- **Service Layer**: implemented via Action classes (no separate service classes)
-- **Repository Pattern**: not used — rely on Eloquent models directly
+- **Clean Architecture** — all business logic in UseCase/Handler classes
+- **Service Layer** — pure domain logic services (no I/O), injected into UseCases
+- **Repository Pattern** — data access abstraction via interfaces; implementations swap ORM
+- No business logic in route handlers or controllers — they are thin entry points
+
+## Layer Stack
+
+```
+Route Handler / Controller
+  ↓  validates input (js-validator-livr / Zod / class-validator)
+  ↓  calls UseCase
+UseCase / Handler
+  ↓  orchestrates business logic
+  ↓  calls Services + Repositories
+Service
+  ↓  pure domain logic, no I/O
+Repository Interface → ORM Implementation (Prisma / TypeORM / Drizzle)
+```
+
+Each layer depends only on the layer below it. No skipping layers.
 
 ## Frontend
 
-- **Inertia.js** with Vue.js — frontend built as SPA via server-driven routing
-- **Domain Organization**: features organized by domain (Auth, Posts, Categories, etc.)
+- **Vue, React, or Angular** — separate agents handle each framework (vue-developer, react-developer, angular-developer)
+- Communicates with backend via REST or GraphQL API
+- Domain organization: features organized by domain (auth, posts, users, etc.)
 
 ## Database
 
-- Every DB structure change → new migration
-- Every DB data change → update seeder + factory
-- Prefer Eloquent models over raw queries (`DB::` facade)
-- Prefer Eloquent relationships over manual joins
-- Prefer Eloquent eager loading over lazy loading (N+1 prevention)
-- Prefer Eloquent pagination, scopes, soft deletes over raw alternatives
+- Every schema change → new migration file (never modify existing migrations in production)
+- Prefer repository pattern: `IPostRepository` interface + `PrismaPostRepository` implementation
+- Eager loading via ORM includes/relations to prevent N+1 queries
+- Prefer ORM abstractions over raw SQL; use raw queries only for complex aggregations
+- Update seeders and factories when data changes
 
 ## Performance
 
-- **Laravel Octane** with FrankenPHP — high-performance application server
+- **Node.js** with PM2 cluster mode or native clustering
 - **Redis** — caching, sessions, queue management
 - **PostgreSQL** with proper indexing
-- Image optimization tools included in Docker setup
+- Structured logging with pino (JSON output, configurable log levels)
 
 ## Development Tools
 
-- **Telescope** — debugging assistant (enabled in testing)
-- **Log Viewer** — web-based log viewing
-- **IDE Helpers** — auto-generated (`php artisan ide-helper:generate`)
-- **Xdebug** — available in Docker development environment
+- **Bull Board** — queue monitoring UI at `/admin/queues`
+- **Prisma Studio** — database inspector (if using Prisma)
+- **Node.js debugger** — attach via `--inspect` flag
+- **pino-pretty** — human-readable logs in development

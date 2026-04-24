@@ -2,55 +2,59 @@
 
 **All commands MUST run inside the Docker container.**
 
-## PHP / Artisan
+## ORM / Prisma
 
 ```bash
-docker compose exec app php artisan make:action Domain/ActionName
-docker compose exec app php artisan make:request Domain/RequestName
-docker compose exec app php artisan make:model ModelName -m
-docker compose exec app php artisan make:migration create_table_name_table
-docker compose exec app php artisan migrate
-docker compose exec app php artisan migrate:rollback
-docker compose exec app php artisan optimize:clear
-docker compose exec app php artisan ide-helper:generate
+docker compose exec app npx prisma migrate dev --name create_posts_table
+docker compose exec app npx prisma migrate deploy
+docker compose exec app npx prisma generate
+docker compose exec app npx prisma studio
+docker compose exec app npx prisma migrate reset
+```
+
+## TypeORM (alternative)
+
+```bash
+docker compose exec app npx typeorm migration:generate src/migrations/CreatePostsTable
+docker compose exec app npx typeorm migration:run
+docker compose exec app npx typeorm migration:revert
 ```
 
 ## Code Quality
 
 ```bash
-docker compose exec app ./vendor/bin/pint --dirty
-docker compose exec app ./vendor/bin/pint
-docker compose exec app ./vendor/bin/phpstan analyse
-docker compose exec app ./vendor/bin/rector process --dry-run
-docker compose exec app ./vendor/bin/rector process
+docker compose exec app npx eslint .
+docker compose exec app npx eslint . --fix
+docker compose exec app npx prettier --check .
+docker compose exec app npx prettier --write .
+docker compose exec app npx tsc --noEmit
 ```
 
-## Testing
+## Testing (Vitest)
 
 ```bash
-docker compose exec app php artisan test
-docker compose exec app php artisan test --coverage
-docker compose exec app php artisan test --mutate --covered-only --parallel --min=100
-docker compose exec app php artisan test tests/Unit/ExampleTest.php
+docker compose exec app npx vitest run
+docker compose exec app npx vitest run --coverage
+docker compose exec app npx vitest run --reporter=verbose
+docker compose exec app npx vitest run src/use-cases/create-post/create-post.spec.ts
+docker compose exec app npx stryker run
 ```
 
-## Composer
+## Build & Runtime
 
 ```bash
-docker compose exec app composer install
-docker compose exec app composer require vendor/package
-docker compose exec app composer run dev
-docker compose exec app composer run pint:fix
-docker compose exec app composer run rector:fix
+docker compose exec app npm run build
+docker compose exec app npm run dev
+docker compose exec app npm run start
 ```
 
-## Frontend (also in Docker)
+## Package Management
 
 ```bash
-docker compose exec app yarn dev
-docker compose exec app yarn build
-docker compose exec app yarn install
+# ALWAYS use npm ci — never npm install
+docker compose exec app npm ci
+docker compose exec app npm ci --production
 ```
 
 > **NEVER run commands outside Docker** — all dependencies exist only in the container.
-> **NEVER create Controllers** — this project uses Laravel Actions pattern.
+> **NEVER put business logic in route handlers** — use UseCases/Services.

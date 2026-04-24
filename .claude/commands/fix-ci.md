@@ -78,17 +78,15 @@ IMPORTANT: `--log-failed` output can be very large. If it is truncated, note tha
 The CI has two job groups. Map the failed job name to one of these:
 
 **Lint matrix** (`🪄 Lints | ...`):
-- `🔍 PHPStan` — static analysis failure
-- `🧽 Laravel Pint` — code style failure (often auto-fixable with `./vendor/bin/pint`)
-- `🏠 Rector` — code modernization failure (often auto-fixable with `./vendor/bin/rector process`)
-- `🅿️ Prettier` — frontend formatting failure (auto-fixable with `yarn prettier --write`)
-- `🔯 Eslint` — frontend linting failure (often auto-fixable with `yarn eslint --fix`)
+- `🔍 TypeScript` — type check failure (`tsc --noEmit`)
+- `🔯 ESLint` — linting failure (often auto-fixable with `npx eslint . --fix`)
+- `🅿️ Prettier` — formatting failure (auto-fixable with `npx prettier --write .`)
 
 **Test matrix** (`♻️ Tests | ...`):
 - `🔬 Unit` — unit test failure (requires code investigation)
-- `🧬 Feature` — feature/integration test failure (requires code investigation)
+- `🧬 Integration` — integration test failure (requires code investigation)
 - `☂️ Coverage` — test coverage failure (may indicate new code without tests)
-- `🦠 Mutation` — mutation testing failure (tests exist but don't catch mutations)
+- `🦠 Mutation` — Stryker mutation testing failure (tests exist but don't catch mutations)
 
 ## Step 4: Switch to the PR branch
 
@@ -113,20 +111,20 @@ Launch the `debugger` agent with `subagent_type: "debugger"` passing:
 The agent prompt must instruct the debugger to:
 - Analyze the GitHub Actions failure logs to identify root cause
 - For **lint failures**: identify which files and lines caused the linter to fail; check if the issue is auto-fixable
-- For **test failures**: identify the failing test class::method and the assertion that failed; read the failing test file and the code under test from the local codebase
+- For **test failures**: identify the failing `describe/it` block and the assertion that failed; read the failing test file and the code under test from the local codebase
 - For **mutation failures**: identify which mutations survived; read the affected test and source files
 - Note: GitHub Actions has no built-in flaky test detection. If the failure looks intermittent (timing, random ordering, environment), flag it explicitly and suggest a manual rerun
 - Produce a structured diagnosis:
   - Root cause (one sentence)
-  - Failure type: lint | unit test | feature test | coverage | mutation
+  - Failure type: lint | unit test | integration test | coverage | mutation
   - Affected files (list of file paths)
   - Failed tests or linter errors (specific list)
   - Whether a code fix is needed or if it is a transient/environment issue
   - Recommended fix approach (brief)
 
-## Step 6: Dispatch the developer agent (if fix needed)
+## Step 6: Dispatch the backend-developer agent (if fix needed)
 
-If the debugger determined that a code fix is needed, launch the `developer` agent with `subagent_type: "developer"` passing:
+If the debugger determined that a code fix is needed, launch the `backend-developer` agent with `subagent_type: "backend-developer"` passing:
 1. The full root cause analysis from the debugger
 2. The specific files that need to be modified
 3. The failed job names and test/lint errors so developer can verify the fix
@@ -134,23 +132,19 @@ If the debugger determined that a code fix is needed, launch the `developer` age
 The agent prompt must instruct the developer to:
 - Apply the minimal fix to resolve the CI failure
 - Follow project standards: `CLAUDE.md`, `.claude/rules/code-style.md`, `.claude/rules/architecture.md`
-- Follow project conventions: see @.claude/rules/code-style.md, @.claude/rules/architecture.md
 - For **lint failures**, run the relevant linter to verify the fix:
   ```bash
-  docker compose exec app ./vendor/bin/phpstan analyse --memory-limit=2G
-  docker compose exec app ./vendor/bin/pint --test
-  docker compose exec app ./vendor/bin/rector process --dry-run
-  docker compose exec app yarn prettier
-  docker compose exec app yarn eslint
+  docker compose exec app npx tsc --noEmit
+  docker compose exec app npx eslint .
+  docker compose exec app npx prettier --check .
   ```
 - For **test failures**, run the failing test to verify the fix:
   ```bash
-  docker compose exec app php artisan test --filter="FailingTestMethod"
+  docker compose exec app npx vitest run test/unit/failing-test.spec.ts
   ```
 - If tests pass, run the broader suite for the affected area:
   ```bash
-  docker compose exec app php artisan test --testsuite=Unit
-  docker compose exec app php artisan test --testsuite=Feature
+  docker compose exec app npx vitest run
   ```
 - Do NOT make changes beyond what is needed to fix the CI failure
 - Do NOT refactor, improve, or "clean up" adjacent code

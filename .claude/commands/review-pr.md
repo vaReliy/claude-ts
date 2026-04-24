@@ -62,12 +62,12 @@ The agent prompt MUST include these rules:
 - NEVER mention AI, Claude, LLM, automation, or that this is an automated review
 - Write all comments in English, in natural human engineer tone
 - For each finding, return: file path, line number (from the diff), severity (critical/important/suggestion), and the comment text
-- Use skills: `code-reviewer`, `security-audit`, `laravel-architecture`, `verification-before-completion`
+- Use skills: `code-reviewer`, `security-audit`, `typescript-architecture`, `verification-before-completion`
 - Read relevant project docs when applicable: `CLAUDE.md`, `.claude/rules/architecture.md`, `.claude/rules/code-style.md`, `.claude/rules/testing.md`, `.claude/rules/git-operations.md`
 - Read the actual changed files from the local codebase (not just the diff) for full context
 - Return findings as a structured list with: file, line, severity, comment
 
-**Project-specific patterns to check:** see @.claude/rules/code-style.md, @.claude/rules/architecture.md, @.claude/rules/testing.md, @.claude/rules/inertia-vue.md
+**Project-specific patterns to check:** see @.claude/rules/code-style.md, @.claude/rules/architecture.md, @.claude/rules/testing.md, @.claude/rules/validation-authorization.md
 
 ## Step 4: Post inline review comments
 
