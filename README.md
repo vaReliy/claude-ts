@@ -216,6 +216,21 @@ This configuration follows **Clean Architecture** for Node.js/TypeScript:
 
 **Strict role separation:** `backend-developer` handles Node.js API only. Each frontend framework has its own dedicated agent (`vue-developer`, `react-developer`, `angular-developer`) — no combined "fullstack" agents.
 
+## Credits / Sources
+
+Base:
+
+- Fork of: https://github.com/AratKruglik/claude-laravel
+- Adapted for Node.js / TS stack
+
+Additional skills:
+
+- Some skills adapted from external repositories (see [THIRD_PARTY.md](./THIRD_PARTY.md))
+
 ## License
 
-MIT
+MIT — see [LICENSE](./LICENSE) file.
+
+Third-party attributions:
+- https://github.com/mattpocock/skills (MIT)
+- https://github.com/AratKruglik/claude-laravel (MIT)
