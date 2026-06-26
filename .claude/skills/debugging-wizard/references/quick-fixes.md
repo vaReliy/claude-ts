@@ -7,14 +7,14 @@
 
 ```typescript
 // Error
-user.profile.name
+user.profile.name;
 // user or profile is undefined
 
 // Fix: Optional chaining
-user?.profile?.name
+user?.profile?.name;
 
 // Fix: Default value
-user?.profile?.name ?? 'Unknown'
+user?.profile?.name ?? "Unknown";
 
 // Fix: Guard clause
 if (!user?.profile) {
@@ -33,8 +33,8 @@ fetchData().then(process);
 // Fix: Add catch
 fetchData()
   .then(process)
-  .catch(error => {
-    console.error('Fetch failed:', error);
+  .catch((error) => {
+    console.error("Fetch failed:", error);
   });
 
 // Fix: try/catch with await
@@ -42,7 +42,7 @@ try {
   const data = await fetchData();
   await process(data);
 } catch (error) {
-  console.error('Operation failed:', error);
+  console.error("Operation failed:", error);
 }
 ```
 
@@ -83,16 +83,16 @@ npm install
 ```typescript
 // Error: await in non-async function
 function getData() {
-  const data = await fetch('/api'); // SyntaxError!
+  const data = await fetch("/api"); // SyntaxError!
 }
 
 // Fix: Mark function as async
 async function getData() {
-  const data = await fetch('/api');
+  const data = await fetch("/api");
 }
 
 // Error: forEach doesn't await
-items.forEach(async item => {
+items.forEach(async (item) => {
   await process(item); // Doesn't wait!
 });
 
@@ -102,33 +102,16 @@ for (const item of items) {
 }
 
 // Fix: Use Promise.all for parallel
-await Promise.all(items.map(item => process(item)));
-```
-
-## PHP / Laravel Common Errors
-
-```php
-// Error: Class not found
-// Fix: Run composer dump-autoload
-composer dump-autoload
-
-// Error: Method not found on model
-// Fix: Check relationship name, run ide-helper
-php artisan ide-helper:models
-
-// Error: SQLSTATE[HY000] Connection refused
-// Fix: Check database config in .env
-DB_HOST=127.0.0.1
-DB_PORT=5432
+await Promise.all(items.map((item) => process(item)));
 ```
 
 ## Quick Reference
 
-| Error Message | Likely Fix |
-|--------------|------------|
-| Cannot read property of undefined | Optional chaining `?.` |
-| Unhandled promise rejection | Add `.catch()` or try/catch |
-| Maximum call stack | Add recursion base case |
-| Module not found | Check path, install package |
-| await in non-async | Add `async` keyword |
-| Class not found | `composer dump-autoload` |
+| Error Message                     | Likely Fix                  |
+| --------------------------------- | --------------------------- |
+| Cannot read property of undefined | Optional chaining `?.`      |
+| Unhandled promise rejection       | Add `.catch()` or try/catch |
+| Maximum call stack                | Add recursion base case     |
+| Module not found                  | Check path, install package |
+| await in non-async                | Add `async` keyword         |
+| Class not found                   | `composer dump-autoload`    |

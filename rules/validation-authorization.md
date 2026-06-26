@@ -7,12 +7,12 @@ All input must be validated before reaching business logic. Never validate in Us
 ### js-validator-livr (Primary Choice)
 
 ```typescript
-import LIVR from 'livr';
+import LIVR from "livr";
 
 const validator = new LIVR.Validator({
-  title: ['required', { max_length: 255 }],
-  description: ['required', { max_length: 5000 }],
-  status: ['required', { one_of: ['draft', 'published'] }],
+  title: ["required", { max_length: 255 }],
+  description: ["required", { max_length: 5000 }],
+  status: ["required", { one_of: ["draft", "published"] }],
 });
 
 const validData = validator.validate(input);
@@ -24,7 +24,7 @@ if (!validData) {
 ### Zod (Alternative)
 
 ```typescript
-import { z } from 'zod';
+import { z } from "zod";
 
 const CreatePostSchema = z.object({
   title: z.string().min(1).max(255),
@@ -40,7 +40,7 @@ if (!result.success) {
 ### class-validator (Alternative — NestJS style)
 
 ```typescript
-import { IsString, MaxLength, IsNotEmpty } from 'class-validator';
+import { IsString, MaxLength, IsNotEmpty } from "class-validator";
 
 export class CreatePostDto {
   @IsNotEmpty()
@@ -64,7 +64,7 @@ Use middleware guards or a CASL-based RBAC service. Never perform auth checks in
 ```typescript
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (!req.user) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    return res.status(401).json({ error: "Unauthorized" });
   }
   next();
 }
@@ -72,7 +72,7 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
 export function requireRole(role: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user?.roles.includes(role)) {
-      return res.status(403).json({ error: 'Forbidden' });
+      return res.status(403).json({ error: "Forbidden" });
     }
     next();
   };
@@ -85,11 +85,11 @@ export function requireRole(role: string) {
 export class UpdatePostUseCase {
   async execute(user: User, postId: string, dto: UpdatePostDto): Promise<Post> {
     const post = await this.postRepository.findById(postId);
-    if (!post) throw new NotFoundError('Post');
+    if (!post) throw new NotFoundError("Post");
 
     const ability = defineAbilityFor(user);
-    if (!ability.can('update', post)) {
-      throw new ForbiddenError('Cannot update this post');
+    if (!ability.can("update", post)) {
+      throw new ForbiddenError("Cannot update this post");
     }
 
     // proceed with update

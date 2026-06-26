@@ -5,15 +5,9 @@
   "enabledPlugins": {
     "superpowers@superpowers-marketplace": true
   },
-  "enabledMcpjsonServers": [
-    "context7",
-    "figma",
-    "github"
-  ],
+  "enabledMcpjsonServers": ["context7", "figma", "github"],
   "permissions": {
-    "deny": [
-      "Read(./.env)"
-    ]
+    "deny": ["Read(./.env)"]
   },
   "model": "opusplan",
   "hooks": {

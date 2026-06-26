@@ -7,12 +7,14 @@
 Rationale: ORM libraries (Prisma, TypeORM, Drizzle) are extensively tested by their maintainers. Testing basic CRUD provides no value.
 
 What NOT to test:
+
 - Basic ORM relations
 - Simple CRUD via repository
 - Standard ORM casting/transformations
 - Factory/seed creation without custom logic
 
 What TO test:
+
 - Custom business logic in UseCases/Services
 - Complex validators with business rules
 - Guards and authorization logic
@@ -47,12 +49,15 @@ docker compose exec app npx stryker run                   # mutation testing
 ## Writing Tests
 
 ```typescript
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { CreatePostUseCase } from '@/use-cases/create-post/create-post.usecase';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { CreatePostUseCase } from "@/use-cases/create-post/create-post.usecase";
 
-describe('CreatePostUseCase', () => {
+describe("CreatePostUseCase", () => {
   let useCase: CreatePostUseCase;
-  let mockRepository: { save: ReturnType<typeof vi.fn>; existsBySlug: ReturnType<typeof vi.fn> };
+  let mockRepository: {
+    save: ReturnType<typeof vi.fn>;
+    existsBySlug: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     mockRepository = {
@@ -62,16 +67,17 @@ describe('CreatePostUseCase', () => {
     useCase = new CreatePostUseCase(mockRepository as any);
   });
 
-  it('creates a post with valid data', async () => {
-    const result = await useCase.execute({ title: 'Test', body: 'Content' });
-    expect(result.title).toBe('Test');
+  it("creates a post with valid data", async () => {
+    const result = await useCase.execute({ title: "Test", body: "Content" });
+    expect(result.title).toBe("Test");
     expect(mockRepository.save).toHaveBeenCalledOnce();
   });
 
-  it('throws ConflictError if slug exists', async () => {
+  it("throws ConflictError if slug exists", async () => {
     mockRepository.existsBySlug.mockResolvedValue(true);
-    await expect(useCase.execute({ title: 'Test', body: 'Content' }))
-      .rejects.toThrow(ConflictError);
+    await expect(
+      useCase.execute({ title: "Test", body: "Content" }),
+    ).rejects.toThrow(ConflictError);
   });
 });
 ```
@@ -79,16 +85,16 @@ describe('CreatePostUseCase', () => {
 ## Testing HTTP Endpoints (Integration)
 
 ```typescript
-import supertest from 'supertest';
+import supertest from "supertest";
 
-it('POST /posts returns 201', async () => {
+it("POST /posts returns 201", async () => {
   const response = await supertest(app)
-    .post('/posts')
-    .set('Authorization', `Bearer ${testToken}`)
-    .send({ title: 'Test Post', body: 'Content' });
+    .post("/posts")
+    .set("Authorization", `Bearer ${testToken}`)
+    .send({ title: "Test Post", body: "Content" });
 
   expect(response.status).toBe(201);
-  expect(response.body.title).toBe('Test Post');
+  expect(response.body.title).toBe("Test Post");
 });
 ```
 

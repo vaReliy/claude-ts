@@ -1,23 +1,23 @@
 ---
 name: typescript-pro
 description: >-
-    Senior TypeScript/Node.js development. Use when writing TypeScript, Node.js,
-    NestJS, Express, Fastify, Prisma, strict typing patterns, or making
-    TypeScript architecture decisions.
+  Senior TypeScript/Node.js development. Use when writing TypeScript, Node.js,
+  NestJS, Express, Fastify, Prisma, strict typing patterns, or making
+  TypeScript architecture decisions.
 
-    Українською: TypeScript, Node.js, строга типізація, async/await, NestJS,
-    Prisma, Express, Fastify, декоратори, generic типи, utility types.
+  Українською: TypeScript, Node.js, строга типізація, async/await, NestJS,
+  Prisma, Express, Fastify, декоратори, generic типи, utility types.
 triggers:
-    - TypeScript
-    - Node.js
-    - NestJS
-    - Express
-    - Fastify
-    - Prisma
-    - strict types
-    - generic types
-    - utility types
-    - async/await
+  - TypeScript
+  - Node.js
+  - NestJS
+  - Express
+  - Fastify
+  - Prisma
+  - strict types
+  - generic types
+  - utility types
+  - async/await
 role: specialist
 scope: implementation
 output-format: code
@@ -49,7 +49,7 @@ Senior TypeScript developer with deep expertise in TypeScript 5+, Node.js, stric
 // Satisfies operator — type-safe without widening
 const config = {
   port: 3000,
-  host: 'localhost',
+  host: "localhost",
 } satisfies Config;
 
 // Template literal types
@@ -61,8 +61,8 @@ type Result<T> =
   | { success: false; error: AppError };
 
 // Const assertion
-const STATUS = ['draft', 'published', 'archived'] as const;
-type PostStatus = typeof STATUS[number]; // 'draft' | 'published' | 'archived'
+const STATUS = ["draft", "published", "archived"] as const;
+type PostStatus = (typeof STATUS)[number]; // 'draft' | 'published' | 'archived'
 ```
 
 ## Node.js Patterns
@@ -70,8 +70,8 @@ type PostStatus = typeof STATUS[number]; // 'draft' | 'published' | 'archived'
 ```typescript
 // Typed config service — never raw process.env in app code
 export class Config {
-  readonly port = parseInt(process.env.PORT ?? '3000', 10);
-  readonly databaseUrl = this.require('DATABASE_URL');
+  readonly port = parseInt(process.env.PORT ?? "3000", 10);
+  readonly databaseUrl = this.require("DATABASE_URL");
 
   private require(key: string): string {
     const value = process.env[key];
@@ -81,12 +81,12 @@ export class Config {
 }
 
 // Structured logging with pino
-import pino from 'pino';
-const logger = pino({ level: process.env.LOG_LEVEL ?? 'info' });
+import pino from "pino";
+const logger = pino({ level: process.env.LOG_LEVEL ?? "info" });
 
 // Graceful shutdown
-process.on('SIGTERM', async () => {
-  logger.info('SIGTERM received, shutting down gracefully');
+process.on("SIGTERM", async () => {
+  logger.info("SIGTERM received, shutting down gracefully");
   await server.close();
   await prisma.$disconnect();
   process.exit(0);
@@ -115,8 +115,8 @@ try {
   if (error instanceof AppError) {
     return res.status(error.statusCode).json({ error: error.message });
   }
-  logger.error({ error }, 'Unexpected error');
-  return res.status(500).json({ error: 'Internal server error' });
+  logger.error({ error }, "Unexpected error");
+  return res.status(500).json({ error: "Internal server error" });
 }
 ```
 

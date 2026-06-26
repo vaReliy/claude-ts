@@ -1,0 +1,15 @@
+# CTS payload manifest — paths copied into target projects by cts-sync.sh.
+# One path per line. Trailing "/" marks a directory (copied recursively).
+# Lines starting with "#" and blank lines are ignored.
+
+AGENTS.md
+CLAUDE.md
+.mcp.json
+rules/
+.claude/agents/
+.claude/skills/
+.claude/scripts/
+.claude/settings.json
+
+# Explicitly NOT payload: README.md, CHANGELOG.md, THIRD_PARTY.md, LICENSE,
+# images, tasks/, tmp/, cts-payload.txt itself, .claude/settings.local.json.

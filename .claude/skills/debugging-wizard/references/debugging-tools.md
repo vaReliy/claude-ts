@@ -5,13 +5,12 @@
 
 ## Debuggers by Language
 
-| Language | Debugger | Start Command |
-|----------|----------|---------------|
-| TypeScript/JS | Node Inspector | `node --inspect` |
-| Python | pdb/ipdb | `python -m pdb` |
-| Go | Delve | `dlv debug` |
-| PHP | Xdebug | `XDEBUG_MODE=debug` |
-| Rust | rust-gdb/lldb | `rust-gdb ./target/debug/app` |
+| Language      | Debugger       | Start Command                 |
+| ------------- | -------------- | ----------------------------- |
+| TypeScript/JS | Node Inspector | `node --inspect`              |
+| Python        | pdb/ipdb       | `python -m pdb`               |
+| Go            | Delve          | `dlv debug`                   |
+| Rust          | rust-gdb/lldb  | `rust-gdb ./target/debug/app` |
 
 ## Node.js / TypeScript
 
@@ -33,7 +32,7 @@ debugger; // Breakpoint
 // Quick print
 console.log({ variable }); // Shows name and value
 console.table(arrayOfObjects); // Table format
-console.trace('Called from'); // Stack trace
+console.trace("Called from"); // Stack trace
 ```
 
 ## Python
@@ -57,29 +56,15 @@ print(f"{variable=}")  # Python 3.8+ shows name and value
 
 ### pdb Commands
 
-| Command | Action |
-|---------|--------|
-| `n` | Next line |
-| `s` | Step into |
-| `c` | Continue |
-| `l` | List code |
+| Command  | Action           |
+| -------- | ---------------- |
+| `n`      | Next line        |
+| `s`      | Step into        |
+| `c`      | Continue         |
+| `l`      | List code        |
 | `p expr` | Print expression |
-| `w` | Where (stack) |
-| `q` | Quit |
-
-## PHP / Laravel
-
-```php
-// In code
-dd($variable);       // Dump and die
-dump($variable);     // Dump without dying
-ray($variable);      // Ray debugger
-
-// Xdebug
-// Set in php.ini or .env:
-// XDEBUG_MODE=debug
-// XDEBUG_START_WITH_REQUEST=yes
-```
+| `w`      | Where (stack)    |
+| `q`      | Quit             |
 
 ## VS Code Debug Config
 
@@ -94,12 +79,6 @@ ray($variable);      // Ray debugger
       "program": "${workspaceFolder}/src/main.ts",
       "preLaunchTask": "tsc: build",
       "outFiles": ["${workspaceFolder}/dist/**/*.js"]
-    },
-    {
-      "name": "Listen for Xdebug",
-      "type": "php",
-      "request": "launch",
-      "port": 9003
     }
   ]
 }
@@ -107,9 +86,9 @@ ray($variable);      // Ray debugger
 
 ## Quick Reference
 
-| Need | Tool |
-|------|------|
-| Breakpoint in code | `debugger;` / `breakpoint()` |
-| Print with name | `console.log({x})` / `print(f"{x=}")` |
-| Stack trace | `console.trace()` / `traceback.print_stack()` |
-| Inspect object | `console.dir(obj)` / `dir(obj)` |
+| Need               | Tool                                          |
+| ------------------ | --------------------------------------------- |
+| Breakpoint in code | `debugger;` / `breakpoint()`                  |
+| Print with name    | `console.log({x})` / `print(f"{x=}")`         |
+| Stack trace        | `console.trace()` / `traceback.print_stack()` |
+| Inspect object     | `console.dir(obj)` / `dir(obj)`               |

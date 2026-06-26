@@ -1,21 +1,21 @@
 ---
 name: typescript-architecture
 description: >-
-    Clean Architecture patterns for Node.js/TypeScript. Use when designing
-    UseCase/Service/Repository layers, domain organization, dependency injection,
-    or making architecture decisions for Node.js backends.
+  Clean Architecture patterns for Node.js/TypeScript. Use when designing
+  UseCase/Service/Repository layers, domain organization, dependency injection,
+  or making architecture decisions for Node.js backends.
 
-    Українською: архітектура Node.js, чиста архітектура, UseCase, сервіс,
-    репозиторій, шари архітектури, ін'єкція залежностей, доменна логіка.
+  Українською: архітектура Node.js, чиста архітектура, UseCase, сервіс,
+  репозиторій, шари архітектури, ін'єкція залежностей, доменна логіка.
 triggers:
-    - Clean Architecture
-    - UseCase
-    - Service layer
-    - Repository pattern
-    - Node.js architecture
-    - TypeScript architecture
-    - dependency injection
-    - domain layer
+  - Clean Architecture
+  - UseCase
+  - Service layer
+  - Repository pattern
+  - Node.js architecture
+  - TypeScript architecture
+  - dependency injection
+  - domain layer
 ---
 
 # TypeScript Clean Architecture
@@ -51,7 +51,7 @@ export class CreatePostUseCase {
     const slug = this.slugService.generate(dto.title);
 
     if (await this.postRepository.existsBySlug(slug)) {
-      throw new ConflictError('Slug already exists');
+      throw new ConflictError("Slug already exists");
     }
 
     const post = new Post({ ...dto, slug });
@@ -68,9 +68,10 @@ export class CreatePostUseCase {
 // src/services/slug.service.ts
 export class SlugService {
   generate(title: string): string {
-    return title.toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
+    return title
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
   }
 }
 ```
@@ -117,7 +118,11 @@ Constructor injection (works with NestJS, tsyringe, inversify, or manual wiring)
 // Manual wiring (no framework)
 const postRepository = new PrismaPostRepository(prisma);
 const slugService = new SlugService();
-const createPostUseCase = new CreatePostUseCase(postRepository, slugService, eventBus);
+const createPostUseCase = new CreatePostUseCase(
+  postRepository,
+  slugService,
+  eventBus,
+);
 ```
 
 ## Directory Structure
@@ -141,11 +146,11 @@ src/
 
 ## When to Use Which Pattern
 
-| Need | Pattern |
-|------|---------|
+| Need                           | Pattern              |
+| ------------------------------ | -------------------- |
 | HTTP endpoint + business logic | Controller → UseCase |
-| Reusable domain computation | Service |
-| Data access | Repository |
-| Async/background work | BullMQ Worker |
-| Cross-cutting auth check | Guard middleware |
-| Domain events / side effects | Event Bus |
+| Reusable domain computation    | Service              |
+| Data access                    | Repository           |
+| Async/background work          | BullMQ Worker        |
+| Cross-cutting auth check       | Guard middleware     |
+| Domain events / side effects   | Event Bus            |
