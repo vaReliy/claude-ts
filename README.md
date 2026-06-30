@@ -2,7 +2,7 @@
 
 > **Forked from** [AratKruglik/claude-laravel](https://github.com/AratKruglik/claude-laravel) — adapted from PHP/Laravel to Node.js/TypeScript targeting Vue/Angular/React environments.
 
-A comprehensive, production-ready Claude Code configuration for Node.js/TypeScript projects. Includes 18 specialized agents, 9 rule files, 24 skills, 2 commands, and a structured workflow pipeline that turns Claude Code into a full AI development team.
+A comprehensive, production-ready Claude Code configuration for Node.js/TypeScript projects. Includes 18 specialized agents, 9 rule files, 25 skills, 2 commands, and a structured workflow pipeline that turns Claude Code into a full AI development team.
 
 **Stack:** Node.js 22+ · TypeScript 5 · Vue 3 / Angular 17+ / React 18+ · Prisma / TypeORM / Drizzle · PostgreSQL 17 · Redis · Docker · Vitest / Playwright · BullMQ
 
@@ -62,7 +62,7 @@ Portable rule files in root `rules/`, referenced from `AGENTS.md`'s on-demand in
 
 `CLAUDE.md` carries a single `@AGENTS.md` import (the portable core, needed every turn). `rules/` files are referenced by plain path and loaded by agents on demand only when relevant, instead of being force-loaded into every conversation's context.
 
-### Skills (24)
+### Skills (25)
 
 Reusable knowledge modules organized by category:
 
@@ -82,7 +82,7 @@ Reusable knowledge modules organized by category:
 
 **Planning:** `plan-writing`, `brainstorming`
 
-**CTS Tooling:** `cts-setup`, `cts-update` — install, configure, and update the CTS template itself (see [Quick Start](#quick-start) and [Updating](#updating)); `cts-import-skill` — maintainer-only flow for curating new skills into CTS itself (see [Add a New Skill](#add-a-new-skill))
+**CTS Tooling:** `cts-setup`, `cts-update` — install, configure, and update the CTS template itself (see [Quick Start](#quick-start) and [Updating](#updating)); `cts-import-skill` — maintainer-only flow for curating new skills into CTS itself (see [Add a New Skill](#add-a-new-skill)); `cts-contribute` — consumer-side flow for contributing improvements (skills, rules, orchestrator changes) back to a local CTS checkout
 
 ### Workflow Pipeline
 

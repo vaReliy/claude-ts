@@ -2,7 +2,13 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
-## [Unreleased] — Sync Hardening
+## [2026-06-30] — Reverse Contribution Flow
+
+### Added
+
+- **`.claude/skills/cts-contribute/SKILL.md`** (`/cts-contribute`): consumer-side skill for contributing improvements back to a local CTS checkout. Runs from inside a consumer project (`penny`, `hpw`, etc.) and guides a full export session: four pre-flight hard blocks (consumer identity, CTS target resolution, sync alignment, knowledge inbox gate), three-case candidate discovery (net-new skills auto-queued; CTS-managed file edits flagged; `.ctsignore`'d file hunks pre-filtered by project-specific signals then reviewed interactively), hunk-level Q/A with export/skip/edit-before-export decisions, writes only after all decisions are confirmed, updates both CTS `CHANGELOG.md` and the consumer's `docs/CLAUDE_TS_CHANGELOG.md` (distills contributed entries). Never commits or pushes. Natural counterpart to `/cts-update`.
+
+## [2026-06-26] — Sync Hardening
 
 ### Fixed
 
@@ -16,13 +22,13 @@ All notable changes to this Claude Code configuration template are documented he
 - **`/cts-update` merge step**: for each drift-flagged file the skill reviews the upstream diff and offers to hand-merge applicable hunks into the customized local file, or suggests removing the `.ctsignore` entry when local and upstream have converged.
 - **`README.md`**: documents `.ctsignore` root-anchoring and a hygiene policy — every ignore entry is either project-specific (keep), an improvement to contribute upstream then un-ignore, or style-only divergence (prefer un-ignoring).
 
-## [Unreleased] — Knowledge Inbox
+## [2026-06-26] — Knowledge Inbox
 
 ### Added
 
 - **`docs/KNOWLEDGE_INBOX.md` pattern** (agent-agnostic memory layer): an append-only inbox for durable, project-relevant learnings whose final home (`PROJECT_CONTEXT.md`, `CLAUDE.md`, a rule, or a skill) isn't clear yet. `rules/workflow.md`'s Phase 6 (Knowledge Capture) defines the 3-line entry format, the decision rule for when to use the inbox vs. auto-memory vs. a permanent home, and automatic threshold-based distillation (>10 entries or ~3 KB) back into permanent homes. `AGENTS.md`'s On-Demand Rules Index references the file by plain path (never `@`-referenced, to avoid force-loading it). `/cts-setup` bootstraps `docs/KNOWLEDGE_INBOX.md` from the template if absent; it is project data and intentionally excluded from `cts-payload.txt`. `README.md` documents the pattern in the Repo Structure section.
 
-## [Unreleased] — Distribution Engine
+## [2026-06-26] — Distribution Engine
 
 ### Added
 
@@ -37,7 +43,7 @@ All notable changes to this Claude Code configuration template are documented he
 
 - **`README.md`**: install/update flow is now skill-first — Quick Start gives a copy-paste prompt that runs `cts-sync.sh init` then `/cts-setup`; updating documents `/cts-update` with an internals box explaining the script, `.ctsignore`, `.cts-version`, and `git diff`-based review. The Install Profile (pruning) section is reframed as part of `/cts-setup`, recorded in `.ctsignore`. Removed the manual clone + `cp -r` install instructions; a manual `cts-sync.sh` invocation remains documented as a secondary path for CI / no-agent use.
 
-## [Unreleased] — Framework-Agnostic Split
+## [2026-06-26] — Framework-Agnostic Split
 
 ### Changed
 
@@ -45,7 +51,7 @@ All notable changes to this Claude Code configuration template are documented he
 - **`.claude/rules/` moved to root `rules/`** (`git mv .claude/rules rules`); all references updated across `CLAUDE.md`, `AGENTS.md`, `README.md`, and `.claude/agents/*.md`/`.claude/commands/*.md`. Root `rules/` is no longer auto-loaded — files are read on demand by agents and the orchestrator, as the On-Demand Rules Index always intended.
 - **`README.md`**: added a "Repo Structure" section explaining the portable-core (`AGENTS.md` + `rules/`) vs Claude-adapter (`CLAUDE.md` + `.claude/`) split, and updated the Rules table and "Add a New Rule" instructions for the new `rules/` location.
 
-## [Unreleased] — Token Optimization Round 1
+## [2026-06-26] — Token Optimization Round 1
 
 ### Changed
 
