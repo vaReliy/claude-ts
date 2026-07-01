@@ -2,11 +2,13 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
-## [2026-07-01] — Silent Sync-Failure Fix
+## [2026-07-01] — Sync Reliability: Failure Surfacing + Local-Edit Preservation
 
 ### Fixed
 
 - **`.claude/skills/cts-update/SKILL.md`**: the engine call step never checked the exit code or the presence of the script's `Done. Review with: git diff` success marker before narrating results. When `cts-sync.sh update` failed before copying anything (e.g. the upstream clone/fetch couldn't reach the network, leaving `~/.cache/claude-ts` never created), the skill reported it as "nothing to update" instead of surfacing the failure — indistinguishable from a project genuinely being up to date. The skill now treats a non-zero exit, or a zero exit missing the success marker, as a hard stop: it shows the raw stderr and tells the user to retry, without touching `.cts-version` or narrating step 3.
+- **`.claude/scripts/cts-sync.sh`**: `update` previously did an unconditional full recopy of every non-ignored payload file to the source's current tip on every run, silently overwriting any local customization that hadn't yet been added to `.ctsignore` — a direct conflict with the `/cts-contribute` workflow, which depends on those edits surviving until they're exported upstream. A file is now only fast-forwarded if the working copy still matches the version last synced (the blob at `.cts-version`'s recorded SHA); if it diverged, the copy is skipped and reported as `locally modified, not overwritten — diff manually: <path>` (with a ready-to-run `git diff` command) instead of being clobbered.
+- **`.claude/skills/cts-update/SKILL.md`**: building on the failure-surfacing fix above, step 3 narration now also surfaces `locally modified, not overwritten` lines alongside the existing `ignored, but changed upstream` and `removed upstream` notices. Step 5 ("Flag risks") is replaced with "Resolve locally-modified files", since the engine no longer overwrites-then-warns — it refuses the overwrite up front, so the skill's job is to help merge the upstream diff, point to `/cts-contribute` for edits meant to go upstream, or suggest a `.ctsignore` entry to quiet future reports.
 
 ## [2026-06-30] — Reverse Contribution Flow
 
