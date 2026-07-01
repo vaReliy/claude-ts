@@ -15,7 +15,12 @@ Wraps `.claude/scripts/cts-sync.sh update` ("engine call") and narrates the resu
 
 Run `bash .claude/scripts/cts-sync.sh update`, passing through `--source <path-or-url>` and/or `--branch <name>` if the user specified them (e.g. to track a fork or a feature branch).
 
+- Check the call's exit code. A non-zero exit (git clone/fetch failure, missing repo, bad `--source`/`--branch`, etc.) means the sync **did not run** — this is not "already up to date." Stop, show the captured stderr verbatim, and tell the user to retry (most often a transient network issue reaching the source repo). Do not proceed to step 3 in this case, and do not touch `.cts-version` or any files yourself.
+- If the exit code is 0, also sanity-check that something actually happened: the script always prints `Done. Review with: git diff` on success. If that line is missing even though the exit code was 0, treat it the same as a failure — surface the raw output and stop.
+
 ## 3. Narrate
+
+Only reached after a confirmed successful engine call (see step 2).
 
 - Capture the script's stdout: the "Changes:" section (commit log between old and new `.cts-version`), any `ignored, but changed upstream — review manually: <path>` lines, and any `removed upstream — delete manually if unwanted: <path>` lines.
 - Run `git diff --stat` to see which local files actually changed.

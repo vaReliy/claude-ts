@@ -2,6 +2,12 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [2026-07-01] — Silent Sync-Failure Fix
+
+### Fixed
+
+- **`.claude/skills/cts-update/SKILL.md`**: the engine call step never checked the exit code or the presence of the script's `Done. Review with: git diff` success marker before narrating results. When `cts-sync.sh update` failed before copying anything (e.g. the upstream clone/fetch couldn't reach the network, leaving `~/.cache/claude-ts` never created), the skill reported it as "nothing to update" instead of surfacing the failure — indistinguishable from a project genuinely being up to date. The skill now treats a non-zero exit, or a zero exit missing the success marker, as a hard stop: it shows the raw stderr and tells the user to retry, without touching `.cts-version` or narrating step 3.
+
 ## [2026-06-30] — Reverse Contribution Flow
 
 ### Added
