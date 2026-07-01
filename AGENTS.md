@@ -19,8 +19,14 @@ PR description rules: `rules/git-operations.md`.
 - Files kebab-case; classes/types/interfaces PascalCase; `I`-prefix for repo/service abstractions.
 - Constants SCREAMING_SNAKE_CASE; enums as `as const` objects.
 - No magic numbers — named constants with JSDoc.
+- Comments are the exception: write one only when the WHY is non-obvious and cannot be expressed through renaming. Never reference task IDs, decision IDs, or task file paths in comments (`D9`, `task 11`, etc.) — these go stale. Use `// TODO:` / `// FIXME:` for deferred work with a self-contained description; remove them once the work is done.
+- **Exact-pin all `package.json` deps** — no `^` or `~` ranges, ever (dependencies, devDependencies, peerDependencies). Audit after every `pnpm add` / generator run. Full procedure: `rules/dependencies.md`.
 
 Details: `rules/code-style.md`.
+
+## Verification Commands
+
+**If your workspace uses Nx, read `rules/workflow.md` § "Command Execution Policy (Nx Targets)" before running any build, test, lint, or type-check command.** That section is the single source of truth for the ✅/❌ command table, useful flags, and project names. Never use raw tool invocations (`tsc`, `eslint`, `vitest`, `webpack`, `playwright`) when an `nx` target exists — always prefer the `nx` target. Non-Nx workspaces: use the project's own scripts (`package.json` `scripts`), not ad-hoc tool invocations.
 
 ## Model Tiers
 
@@ -46,6 +52,9 @@ Read when relevant (never preloaded):
 - `rules/docker-commands.md` — running anything in containers
 - `rules/mcp-stack.md` — MCP tool selection
 - `rules/git-operations.md` — PR description rules
+- `rules/task-authoring.md` — emitting backlog task files from plan/grill/grooming sessions
+- `rules/nx-generators.md` — after running ANY `nx g …` generator (apps, libs, configs) — Nx workspaces only
+- `rules/dependencies.md` — adding/updating/removing npm deps; auditing generator-injected ranges
 - `README.md` — setup, install profile, common commands
 - `docs/KNOWLEDGE_INBOX.md` — append-only inbox for durable-but-unplaced learnings; any AI tool working in the repo may append entries in the 3-line format from `rules/workflow.md`'s Knowledge Inbox section, which also defines the distillation policy
 

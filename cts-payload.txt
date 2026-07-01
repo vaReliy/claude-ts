@@ -9,6 +9,7 @@ rules/
 .claude/agents/
 .claude/skills/
 .claude/scripts/
+.claude/hooks/
 .claude/settings.json
 
 # Explicitly NOT payload: README.md, CHANGELOG.md, THIRD_PARTY.md, LICENSE,

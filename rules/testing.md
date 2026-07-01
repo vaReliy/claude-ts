@@ -37,22 +37,36 @@ test/
 
 E2E tests live in `e2e/` and are owned by the `qa` agent.
 
-## Running Tests (all in Docker)
+## Running Tests
+
+Use nx targets — never invoke vitest/jest directly (see `rules/workflow.md` → Command Execution Policy).
 
 ```bash
-docker compose exec app npx vitest run                    # all tests
-docker compose exec app npx vitest run --coverage         # with coverage
-docker compose exec app npx vitest run --reporter=verbose test/unit/create-post.spec.ts
-docker compose exec app npx stryker run                   # mutation testing
+nx test api                             # run unit + integration tests for the api project
+nx test api --skip-nx-cache             # bypass cache (use when verifying correctness)
+nx test <lib-name>                      # run tests for a specific lib
+nx run-many --target=test               # run tests for all projects
+```
+
+For a single file, pass the vitest `--testFile` option through nx:
+
+```bash
+nx test api -- --reporter=verbose --testFile=test/unit/create-post.spec.ts
+```
+
+Mutation testing (no nx plugin — run directly):
+
+```bash
+docker compose exec app npx stryker run
 ```
 
 ## Writing Tests
 
 ```typescript
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { CreatePostUseCase } from "@/use-cases/create-post/create-post.usecase";
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { CreatePostUseCase } from '@/use-cases/create-post/create-post.usecase';
 
-describe("CreatePostUseCase", () => {
+describe('CreatePostUseCase', () => {
   let useCase: CreatePostUseCase;
   let mockRepository: {
     save: ReturnType<typeof vi.fn>;
@@ -67,17 +81,15 @@ describe("CreatePostUseCase", () => {
     useCase = new CreatePostUseCase(mockRepository as any);
   });
 
-  it("creates a post with valid data", async () => {
-    const result = await useCase.execute({ title: "Test", body: "Content" });
-    expect(result.title).toBe("Test");
+  it('creates a post with valid data', async () => {
+    const result = await useCase.execute({ title: 'Test', body: 'Content' });
+    expect(result.title).toBe('Test');
     expect(mockRepository.save).toHaveBeenCalledOnce();
   });
 
-  it("throws ConflictError if slug exists", async () => {
+  it('throws ConflictError if slug exists', async () => {
     mockRepository.existsBySlug.mockResolvedValue(true);
-    await expect(
-      useCase.execute({ title: "Test", body: "Content" }),
-    ).rejects.toThrow(ConflictError);
+    await expect(useCase.execute({ title: 'Test', body: 'Content' })).rejects.toThrow(ConflictError);
   });
 });
 ```
@@ -85,16 +97,13 @@ describe("CreatePostUseCase", () => {
 ## Testing HTTP Endpoints (Integration)
 
 ```typescript
-import supertest from "supertest";
+import supertest from 'supertest';
 
-it("POST /posts returns 201", async () => {
-  const response = await supertest(app)
-    .post("/posts")
-    .set("Authorization", `Bearer ${testToken}`)
-    .send({ title: "Test Post", body: "Content" });
+it('POST /posts returns 201', async () => {
+  const response = await supertest(app).post('/posts').set('Authorization', `Bearer ${testToken}`).send({ title: 'Test Post', body: 'Content' });
 
   expect(response.status).toBe(201);
-  expect(response.body.title).toBe("Test Post");
+  expect(response.body.title).toBe('Test Post');
 });
 ```
 
@@ -103,6 +112,28 @@ it("POST /posts returns 201", async () => {
 - **Database**: use test containers or transaction rollback for isolation — never share DB state between tests
 - **Environment**: `vitest.config.ts` with test-specific settings
 - **Coverage**: c8/istanbul, reports in `coverage/` directory
+
+## Environment Variable Stubbing
+
+When testing production env readers (e.g., config functions that read `process.env`), use `vi.stubEnv()` for correct restoration behavior:
+
+**❌ DO NOT do this:**
+
+```typescript
+delete process.env.PORT; // vi.stubEnv does not track direct deletion
+// test code
+vi.unstubAllEnvs(); // PORT is already gone — not restored
+```
+
+**✅ DO this instead:**
+
+```typescript
+vi.stubEnv('PORT', ''); // Empty string simulates absence
+// In the env reader: portRaw ? parseInt(portRaw, 10) : DEFAULT_PORT
+vi.unstubAllEnvs(); // Correctly restored
+```
+
+Rationale: `vi.stubEnv` saves and restores env vars via `vi.unstubAllEnvs()`. Direct `delete process.env[KEY]` operates outside that tracking and leaves the var permanently deleted — breaking subsequent tests or production code that reads the same var. Treat empty string as "absent" in your env readers instead.
 
 ## Mutation Testing
 
@@ -113,3 +144,5 @@ docker compose exec app npx stryker run
 ```
 
 Fix surviving mutants by improving test assertions to test behavior, not implementation.
+
+> Stryker has no nx plugin in this repo — invoke it directly inside Docker only.

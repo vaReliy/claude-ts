@@ -17,6 +17,15 @@ tools:
 
 Build reliable, idempotent BullMQ Workers for Node.js Redis-based queue infrastructure.
 
+## Pre-flight
+
+Before acting, read `docs/KNOWLEDGE_INBOX.md` — it contains accumulated project-specific conventions and discovered issues that apply to all agents.
+
+Before writing or modifying any code, additionally read:
+
+- `rules/architecture.md`
+- `rules/code-style.md`
+
 ## Scope Boundary
 
 | This Agent (Queue)  | Backend Developer        | DevOps Agent              |
@@ -55,7 +64,7 @@ Build reliable, idempotent BullMQ Workers for Node.js Redis-based queue infrastr
 ### Worker Anatomy
 
 ```typescript
-import { Worker, Job } from "bullmq";
+import { Worker, Job } from 'bullmq';
 
 interface SendEmailJobData {
   userId: string;
@@ -63,7 +72,7 @@ interface SendEmailJobData {
 }
 
 const worker = new Worker<SendEmailJobData>(
-  "notifications",
+  'notifications',
   async (job: Job<SendEmailJobData>) => {
     // idempotent — check for existing result before processing
     const { userId, templateId } = job.data;
@@ -72,7 +81,7 @@ const worker = new Worker<SendEmailJobData>(
   {
     connection: redisConnection,
     attempts: 3,
-    backoff: { type: "exponential", delay: 30_000 },
+    backoff: { type: 'exponential', delay: 30_000 },
   },
 );
 ```
@@ -114,5 +123,6 @@ Reports back to orchestrator: terse fragments, bullets, no prose, ≤300 words.
 - Exact file paths, identifiers, error text — verbatim, never paraphrased.
 - Lead with verdict/result; details after.
 - Status markers: 🔴 critical / 🟡 important / 🟢 ok (quality-gate agents).
+- If you discovered something durable and non-obvious (config recipe, wrong-pattern gotcha, test anti-pattern, library constraint), add a `## Learnings` section at the end of your report — the orchestrator records it in `docs/KNOWLEDGE_INBOX.md`.
 - EXEMPT from compression: code, migrations, API contracts, user stories consumed
   by next phase, PR descriptions — these stay complete and precise.

@@ -8,6 +8,29 @@ All notable changes to this Claude Code configuration template are documented he
 
 - **`.prettierrc`** (new) + 40 files under `.claude/skills/**` and `rules/migrations-queue.md`: reformatted embedded code examples to `singleQuote: true`, matching both consumer projects' own Prettier config (Penny, HPW). CTS had no `.prettierrc` of its own, so its code fences drifted to Prettier's double-quote default while consumers reformatted their synced copies to their project style — producing phantom diffs on every `/cts-contribute` run. Content is otherwise byte-identical; this is a pure formatting alignment, no semantic changes.
 
+## [Unreleased] — Contributed from penny (workflow & agent enhancements)
+
+### Added
+
+- **`.claude/skills/cts-rule-auditor/`** (renamed from `rules-auditor`): extended from 5 to 10 structural checks — foresight gate presence, severity floor coverage across workflow.md + reviewer.md + security-scanner.md, project-scope pre-flight doc existence, roadmap-prioritization rule, stale `rules-auditor` reference detection.
+- **`.claude/skills/distill-inbox/`** (new): distills `docs/KNOWLEDGE_INBOX.md` by categorizing entries into Done/Clear-target/Uncertain and dispatching a docs-writer agent to perform the writes.
+- **`rules/task-authoring.md`** (new): backlog task-file convention — naming, header, body sections, splitting rule, blast-radius map for seam-touching tasks, parked-task convention.
+- **`rules/nx-generators.md`** (new): Nx generator-output audit checklist — caret-range injection, tsconfig strict block, LIVR/bootstrap-style silent failures, bundler-contract prescription, Vitest target name (`vite:test` vs `test`), SCSS enforcement, `--name`/`--directory` flag fixes, deprecated `@nx/vite` plugin removal.
+- **`rules/dependencies.md`** (new): exact-pin dependency audit procedure, extracted from AGENTS.md.
+- **`.claude/hooks/knowledge-capture-nudge.sh`** (new) + `cts-payload.txt`: added `.claude/hooks/` to the payload manifest (it was referenced by `.claude/settings.json` but never synced to consumers) and added the Stop hook itself, which nudges the orchestrator once per session per unmet knowledge-capture obligation.
+- **`rules/workflow.md`**: foresight gate (blast-radius map required before implementation on seam-touching tasks), severity floor (4-tier emit-vs-drop table preventing infinite review loops), roadmap-prioritization rule for emitted tasks, Command Execution Policy (Nx targets) section, sequential quality gate (`tester` → `reviewer` → `[security-scanner ∥ qa]`, max 2 restart cycles), two-section Fix-Now/Emit-as-Task finding-classification contract, mixed infra+code split-dispatch routing note.
+- **`rules/validation-authorization.md`**: HTTP status contract (authn guards → 401, authz guards → 403) and a generalized two-guard pattern (SessionGuard + StatusGuard) for multi-step/status-gated authorization flows.
+- **`rules/code-style.md`**: Object Destructuring section; full Comments section (acceptable vs. never-write, TODO/FIXME hygiene).
+- **`AGENTS.md`**: comment-hygiene bullet, exact-pin dependency bullet, Verification Commands section (Nx-target directive), on-demand index entries for the three new rules files.
+- **All `.claude/agents/*.md`** (except `vue-developer`, `react-developer`): mandatory `## Pre-flight` section — read `docs/KNOWLEDGE_INBOX.md` before acting; technical agents additionally read `rules/architecture.md` + `rules/code-style.md` (+ platform-specific rules files if the project splits them, e.g. `-angular`/`-backend` suffixes); `reviewer`/`security-scanner` additionally get project-scope pre-flight (read `ARCHITECTURE.md`/`DECISIONS.md`/`CONTEXT.md` if present), seam-aware bidirectional-wiring depth, `## Fix Now` / `## Emit as Task` finding classification, severity-floor application, and a commit policy (suggest, never commit). `## Learnings` report bullet added to all agents' Report Format sections.
+- **`.mcp.json`**: `--name github-mcp-server` flag to avoid random container names for the Docker-based GitHub MCP server.
+
+### Fixed
+
+- **`CLAUDE.md`**: triage rule 1 no longer treats ESLint/CI/tsconfig/build-config changes as "trivial" just because they touch ≤2 files (these are executable and correctness-bearing); quality gate rewritten to mandatory sequential execution; hard tool limits carve out ledger docs (`docs/KNOWLEDGE_INBOX.md`, `CHANGELOG.md`, etc.) as orchestrator-writable; knowledge-capture paragraph rewritten with an explicit litmus test and a pointer to the cheap-override exception.
+- **`rules/testing.md`**: `vi.stubEnv(KEY, '')` vs. `delete process.env[KEY]` anti-pattern documented — the latter escapes `vi.unstubAllEnvs()` tracking and leaks state across tests.
+- **`.claude/agents/devops.md`**: pre-flight scoped to `rules/code-style.md` only (not `rules/architecture.md`, which covers Clean Architecture layers irrelevant to infra-only work).
+
 ## [2026-07-01] — Sync Reliability: Failure Surfacing + Local-Edit Preservation
 
 ### Fixed

@@ -11,7 +11,7 @@ A comprehensive, production-ready Claude Code configuration for Node.js/TypeScri
 - **`AGENTS.md`** — portable core (stack, git safety, code style essentials, Model Tiers vocabulary, on-demand rules index), readable by any AI CLI (Claude Code, Codex, Gemini, Copilot, ...).
 - **`rules/`** — portable knowledge referenced from `AGENTS.md`'s on-demand index: architecture, testing, validation, migrations/queue, Docker commands, MCP stack, git operations, and the workflow pipeline.
 - **`CLAUDE.md`** — Claude Code adapter. Imports `AGENTS.md` via `@AGENTS.md` (Claude Code does not auto-load `AGENTS.md`), then adds the orchestrator/dispatcher core: triage, agent routing, pipeline, quality gate, skill preferences.
-- **`.claude/`** — the rest of the Claude adapter layer: agent definitions (`agents/`), skills (`skills/`), commands (`commands/`), settings, and the sync engine (`scripts/cts-sync.sh`).
+- **`.claude/`** — the rest of the Claude adapter layer: agent definitions (`agents/`), skills (`skills/`), commands (`commands/`), Stop/other hooks (`hooks/`), settings, and the sync engine (`scripts/cts-sync.sh`).
 - **`cts-payload.txt`** — the manifest of paths copied into target projects by `cts-sync.sh` (everything above, plus `.mcp.json` and `.claude/settings.json`).
 - **`docs/KNOWLEDGE_INBOX.md`** — an append-only "knowledge inbox": the agent-agnostic memory layer for durable, project-relevant learnings whose final home (`PROJECT_CONTEXT.md`, `CLAUDE.md`, a rule, or a skill) isn't clear yet. Any AI tool can append a 3-line entry; Phase 6 (Knowledge Capture) in `rules/workflow.md` distills entries into their permanent home once the inbox grows past ~10 entries, so it trends toward empty. This is project data — `/cts-setup` bootstraps it but it's never part of `cts-payload.txt`.
 
@@ -44,25 +44,28 @@ Specialized AI agents that handle different aspects of development. Each agent h
 | `security-scanner`      | OWASP, auth/authz, credential leaks                | sonnet | —      | Web (CVE lookup)        |
 | `tester`                | Unit/integration tests, Vitest, Stryker mutation   | sonnet | +      | —                       |
 
-### Rules (9)
+### Rules (12)
 
 Portable rule files in root `rules/`, referenced from `AGENTS.md`'s on-demand index and loaded by agents and orchestrator on demand:
 
-| Rule                          | Purpose                                                   |
-| ----------------------------- | --------------------------------------------------------- |
-| `architecture.md`             | Clean Architecture layers, domain organization            |
-| `code-style.md`               | TypeScript strict mode, ESLint/Prettier/tsc conventions   |
-| `docker-commands.md`          | Docker-prefixed commands reference (Node.js/npm/Prisma)   |
-| `validation-authorization.md` | js-validator-livr (primary) / Zod + Guards / CASL RBAC    |
-| `git-operations.md`           | Commit/push safety, PR description format                 |
-| `mcp-stack.md`                | MCP tool usage guide (Context7, GitHub, Figma)            |
-| `migrations-queue.md`         | Prisma migration conventions, BullMQ queue pattern        |
-| `testing.md`                  | Vitest/Jest, Stryker mutation testing, ORM testing policy |
-| `workflow.md`                 | Agent pipeline orchestration + agent routing table        |
+| Rule                           | Purpose                                                          |
+| ------------------------------ | ----------------------------------------------------------------- |
+| `architecture.md`              | Clean Architecture layers, domain organization                    |
+| `code-style.md`                | TypeScript strict mode, ESLint/Prettier/tsc conventions, comments |
+| `dependencies.md`              | Exact-pin dependency audit procedure (npm/pnpm ranges)             |
+| `docker-commands.md`           | Docker-prefixed commands reference (Node.js/npm/Prisma)           |
+| `validation-authorization.md`  | js-validator-livr (primary) / Zod + Guards / CASL RBAC             |
+| `git-operations.md`            | Commit/push safety, PR description format                         |
+| `mcp-stack.md`                 | MCP tool usage guide (Context7, GitHub, Figma)                     |
+| `migrations-queue.md`          | Prisma migration conventions, BullMQ queue pattern                 |
+| `nx-generators.md`             | Nx generator-output audit checklist (Nx workspaces only)          |
+| `task-authoring.md`            | Backlog task-file conventions for plan/grill/grooming sessions    |
+| `testing.md`                   | Vitest/Jest, Stryker mutation testing, ORM testing policy         |
+| `workflow.md`                  | Agent pipeline orchestration + agent routing table + quality gate |
 
 `CLAUDE.md` carries a single `@AGENTS.md` import (the portable core, needed every turn). `rules/` files are referenced by plain path and loaded by agents on demand only when relevant, instead of being force-loaded into every conversation's context.
 
-### Skills (25)
+### Skills (27)
 
 Reusable knowledge modules organized by category:
 
@@ -84,19 +87,21 @@ Reusable knowledge modules organized by category:
 
 **CTS Tooling:** `cts-setup`, `cts-update` — install, configure, and update the CTS template itself (see [Quick Start](#quick-start) and [Updating](#updating)); `cts-import-skill` — maintainer-only flow for curating new skills into CTS itself (see [Add a New Skill](#add-a-new-skill)); `cts-contribute` — consumer-side flow for contributing improvements (skills, rules, orchestrator changes) back to a local CTS checkout
 
+**Maintenance:** `cts-rule-auditor` — audits `.claude/agents/`, `rules/`, `AGENTS.md`, and `docs/KNOWLEDGE_INBOX.md` for structural drift (broken pre-flight paths, stale references, missing index entries); run after any change to `.claude/**` or `rules/**`. `distill-inbox` — categorizes `docs/KNOWLEDGE_INBOX.md` entries into Done/Clear-target/Uncertain and dispatches a docs-writer agent to move each into its permanent home, keeping the inbox trending toward empty.
+
 ### Workflow Pipeline
 
 The configuration defines a mandatory agent pipeline for feature development:
 
 ```
-Standard Feature:  Planning Team → Backend Developer → Quality Gate Team → DocsWriter
-Bug Fix:           Debugger → Backend Developer → Verify Team
+Standard Feature:  Planning Team → Backend Developer → Quality Gate (sequential) → DocsWriter
+Bug Fix:           Debugger → Backend Developer → Verify (same quality-gate contract)
 CI/CD:             DevOps → Reviewer + Security Scanner
 ```
 
 **Planning Team** (`plan-{slug}`) runs `ba`, `ddd-architect`, and `devil` in parallel. `devil` is a read-only devil's advocate that challenges requirements and architecture decisions via SendMessage before any code is written. For simple features with no arch decisions, `ba` runs sequentially alone.
 
-**Quality Gate Team** (`qg-{slug}`) runs `tester`, `reviewer`, `security-scanner`, and `qa` in parallel via TeamCreate. If any agent reports a Critical or Important issue, findings route back to Backend Developer and the team reruns.
+**Quality Gate (mandatory, sequential — see `rules/workflow.md`)**: `tester` runs first, alone; `reviewer` runs only after `tester` passes; `security-scanner` and `qa` then run in parallel as a final stage, each only when its trigger condition is met (auth/validation/secrets/HMAC for security-scanner, user-visible flow change for qa). Any failure at any stage restarts from `tester`, capped at 2 full restart cycles. `reviewer` and `security-scanner` emit two sections per report — `## Fix Now` (introduced by this changeset, drives the restart) and `## Emit as Task` (pre-existing, filed as a task and does not block the gate) — with a severity floor that drops pure polish/preference findings instead of emitting them. Also gated by a **foresight gate**: seam-touching tasks (new cross-layer contract, shared enum, topology change) require a blast-radius map before implementation starts, not just before review.
 
 ## Prerequisites
 
@@ -171,12 +176,13 @@ Run `/cts-update` inside the project. It pulls the latest `claude-ts` and re-syn
 
 `/cts-update` calls `.claude/scripts/cts-sync.sh update`, which:
 
-1. Refreshes the cached `claude-ts` checkout (`~/.cache/claude-ts`) to the latest commit.
+1. Refreshes the cached `claude-ts` checkout (`~/.cache/claude-ts`) to the latest commit — or, with `--source <local-path>`, uses a local checkout directly (no network, useful for testing an unpushed contribution before it lands upstream).
 2. Re-copies every path in `cts-payload.txt`, **skipping** anything matched by `.ctsignore` (gitignore syntax, in your project root).
-3. Never deletes files. If a payload file no longer exists upstream, it's printed as "removed upstream — delete manually if unwanted".
-4. Reports every ignored file that **changed upstream** since your last sync ("ignored, but changed upstream — review manually"), with a ready-to-run `git diff` command per file — so customizing a file never silently cuts you off from its upstream improvements.
-5. Prints the `claude-ts` changelog between your old and new `.cts-version`, then updates `.cts-version`.
-6. Finishes with `Done. Review with: git diff` — **`git diff` is the merge tool**: review the changes like any other dependency bump and commit them yourself.
+3. **Skips (does not overwrite) any payload file that diverged locally**, even if it's not in `.ctsignore` — a file is only fast-forwarded if the working copy still matches what was synced last time. Diverged files are printed as `locally modified, not overwritten — diff manually: <path>` with a ready-to-run `git diff` command. This is what makes it safe to edit payload files ahead of a `/cts-contribute` session without them being silently clobbered on the next update.
+4. Never deletes files. If a payload file no longer exists upstream, it's printed as "removed upstream — delete manually if unwanted".
+5. Reports every ignored file that **changed upstream** since your last sync ("ignored, but changed upstream — review manually"), with a ready-to-run `git diff` command per file — so customizing a file never silently cuts you off from its upstream improvements.
+6. Prints the `claude-ts` changelog between your old and new `.cts-version`, then updates `.cts-version`.
+7. Finishes with `Done. Review with: git diff` — **`git diff` is the merge tool**: review the changes like any other dependency bump and commit them yourself.
 
 **`.ctsignore`** (gitignore syntax, project root) covers three cases:
 
