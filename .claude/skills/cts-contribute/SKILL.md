@@ -30,16 +30,21 @@ Read `docs/KNOWLEDGE_INBOX.md`. If it contains entries in the standard 3-line fo
 Scan three cases in parallel and build a candidate list — no user interaction yet.
 
 ### Case A — Net-new skills
+
 List every directory in `.claude/skills/` that does **not** exist in `<cts-path>/.claude/skills/`. These are new skills the consumer created. Auto-queue all for export.
 
 ### Case B — CTS-managed file changes
+
 For each file in `cts-payload.txt` that is **not** in `.ctsignore`, diff the consumer's copy against CTS:
+
 ```
 diff <(cat <consumer-file>) <(cat <cts-path>/<file>)
 ```
+
 If a diff exists, flag it — a CTS-managed file was edited outside the sync flow. These are unusual and need explicit review.
 
 ### Case C — `.ctsignore`'d file improvements
+
 For each path in `.ctsignore` that also exists in CTS, diff consumer vs. CTS. Pre-filter hunks:
 
 - **Auto-skip (project-specific signals)**: hunk contains stack names, app names, domain terms, file paths, or language identifiers tied to this project (e.g. `MongoDB`, `Mongoose`, `Typegoose`, `Telegram`, `Angular` when paired with project-specific routing, `NestJS` module names, repo-specific paths). Log as "skipped — project-specific."
@@ -53,12 +58,12 @@ Also check `docs/CLAUDE_TS_CHANGELOG.md` if it exists — its entries describe w
 
 Print a summary table:
 
-| Category | Count | Action |
-|---|---|---|
-| Net-new skills (Case A) | N | Will export |
-| CTS-managed edits (Case B) | N | Needs review |
-| Improvement hunks (Case C) | N | Interactive review |
-| Skipped (project-specific) | N | Will skip (escape hatch below) |
+| Category                   | Count | Action                         |
+| -------------------------- | ----- | ------------------------------ |
+| Net-new skills (Case A)    | N     | Will export                    |
+| CTS-managed edits (Case B) | N     | Needs review                   |
+| Improvement hunks (Case C) | N     | Interactive review             |
+| Skipped (project-specific) | N     | Will skip (escape hatch below) |
 
 Ask: "Proceed with interactive review?" If the user wants to re-examine any skipped hunk, they can say so now — add it back to the queue.
 
@@ -69,6 +74,7 @@ Ask: "Proceed with interactive review?" If the user wants to re-examine any skip
 Work through the queue one item at a time. For each:
 
 **Format:**
+
 ```
 ── [Case A / B / C] ── <file or skill name> ──
 <diff or description>
@@ -105,12 +111,15 @@ Report each write: `✓ wrote <path>`.
 ## 6. Update changelogs
 
 **CTS `CHANGELOG.md`** — add under `## [Unreleased]`:
+
 ```markdown
 ## [Unreleased] — Contributed from <consumer-project-name>
 
 ### Added / Changed / Fixed
+
 - **`<file-or-skill>`**: <one-line description of what was contributed>
 ```
+
 One bullet per contributed item. Use the standard Added/Changed/Fixed grouping.
 
 **Consumer `docs/CLAUDE_TS_CHANGELOG.md`** — distill post-export:

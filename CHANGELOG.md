@@ -2,6 +2,12 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Contributed from penny
+
+### Fixed
+
+- **`.prettierrc`** (new) + 40 files under `.claude/skills/**` and `rules/migrations-queue.md`: reformatted embedded code examples to `singleQuote: true`, matching both consumer projects' own Prettier config (Penny, HPW). CTS had no `.prettierrc` of its own, so its code fences drifted to Prettier's double-quote default while consumers reformatted their synced copies to their project style — producing phantom diffs on every `/cts-contribute` run. Content is otherwise byte-identical; this is a pure formatting alignment, no semantic changes.
+
 ## [2026-07-01] — Sync Reliability: Failure Surfacing + Local-Edit Preservation
 
 ### Fixed

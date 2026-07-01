@@ -43,24 +43,17 @@ Senior Angular specialist with deep expertise in Angular 17+, standalone compone
 ## Standalone Component Pattern
 
 ```typescript
-import { Component, Input, Output, EventEmitter } from "@angular/core";
-import { CommonModule } from "@angular/common";
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
 
 @Component({
-  selector: "app-post-card",
+  selector: 'app-post-card',
   standalone: true,
   imports: [CommonModule],
   template: `
     <article class="rounded-lg border p-4">
       <h2 class="text-xl font-semibold">{{ post.title }}</h2>
-      <button
-        *ngIf="showDelete"
-        type="button"
-        (click)="deleted.emit(post.id)"
-        class="text-red-500"
-      >
-        Delete
-      </button>
+      <button *ngIf="showDelete" type="button" (click)="deleted.emit(post.id)" class="text-red-500">Delete</button>
     </article>
   `,
 })
@@ -75,7 +68,7 @@ export class PostCardComponent {
 
 ```typescript
 @Component({
-  selector: "app-post-list",
+  selector: 'app-post-list',
   standalone: true,
   template: `...`,
 })
@@ -92,7 +85,7 @@ export class PostListComponent {
       const posts = await firstValueFrom(this.postService.getAll());
       this.posts.set(posts);
     } catch (err) {
-      this.error.set("Failed to load posts");
+      this.error.set('Failed to load posts');
     } finally {
       this.loading.set(false);
     }
@@ -103,20 +96,20 @@ export class PostListComponent {
 ## HTTP Service Pattern
 
 ```typescript
-import { Injectable, inject } from "@angular/core";
-import { HttpClient } from "@angular/common/http";
-import { Observable } from "rxjs";
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
-@Injectable({ providedIn: "root" })
+@Injectable({ providedIn: 'root' })
 export class PostService {
   private readonly http = inject(HttpClient);
 
   getAll(): Observable<Post[]> {
-    return this.http.get<Post[]>("/api/posts");
+    return this.http.get<Post[]>('/api/posts');
   }
 
   create(dto: CreatePostDto): Observable<Post> {
-    return this.http.post<Post>("/api/posts", dto);
+    return this.http.post<Post>('/api/posts', dto);
   }
 
   update(id: string, dto: UpdatePostDto): Observable<Post> {
@@ -140,19 +133,17 @@ constructor(private readonly service: PostService) {}
 ## Reactive Forms
 
 ```typescript
-import { Component, inject } from "@angular/core";
-import { FormBuilder, Validators, ReactiveFormsModule } from "@angular/forms";
+import { Component, inject } from '@angular/core';
+import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
 
 @Component({
-  selector: "app-create-post-form",
+  selector: 'app-create-post-form',
   standalone: true,
   imports: [ReactiveFormsModule],
   template: `
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <input formControlName="title" />
-      <span *ngIf="form.get('title')?.errors?.['required']"
-        >Title is required</span
-      >
+      <span *ngIf="form.get('title')?.errors?.['required']">Title is required</span>
       <button type="submit" [disabled]="form.invalid">Create</button>
     </form>
   `,
@@ -161,8 +152,8 @@ export class CreatePostFormComponent {
   private readonly fb = inject(FormBuilder);
 
   form = this.fb.group({
-    title: ["", [Validators.required, Validators.maxLength(255)]],
-    body: ["", [Validators.required]],
+    title: ['', [Validators.required, Validators.maxLength(255)]],
+    body: ['', [Validators.required]],
   });
 
   onSubmit() {
