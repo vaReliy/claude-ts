@@ -65,13 +65,13 @@ Portable rule files in root `rules/`, referenced from `AGENTS.md`'s on-demand in
 
 `CLAUDE.md` carries a single `@AGENTS.md` import (the portable core, needed every turn). `rules/` files are referenced by plain path and loaded by agents on demand only when relevant, instead of being force-loaded into every conversation's context.
 
-### Skills (27)
+### Skills (30)
 
 Reusable knowledge modules organized by category:
 
 **TypeScript & Node.js:** `typescript-pro`, `typescript-architecture`
 
-**Testing:** `vitest-testing`, `test-master`, `playwright-expert`
+**Testing:** `vitest-testing`, `test-master`, `playwright-expert`, `tdd` — the red-green-refactor discipline loop itself (seams, anti-patterns, one-slice-at-a-time rules), distinct from `vitest-testing`'s tooling/mocking/coverage setup and `test-master`'s broader strategy/automation-framework guidance
 
 **Database:** `postgres-best-practices`
 
@@ -83,7 +83,7 @@ Reusable knowledge modules organized by category:
 
 **Frontend:** `vue-expert`, `react-expert`, `angular-expert`
 
-**Planning:** `plan-writing`, `brainstorming`
+**Planning:** `plan-writing`, `brainstorming`, `grill-me` — one-question-at-a-time interrogation that pressure-tests a plan already on the table, distinct from `brainstorming`'s open-ended idea generation and `plan-writing`'s task breakdown, `handoff` — compacts a conversation into a handoff document so a fresh session can pick up mid-task (also the format cited by the orchestrator's quality-gate continuation-task hard stop)
 
 **CTS Tooling:** `cts-setup`, `cts-update` — install, configure, and update the CTS template itself (see [Quick Start](#quick-start) and [Updating](#updating)); `cts-import-skill` — maintainer-only flow for curating new skills into CTS itself (see [Add a New Skill](#add-a-new-skill)); `cts-contribute` — consumer-side flow for contributing improvements (skills, rules, orchestrator changes) back to a local CTS checkout
 

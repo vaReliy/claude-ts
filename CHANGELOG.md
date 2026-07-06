@@ -2,6 +2,16 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Skill imports wave 1
+
+### Added
+
+- **`.claude/skills/grill-me/`** (new, from `mattpocock/skills`): one-question-at-a-time interrogation loop that pressure-tests a plan/design already on the table. Upstream split the original self-contained skill into a thin `grill-me` wrapper plus a separate `grilling` skill holding the body; folded `grilling`'s content back into a single self-contained `grill-me` for CTS, which prefers dependency-free skills. Dedup ruling vs. `brainstorming` (open-ended idea generation before a design exists) and `plan-writing` (task breakdown after a design is agreed): no overlap, import as-is.
+- **`.claude/skills/handoff/`** (new, from `mattpocock/skills`): compacts the current conversation into a handoff document for a fresh agent session to pick up. Cited by the `rules/workflow.md` quality-gate hard-stop continuation-task format (R3-D5).
+- **`.claude/skills/tdd/`** (new, from `mattpocock/skills`): the red-green-refactor discipline loop (seams, anti-patterns, one-slice-at-a-time rules) — distinct from `vitest-testing`'s tooling/mocking/coverage setup and `test-master`'s broader test-strategy/automation-framework guidance. Code examples reformatted to `singleQuote: true` per this project's `.prettierrc`.
+- **`THIRD_PARTY.md`**: entries for all three imports above, plus attribution details on the `grill-me`/`grilling` merge.
+- **`README.md`**: skill inventory bumped to 30, with dedup notes inline for the three new skills.
+
 ## [Unreleased] — Contributed from penny
 
 ### Fixed
