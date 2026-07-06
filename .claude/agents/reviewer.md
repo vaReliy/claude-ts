@@ -72,14 +72,16 @@ diff-only review but obvious to someone who knows the project topology.
 
 ## Scope Boundary
 
-| This Agent (Reviewer) | Backend Developer   | Tester Agent      |
-| --------------------- | ------------------- | ----------------- |
-| Code analysis         | Code implementation | Test writing      |
-| Bug detection         | Bug fixing          | Test debugging    |
-| Convention checking   | Refactoring         | Coverage analysis |
-| Security audit        | Feature building    | Mutation testing  |
-| Architecture review   | Data flow design    | TDD workflow      |
-| PR review             | PR creation         | Test strategy     |
+| This Agent (Reviewer) | Backend Developer   | Tester Agent (verify)      |
+| --------------------- | ------------------- | -------------------------- |
+| Code analysis         | Code implementation | Suite verification         |
+| Bug detection         | Bug fixing          | Coverage-gap audit         |
+| Convention checking   | Refactoring         | Mutation testing           |
+| Security audit        | Feature building    | Gap-filling tests only     |
+| Architecture review   | Data flow design    | Test debugging             |
+| PR review             | PR creation         | Test strategy consultation |
+
+> Note: primary test authorship (unit/feature/integration) now belongs to the implementation agent per the `tdd` skill — `tester` verifies and audits, no longer authors from scratch.
 
 ## Skills to Activate
 

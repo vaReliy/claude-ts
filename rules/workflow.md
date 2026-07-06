@@ -121,8 +121,8 @@ ba → ddd-architect? → impl-{slug} team ══╣
                                          ╚═══ vue/react/angular-developer (if UI change)
                               ║
                     [Quality Gate — sequential]
-                    tester ──► reviewer ──► security-scanner ┐
-                                       └──► qa              ┘ (parallel final stage)
+                    tester(verify) ──► reviewer ──► security-scanner ┐
+                                                └──► qa              ┘ (parallel final stage)
                               ║
                         docs-writer
                               ║
@@ -134,7 +134,7 @@ ba → ddd-architect? → impl-{slug} team ══╣
 | 1. Requirements      | sequential                              | `ba`                                          | User stories, scope, API contract   |
 | 2. Architecture      | sequential _(skip if no arch decision)_ | `ddd-architect`                               | Domain model, placement             |
 | 3. Implementation    | **team** `impl-{slug}`                  | `backend-developer` + frontend agent(s) if UI | Code + ESLint + tsc                 |
-| 4. Quality Gate      | sequential then parallel (mandatory)    | `tester` → `reviewer` → conditional parallel  | Stage reports; restart from tester  |
+| 4. Quality Gate      | sequential then parallel (mandatory)    | `tester(verify)` → `reviewer` → conditional parallel | Stage reports; restart from tester(verify) |
 | 5. Documentation     | sequential                              | `docs-writer`                                 | PR description + `gh pr create`     |
 | 6. Knowledge Capture | orchestrator (mandatory — never skip)   | —                                             | Updated docs + inbox/permanent home |
 
@@ -203,12 +203,12 @@ Spawn 3 teammates: `ba`, `ddd-architect`, `devil`.
 **Execution order:**
 
 ```
-tester ──► reviewer ──► security-scanner ┐
-                    └──► qa              ┘ (parallel final stage)
+tester(verify) ──► reviewer ──► security-scanner ┐
+                            └──► qa              ┘ (parallel final stage)
 ```
 
-**Stage 1 — `tester` (always, alone):**
-Run `tester` sequentially. If it reports failures → fix → restart from stage 1.
+**Stage 1 — `tester` runs verify/coverage-audit, not primary authorship (always, alone):**
+Implementation agents (`backend-developer` and the frontend agents) write tests with the code per the `tdd` skill — red/green/refactor during Phase 3, not a separate authoring stage. `tester` runs the suite, audits for coverage gaps (missed edge cases, untested branches, weak assertions), and adds only the tests needed to close those gaps. If the suite fails, or a newly-added gap-filling test fails (revealing a real bug) → fix → restart from stage 1. A gap-filling test that passes closes the gap silently — it does not trigger a restart.
 
 **Stage 2 — `reviewer` (only after tester passes):**
 Run `reviewer` sequentially. If it reports `## Fix Now` items → fix → restart from stage 1 (not from stage 2).

@@ -49,7 +49,7 @@ These sort before `…-N.md` because `-` (0x2D) < `.` (0x2E) in ASCII/C collatio
 2. `## Context / Why` — references decision IDs if applicable
 3. `## Steps` — numbered H3 subsections (`### 1. …`)
 4. `## Verification gate` — concrete commands + mandatory quality gate:
-   - `tester` + `reviewer` always
+   - `tester(verify)` + `reviewer` always — implementation agents co-author tests with the code per the `tdd` skill; `tester` verifies the suite and audits coverage gaps
    - Add `security-scanner` when auth/validation/secrets/HMAC/external-input is touched
 5. `## Acceptance criteria` — `- [ ]` checkbox list
 

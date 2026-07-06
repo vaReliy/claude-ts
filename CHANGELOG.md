@@ -2,6 +2,15 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — TDD-shift quality gate
+
+### Changed
+
+- **`rules/workflow.md`**: quality gate stage 1 redefined from `tester` (primary test author) to `tester(verify)` — implementation agents (`backend-developer` + frontend agents) now write unit/feature/integration tests alongside the code they produce, per the `tdd` skill (red/green/refactor), so `reviewer` Fix-Now cycles no longer invalidate test authorship. `tester` runs the suite, audits coverage gaps, and adds only the tests needed to close a real gap. Restart semantics (max 2 full cycles, restart from stage 1) unchanged. ASCII diagrams and the phase table updated to say `tester(verify)`.
+- **`CLAUDE.md`**: Quality gate paragraph updated to match, compressed to the existing paragraph's density.
+- **`.claude/agents/tester.md`**: redefined as verify/coverage-audit stage; scope-boundary table now shows implementation agents as primary test authors; TDD workflow section scoped to gap-filling tests only (a failing gap-fill test is a `## Fix Now` finding routed back to the implementation agent, not something tester patches itself).
+- **`.claude/agents/backend-developer.md`, `vue-developer.md`, `react-developer.md`, `angular-developer.md`**: each gained a mandatory "Tests-with-Code" obligation referencing the `tdd` skill; the three frontend agents also gained a `tdd` row in their Skills-to-Activate table.
+
 ## [Unreleased] — Skill imports wave 1
 
 ### Added
