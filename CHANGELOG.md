@@ -2,6 +2,13 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Tiered planning ladder (T0–T3)
+
+### Changed
+
+- **`rules/workflow.md`**: replaced the flat "First Action: Triage" decision tree, the standalone "Pipeline Trigger: REQUIRED When ANY Applies" list, and the separately-triggered "Foresight gate" section with a single T0–T3 tiered ladder. T0 (trivial, ≤2 files, no executable config) → direct + `reviewer` only. T1 (local, ≤3 files, foresight gate does not fire, no new endpoint/migration) → orchestrator writes 5-line acceptance criteria directly, skips `ba`, full quality gate still runs. T2 (foresight gate fires — new seam/contract/endpoint/migration/auth) → `ba` required. T3 (architecture decision — structural tradeoffs/domain boundaries/topology) → full Planning Team (`ba`+`ddd-architect`+`devil`). The foresight gate is now the sole tier selector — no second file-count/risk heuristic layered on top (R3-D2, R3-D5). Planning Team section re-keyed to trigger on T3 specifically, with T2 running `ba` alone (plus `ddd-architect` when the seam spans domain layers). Quality gate hard-stop (after 2 failed restart cycles) changed from a bare "surface to user" to invoking the `handoff` skill to emit a continuation task (open Fix-Now items, per-cycle attempt log, hypotheses) saved under `todo/`; the Bug Fix Pipeline's hard-stop now references the same behavior instead of duplicating it.
+- **`CLAUDE.md`**: Triage block compressed to mirror the same T0–T3 ladder, delegating full tier definitions and the foresight gate to `rules/workflow.md`.
+
 ## [Unreleased] — TDD-shift quality gate
 
 ### Changed

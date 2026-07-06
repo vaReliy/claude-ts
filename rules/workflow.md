@@ -26,19 +26,42 @@ If you find yourself opening `src/use-cases/...` or grepping `src/controllers/..
 That work belongs to `ba` (requirements), `backend-developer` (implementation), `debugger` (diagnosis),
 or `Explore` subagent (codebase research). Dispatch first, read agent reports instead.
 
-## First Action: Triage (MANDATORY)
+## First Action: Triage (MANDATORY) — Tiered Planning Ladder (T0–T3)
 
 Your first action on ANY user request is classification, not exploration.
 Read ONLY the user's message. Do NOT open project files.
 
-Decision tree:
+Non-ladder routes (checked first, before tiering):
 
-1. Trivial? (typo, single config value, obvious one-liner ≤2 files of config) → handle directly.
-2. Bug report? → `debugger` pipeline.
-3. Infra/CI/Docker? → `devops` pipeline.
-4. Feature / code change / "add X" / "change Y"? → feature pipeline, start with `ba`.
-5. Requirements ambiguous? → ONE round of `AskUserQuestion`, then pipeline.
-6. Pure research question ("how does X work in this codebase?") → dispatch `Explore` subagent.
+1. Bug report → `debugger` pipeline (write a failing test first).
+2. Infra/CI/Docker → `devops` pipeline.
+3. Pure research question ("how does X work in this codebase?") → dispatch `Explore` subagent.
+4. Requirements ambiguous → ONE round of `AskUserQuestion`, then re-classify into a tier.
+
+Everything else is classified into exactly one tier. File-count/config-type checks only decide
+the T0/T1 ceiling (whether a task is small and mechanical enough to skip requirements
+authorship); they never gate T1→T2. **The foresight gate below is the sole T1→T2 selector — do
+not layer a second risk heuristic on top of it to decide whether `ba` is required.**
+
+**T0 — trivial**: ≤2 files, no executable config (not ESLint rules, CI scripts, tsconfig
+settings, build configs — those are executable and correctness-bearing even at 1 file) →
+handle directly, then run `reviewer` only. No pipeline.
+
+**T1 — local**: ≤3 files, the foresight gate below does NOT fire, no new endpoint/migration →
+skip `ba`; the orchestrator writes 5-line acceptance criteria directly from the user's message,
+then dispatches the implementation agent directly. The full quality gate still runs — T1 skips
+requirements authoring, not verification. This includes a small frontend component/page change
+by itself (no seam) — that no longer auto-requires `ba` the way the old "Pipeline Trigger" list
+mandated; only crossing the foresight gate (or exceeding 3 files) escalates it to T2.
+
+**T2 — seam/contract**: the foresight gate fires (new enum/registry/const object consumed
+across files/layers, a field/interface change consumed in >1 layer, a new endpoint/route/DTO,
+a database migration, authorization logic, or a topology/serving-boundary change) → `ba`
+required → route to `ddd-architect` too when the seam spans domain layers → impl → quality gate.
+
+**T3 — architecture decision**: the task requires weighing multiple structural approaches,
+deciding domain boundaries, or picking a topology with no clearly-better default → full
+Planning Team (`ba` + `ddd-architect` + `devil`, see Planning Team section) → impl → quality gate.
 
 You are NOT allowed to:
 
@@ -48,35 +71,26 @@ You are NOT allowed to:
 
 If you feel the urge to look at code — that's the signal to dispatch `ba` or `Explore`.
 
-## Pipeline Trigger: REQUIRED When ANY Applies
-
-- Creates or modifies a UseCase, Service, or Handler class
-- Requires a database migration (Prisma/TypeORM)
-- Adds or changes a route, controller, or request DTO
-- Adds or changes a frontend component or page (Vue/React/Angular)
-- Involves authorization logic (guards, middleware, RBAC)
-- Touches more than 2 files
-
-If none apply (e.g. typo fix, config value) — skip the pipeline.
-
-## Foresight gate (seam-touching tasks only)
+## Foresight gate (T1→T2 tier selector)
 
 Trigger: the task introduces or changes a shared contract/seam — any of:
 
 - A new enum, registry, or const object consumed across multiple files/layers
 - A field or interface change consumed in >1 layer (entity, use-case, API, frontend)
 - A change to who-serves-what (topology, middleware order, serving boundary)
+- A new endpoint/route/controller/DTO, a database migration, or authorization logic (guards,
+  middleware, RBAC)
 
-When triggered:
+When triggered (task is T2 or T3):
 
 1. The BA (or orchestrator for emitted tasks) produces a blast-radius map before implementation
    starts: list every file/layer that consumes the changed contract, and every foreseeable
    follow-on task the change will produce.
 2. Re-author the task at full scope — include the blast-radius. Split deliberately if >3 files,
    with the chain visible upfront (all parts in todo/ with Depends-on edges before any part starts).
-3. Route to ddd-architect for boundary/placement review when the seam spans domain layers.
+3. Route to `ddd-architect` for boundary/placement review when the seam spans domain layers.
 
-Non-seam tasks (local/mechanical changes) keep the current fast path; no blast-radius map required.
+When it does not fire, the task is at most T1 — no `ba`, no blast-radius map, fast path.
 
 ## Core Principles
 
@@ -129,9 +143,14 @@ ba → ddd-architect? → impl-{slug} team ══╣
                      knowledge capture  ← orchestrator (mandatory)
 ```
 
+This diagram is the T2/T3 path (`ba` required). **T1 skips Phase 1 entirely**: the orchestrator
+writes the 5-line acceptance criteria itself (see Tiered Planning Ladder above) and starts
+directly at Phase 3 — everything from Phase 3 onward (impl team, quality gate, docs, knowledge
+capture) still runs unchanged.
+
 | Phase                | Mode                                    | Agent(s)                                      | Output                              |
 | -------------------- | --------------------------------------- | --------------------------------------------- | ----------------------------------- |
-| 1. Requirements      | sequential                              | `ba`                                          | User stories, scope, API contract   |
+| 1. Requirements      | sequential _(skipped for T1 — orchestrator writes acceptance criteria instead)_ | `ba`                        | User stories, scope, API contract   |
 | 2. Architecture      | sequential _(skip if no arch decision)_ | `ddd-architect`                               | Domain model, placement             |
 | 3. Implementation    | **team** `impl-{slug}`                  | `backend-developer` + frontend agent(s) if UI | Code + ESLint + tsc                 |
 | 4. Quality Gate      | sequential then parallel (mandatory)    | `tester(verify)` → `reviewer` → conditional parallel | Stage reports; restart from tester(verify) |
@@ -178,16 +197,17 @@ Passing this checklist authorizes advancing to the quality gate (Phase 4) — it
 
 The `ba` output must include an **API contract** (endpoint, request/response shape) when both backend and frontend are in scope — this is the interface between the two parallel agents.
 
-### Planning Team
+### Planning Team (T3)
 
 Team name: `plan-{feature-slug}` (e.g. `plan-user-auth`)
 
 Spawn 3 teammates: `ba`, `ddd-architect`, `devil`.
 
-**When to include `devil` and `ddd-architect`:**
+**When to spawn the full team vs `ba` alone:**
 
-- Task involves architectural decisions → include both
-- Simple feature, no arch decision needed → run `ba` sequentially only (no team)
+- T3 (architecture decision — see Tiered Planning Ladder above) → spawn the full team
+- T2 (seam/contract, no structural tradeoff to weigh) → run `ba` sequentially only (no team);
+  add `ddd-architect` sequentially if the seam spans domain layers, per the foresight gate
 
 **Resolution:**
 
@@ -221,7 +241,12 @@ Run in parallel, each only when its trigger condition is met:
 
 If either reports `## Fix Now` items → fix → restart from stage 1.
 
-**Max 2 full restart cycles total** (across all stages). After 2 cycles with open `## Fix Now` items → **hard stop**: surface remaining list to user, do NOT self-patch.
+**Max 2 full restart cycles total** (across all stages). After 2 cycles with open `## Fix Now`
+items → **hard stop**: do NOT self-patch. Instead, invoke the `handoff` skill to produce a
+continuation task containing the open `## Fix Now` items, a per-cycle attempt log (what was
+tried each restart and why it didn't close), and current hypotheses about the remaining
+failure(s). Save it under `todo/` and surface it to the user — this replaces a bare
+"surface remaining list to user" stop with a document a fresh session can act on directly.
 
 **Quality gate output contract:**
 
@@ -237,7 +262,7 @@ Reviewer and security-scanner emit two sections in every report:
 
 **Orchestrator actions (deterministic — no judgment calls):**
 
-- `## Fix Now` items present → route to responsible implementation agent → restart quality gate from stage 1. Max 2 full cycles. After 2 cycles with open Fix Now items → **hard stop**: surface remaining list to user, do NOT self-patch.
+- `## Fix Now` items present → route to responsible implementation agent → restart quality gate from stage 1. Max 2 full cycles. After 2 cycles with open Fix Now items → **hard stop**: emit a continuation task via the `handoff` skill (open Fix Now items, attempt log, hypotheses) instead of a bare surface-to-user stop, do NOT self-patch.
 - `## Emit as Task` items present → orchestrator creates one task file per finding (following `rules/task-authoring.md`), then **closes the gate** for the current task. Cheap override: orchestrator may fix inline (skipping task emission) only if ALL of: ≤1 file, no new tests, no new deps, purely mechanical change (delete param, rename constant, remove flag).
 - All sections empty (`_none_`) → proceed to phase 5.
 
@@ -297,7 +322,7 @@ debugger → responsible agent ═══╗
 - `backend-developer` — bug in UseCase / Service / Repository / route handler
 - `vue-developer` / `react-developer` / `angular-developer` — bug in frontend component / store / composable
 
-Same resolution rule (origin-based): `## Fix Now` items → back to phase 2. Max 2 cycles. After 2 cycles with open Fix Now items → hard stop, surface to user. `## Emit as Task` items → create task file per finding, close the verify phase.
+Same resolution rule (origin-based): `## Fix Now` items → back to phase 2. Max 2 cycles. After 2 cycles with open Fix Now items → hard stop via the same `handoff`-based continuation task described in the Quality Gate section above. `## Emit as Task` items → create task file per finding, close the verify phase.
 
 ## CI/CD Pipeline
 

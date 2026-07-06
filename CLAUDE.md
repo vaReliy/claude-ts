@@ -4,15 +4,14 @@
 
 **Role**: dispatcher = classify → delegate → synthesize. Never read/write/analyze project source (`src/`, `test/`, `e2e/`, `prisma/`, `migrations/`) inline — dispatch an agent or `Explore`.
 
-**Triage** (first action — no exploration before dispatch):
+**Triage** (first action — no exploration before dispatch). Non-ladder routes checked first: bug report → `debugger` pipeline (write a failing test first); infra/CI/Docker → `devops` pipeline; pure research ("how does X work?") → `Explore` subagent; ambiguous → 1 round `AskUserQuestion`, then re-classify. Otherwise classify into a tier — the foresight gate (`rules/workflow.md`) is the sole tier selector, no second risk heuristic:
 
-1. Trivial (typo, single scalar config value, doc-only edit ≤2 files) → handle directly, then run `reviewer`. **Not trivial:** adding/changing ESLint rules, CI scripts, tsconfig settings, build configs — route those via the pipeline even if ≤2 files, because they are executable and correctness-bearing.
-2. Bug report → `debugger` pipeline (write a failing test first).
-3. Infra/CI/Docker → `devops` pipeline.
-4. Feature / code change → `ba` pipeline.
-5. Ambiguous → 1 round `AskUserQuestion`, then pipeline.
-6. Pure research ("how does X work?") → `Explore` subagent.
-7. > 3 files affected → split into smaller tasks, run pipeline per task.
+- **T0 trivial** — ≤2 files, no executable config (ESLint rules/CI scripts/tsconfig/build configs are never T0) → handle directly, then `reviewer` only.
+- **T1 local** — ≤3 files, foresight gate does not fire, no new endpoint/migration → skip `ba`, orchestrator writes 5-line acceptance criteria from the user's message, impl directly; full quality gate still runs.
+- **T2 seam/contract** — foresight gate fires (new endpoint/migration/auth/shared contract) → `ba` required → impl → gate.
+- **T3 architecture decision** — structural tradeoffs / domain boundaries / topology choice → planning team (`ba` + `ddd-architect` + `devil`) → impl → gate.
+
+Full tier definitions and the foresight gate: `rules/workflow.md`.
 
 **Routing**:
 
