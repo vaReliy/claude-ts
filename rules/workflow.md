@@ -263,7 +263,8 @@ Reviewer and security-scanner emit two sections in every report:
 **Orchestrator actions (deterministic — no judgment calls):**
 
 - `## Fix Now` items present → route to responsible implementation agent → restart quality gate from stage 1. Max 2 full cycles. After 2 cycles with open Fix Now items → **hard stop**: emit a continuation task via the `handoff` skill (open Fix Now items, attempt log, hypotheses) instead of a bare surface-to-user stop, do NOT self-patch.
-- `## Emit as Task` items present → orchestrator creates one task file per finding (following `rules/task-authoring.md`), then **closes the gate** for the current task. Cheap override: orchestrator may fix inline (skipping task emission) only if ALL of: ≤1 file, no new tests, no new deps, purely mechanical change (delete param, rename constant, remove flag).
+- `## Emit as Task` items present → orchestrator creates one task per context cluster: findings that share a module/seam/file-area become ONE task file with a findings checklist inside it; findings unrelated to each other stay as separate task files (following `rules/task-authoring.md`). Then **closes the gate** for the current task. Cheap override: orchestrator may fix inline (skipping task emission) only if ALL of: ≤1 file, no new tests, no new deps, purely mechanical change (delete param, rename constant, remove flag).
+- **Generation damping at G≥2**: At Generation ≥ 2 (a task itself emitted from another emitted task's gate — see `rules/task-authoring.md`'s Generation row), only Correctness/Security findings (per the Severity floor table below) may spawn a new G(n+1) task file. Comprehension and Consistency findings at G≥2 do NOT get their own task file — instead, record them in the sub-floor ledger (`## Deferred / sub-floor` section in `docs/KNOWLEDGE_INBOX.md`) for theme detection, using the existing ≥3-occurrences-promotes-to-a-task rule that applies to sub-floor findings (see below). This overrides the normal Severity floor only at high generation; the floor table and roadmap-prioritization rules remain unchanged.
 - All sections empty (`_none_`) → proceed to phase 5.
 
 **Closing checklist — if `.claude/**`or`rules/**` changed this session:** suggest running `/rules-audit` before closing. This is a suggestion to the human, not an auto-dispatch.
@@ -322,7 +323,7 @@ debugger → responsible agent ═══╗
 - `backend-developer` — bug in UseCase / Service / Repository / route handler
 - `vue-developer` / `react-developer` / `angular-developer` — bug in frontend component / store / composable
 
-Same resolution rule (origin-based): `## Fix Now` items → back to phase 2. Max 2 cycles. After 2 cycles with open Fix Now items → hard stop via the same `handoff`-based continuation task described in the Quality Gate section above. `## Emit as Task` items → create task file per finding, close the verify phase.
+Same resolution rule (origin-based): `## Fix Now` items → back to phase 2. Max 2 cycles. After 2 cycles with open Fix Now items → hard stop via the same `handoff`-based continuation task described in the Quality Gate section above. `## Emit as Task` items → create tasks per the context-cluster grouping rule (see Quality Gate section above), close the verify phase.
 
 ## CI/CD Pipeline
 

@@ -2,6 +2,13 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Task-authoring provenance rows and emission control
+
+### Changed
+
+- **`rules/task-authoring.md`**: canonical task header grows from 5 to 8 rows, adding `Planning tier` (T0–T3, per `rules/workflow.md`'s ladder), `Planning` (role-granular `ba`/`devil`/`ddd-architect` status — `done` only if the source session produced that role's artifact, `required`, or `skipped` for the T1 no-`ba` case), and `Generation` (G0 = feature work, G1+ = tasks emitted from a prior gate). Added the executor obey-the-stamp rule (dispatch only roles marked `required`, never re-judge planning recorded at authoring time) and a seam-vs-stamp contradiction guard (task body visibly touches a seam but tier says T0/T1 → executor STOPs and flags, does not silently proceed or re-triage). Added a continuation-task template for the quality-gate hard-stop case, wrapping the `handoff` skill's attempt-log/hypotheses output in the canonical header (tier/generation inherited, `Planning: done`).
+- **`rules/workflow.md`**: Quality Gate's Emit-as-Task rule reworded from "one task per finding" to "one task per context cluster" — findings sharing a module/seam/file-area collapse into one task file with a findings checklist; unrelated findings stay separate. Added a generation-damping rule: at Generation ≥2, only Correctness/Security findings may spawn a new task file — Comprehension/Consistency findings instead go to the existing sub-floor ledger (`docs/KNOWLEDGE_INBOX.md`) and follow its existing ≥3-occurrences-promotes rule. Bug Fix Pipeline's parallel "create task file per finding" wording updated to point at the same context-cluster rule instead of duplicating the old phrasing.
+
 ## [Unreleased] — Tiered planning ladder (T0–T3)
 
 ### Changed
