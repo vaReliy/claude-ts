@@ -2,6 +2,17 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Metrics ledger
+
+### Added
+
+- **`docs/METRICS.md`**: new append-only ledger, one pipe-delimited line per completed task (`date | repo | task | tier | cycles | fixnow t/r/s/q | emitted | hardstop | model`), never @-referenced (same constraint as `docs/KNOWLEDGE_INBOX.md`). Raw data collection ahead of a dedicated measurement-design session once 20–30 rows exist (R3-D9). Shipped to consumer projects via `cts-payload.txt`.
+
+### Changed
+
+- **`rules/workflow.md`**: Phase 6 gains an append-one-line obligation for `docs/METRICS.md`, alongside the existing `docs/CLAUDE_TS_CHANGELOG.md` obligation.
+- **`CLAUDE.md`**: Hard tool limits' knowledge-ledger docs list (orchestrator Edit/Write allowlist) gains `docs/METRICS.md`.
+
 ## [Unreleased] — Operator recipes guide
 
 ### Added

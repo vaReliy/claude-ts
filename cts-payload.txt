@@ -7,6 +7,9 @@ CLAUDE.md
 .mcp.json
 rules/
 docs/RECIPES.md
+docs/METRICS.md
+# METRICS.md IS shipped (unlike KNOWLEDGE_INBOX.md) to seed the header/format at
+# init; cts-sync.sh's is_locally_modified() skips it once a repo appends real rows.
 .claude/agents/
 .claude/skills/
 .claude/scripts/
