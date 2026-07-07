@@ -6,6 +6,7 @@ AGENTS.md
 CLAUDE.md
 .mcp.json
 rules/
+docs/RECIPES.md
 .claude/agents/
 .claude/skills/
 .claude/scripts/
@@ -13,4 +14,5 @@ rules/
 .claude/settings.json
 
 # Explicitly NOT payload: README.md, CHANGELOG.md, THIRD_PARTY.md, LICENSE,
-# images, tasks/, tmp/, cts-payload.txt itself, .claude/settings.local.json.
+# images, tasks/, tmp/, cts-payload.txt itself, .claude/settings.local.json,
+# docs/KNOWLEDGE_INBOX.md (project-local, never synced to consumers).

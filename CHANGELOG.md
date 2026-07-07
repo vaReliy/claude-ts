@@ -2,6 +2,18 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Operator recipes guide
+
+### Added
+
+- **`docs/RECIPES.md`**: new operator-facing (never agent-loaded) workflows guide, six recipes each ≤ half a page: grill→tier→stamps→tasks, clean-session execution, hard-stop continuation, `/cts-update`, `/cts-contribute`, and `/distill-inbox` cadence. Shipped to consumer projects via `cts-payload.txt`.
+- **`README.md`**: links to `docs/RECIPES.md` alongside the existing project-map bullets.
+
+### Fixed
+
+- **`CLAUDE.md`**: knowledge-capture line clarified — the `docs/CLAUDE_TS_CHANGELOG.md` instruction is consumer-project-only (that file logs template divergences for `/cts-contribute` to port upstream); in the claude-ts template repo itself, template-inherited-file changes are logged in this `CHANGELOG.md` instead.
+- **`.claude/agents/docs-writer.md`**: added a "Post-Edit Check" step — after rewording/renaming any phrase, `grep -n` the entire file (not just the edited section) to catch stale duplicate occurrences before reporting done. Closes a gap where a prior docs-writer pass reworded one of two identical phrase occurrences in the same file, caught only by the `reviewer` quality-gate pass.
+
 ## [Unreleased] — Task-authoring provenance rows and emission control
 
 ### Changed
