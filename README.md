@@ -2,7 +2,7 @@
 
 > **Forked from** [AratKruglik/claude-laravel](https://github.com/AratKruglik/claude-laravel) — adapted from PHP/Laravel to Node.js/TypeScript targeting Vue/Angular/React environments.
 
-A comprehensive, production-ready Claude Code configuration for Node.js/TypeScript projects. Includes 18 specialized agents, 9 rule files, 25 skills, 2 commands, and a structured workflow pipeline that turns Claude Code into a full AI development team.
+A comprehensive, production-ready Claude Code configuration for Node.js/TypeScript projects. Includes 18 specialized agents, 9 rule files, 31 skills, 2 commands, and a structured workflow pipeline that turns Claude Code into a full AI development team.
 
 **Stack:** Node.js 22+ · TypeScript 5 · Vue 3 / Angular 17+ / React 18+ · Prisma / TypeORM / Drizzle · PostgreSQL 17 · Redis · Docker · Vitest / Playwright · BullMQ
 
@@ -66,7 +66,7 @@ Portable rule files in root `rules/`, referenced from `AGENTS.md`'s on-demand in
 
 `CLAUDE.md` carries a single `@AGENTS.md` import (the portable core, needed every turn). `rules/` files are referenced by plain path and loaded by agents on demand only when relevant, instead of being force-loaded into every conversation's context.
 
-### Skills (30)
+### Skills (31)
 
 Reusable knowledge modules organized by category:
 
@@ -137,7 +137,7 @@ The script clones `claude-ts` into `~/.cache/claude-ts`, copies the payload list
 
 </details>
 
-> **All 24 skills** are bundled in `.claude/skills/` and activate as soon as they're installed — no separate install needed.
+> **All bundled skills** are included in `.claude/skills/` and activate as soon as they're installed — no separate install needed.
 
 ### Install Profile (Pruning for Your Stack)
 
@@ -160,7 +160,7 @@ Run inside Claude Code:
 
 ### Step 3 (Optional): Install Extra Community Skills
 
-The 24 bundled skills already cover TypeScript, testing, frontend, DevOps, architecture, and debugging. To pull **additional** skills from external GitHub repos, use the [`skills` CLI](https://www.npmjs.com/package/skills):
+The bundled skills already cover TypeScript, testing, frontend, DevOps, architecture, and debugging. To pull **additional** skills from external GitHub repos, use the [`skills` CLI](https://www.npmjs.com/package/skills):
 
 ```bash
 npx skills add <owner/repo>
