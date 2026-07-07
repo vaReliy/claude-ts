@@ -2,6 +2,13 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Task-file handling rules
+
+### Changed
+
+- **`rules/task-authoring.md`**: three fixes closing gaps observed during round-3 execution: (1) explicit "plain `mv`, never `git mv`" rule for moving task files — the directories were already documented as git-excluded, but the operational consequence wasn't spelled out, and executors repeatedly tried `git mv` (which fails on untracked paths); (2) the canonical and continuation-template `On completion` rows now read "Do NOT commit. **Do NOT move this file.**" — some executors moved their own task file to `done/`, preempting the owner's review-commit-move confirmation step; (3) Standing Completion Rule rewritten with the exact completion-report shape the executor must emit ("All acceptance criteria met. Suggested commit message: `…`. After committing, move this task file to `done/`.").
+- **`rules/workflow.md`**, **`docs/METRICS.md`**: METRICS ledger wording updated from "one line per task" to "one table row per task" — the Entries section is now a markdown table (renders properly, still trivially parseable) rather than pipe-delimited raw lines; append-only semantics unchanged.
+
 ## [Unreleased] — cts-sync 3-way merge
 
 ### Added
@@ -19,7 +26,7 @@ All notable changes to this Claude Code configuration template are documented he
 
 - **`.claude/scripts/cts-sync.sh`**: added a code comment directly above `merge_one` warning against reintroducing `trap ... RETURN` for its temp-file cleanup — it's shell-global in bash, not function-scoped, so it re-fires (with the local vars out of scope) on the next function return anywhere later in the script. Placed as an inline comment rather than a `docs/KNOWLEDGE_INBOX.md` entry since the affected area was already known and immediately edit-able.
 
-- **`.claude/scripts/cts-sync.sh`**: `merge_one`'s two `mktemp` temp files are now cleaned up on both the normal exit path and error exit via a `trap ... EXIT` that's explicitly cleared (`trap - EXIT`) right before the function's single return, instead of the old explicit `rm -f` before each of several early returns (which leaked the temp files if `git show`/`cp` failed under `set -euo pipefail`). The trap's temp-path variables (`MERGE_BASE`/`MERGE_RESULT`) are deliberately module-level globals, not `local` — testing showed that when `set -e` unwinds out of the function on a failed command, bash tears down the function's local scope *before* running the EXIT trap, so a trap referencing `local` vars crashes with "unbound variable" under `set -u` at exactly the moment cleanup is needed. Verified against a scratch repo covering fast-forward, preserve, merge, conflict, `--no-merge`, dry-run, and a forced `cp` permission-denied failure. Closes the follow-up tracked in `tasks/todo/2026-07-07-08-cts-sync-mergeone-trap-cleanup.md`.
+- **`.claude/scripts/cts-sync.sh`**: `merge_one`'s two `mktemp` temp files are now cleaned up on both the normal exit path and error exit via a `trap ... EXIT` that's explicitly cleared (`trap - EXIT`) right before the function's single return, instead of the old explicit `rm -f` before each of several early returns (which leaked the temp files if `git show`/`cp` failed under `set -euo pipefail`). The trap's temp-path variables (`MERGE_BASE`/`MERGE_RESULT`) are deliberately module-level globals, not `local` — testing showed that when `set -e` unwinds out of the function on a failed command, bash tears down the function's local scope *before* running the EXIT trap, so a trap referencing `local` vars crashes with "unbound variable" under `set -u` at exactly the moment cleanup is needed. Verified against a scratch repo covering fast-forward, preserve, merge, conflict, `--no-merge`, dry-run, and a forced `cp` permission-denied failure. Closes the follow-up tracked in `tasks/todo/2026-07-07-11-cts-sync-mergeone-trap-cleanup.md` (authored as `…-08-…`, renamed to resolve a per-date sequence collision with the consumer-validation task).
 
 ## [Unreleased] — Stale tester-role descriptions
 
