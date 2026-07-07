@@ -2,6 +2,27 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — cts-sync 3-way merge
+
+### Added
+
+- **`.claude/scripts/cts-sync.sh`**: `update` now 3-way-merges a payload file that diverged both locally and upstream since the last sync (base = content at the old `.cts-version`), instead of always skipping it. Clean merges apply and print `merged: <path>`; overlapping hunks leave standard `<<<<<<<`/`=======`/`>>>>>>>` conflict markers and print `CONFLICT: <path>`. Files that diverged locally with no upstream change still skip-and-report as before (`locally modified, not overwritten`). New `--no-merge` flag restores the old preserve-only behavior for every diverged file. Closes R3-D11 — round 2 deferred this (R2-D1: "no 3-way merge... v2 only if pain proves need"); the pain (contribution became a de-facto precondition for receiving upstream updates to any file with a pending contribute-preparation) has since proven the need.
+- Added `is_safe_rel()` path-containment guard in `cts-sync.sh`, applied in `copy_one` before any write — rejects payload-derived relative paths containing `..` segments or a leading `/`. Added during this change's security-scanner pass (payload/file listings originate from the operator-chosen `--source`, which may be a fork or local checkout the operator doesn't fully control); closes a path-traversal gap that predates this feature but was surfaced by the new `merge_one` write path.
+- Added a `NEVER_PAYLOAD` guard in `cts-sync.sh`, checked once right after `PAYLOAD` is built — hard-fails with a clear error if `docs/KNOWLEDGE_INBOX.md` (project-local, never synced to consumers per `cts-payload.txt`) is ever resolved as a payload entry, directly or via a directory entry that contains it. Today that exclusion is enforced only by never listing the file in `cts-payload.txt`; this turns a future careless edit (e.g. listing `docs/` as a whole directory instead of individual files) into a loud failure at sync time instead of a silent leak to every consumer project.
+
+### Changed
+
+- **`.claude/skills/cts-update/SKILL.md`**: step 3 narration gains "Merged cleanly" / "Conflicts" groups; step 5 rewritten so judgment is spent only on `CONFLICT:` files (hunk-by-hunk resolution with the user) — `merged:` files need no review beyond `git diff --stat`. Step 2's engine-call instruction also now tells the agent to pass `--no-merge` when the user wants to skip merge attempts for the run — previously only `--source`/`--branch` pass-through was documented, leaving `--no-merge` usage undocumented and dependent on agent improvisation.
+- **`README.md`**: Updating → "How it works" step 3 and a new "Merge semantics" paragraph document the fast-forward / preserve / merge / conflict split and `--no-merge`.
+
+### Fixed
+
+- **`.claude/scripts/cts-sync.sh`**: added a code comment directly above `merge_one` warning against reintroducing `trap ... RETURN` for its temp-file cleanup — it's shell-global in bash, not function-scoped, so it re-fires (with the local vars out of scope) on the next function return anywhere later in the script. Placed as an inline comment rather than a `docs/KNOWLEDGE_INBOX.md` entry since the affected area was already known and immediately edit-able.
+
+### Known follow-up
+
+- `merge_one`'s two `mktemp` temp files are cleaned up via explicit `rm -f` before each `return` rather than a trap, so a `git show`/`cp` failure inside the function can leak them under `/tmp` (payload content only, no secrets) — low-severity, tracked in `tasks/todo/2026-07-07-08-cts-sync-mergeone-trap-cleanup.md`.
+
 ## [Unreleased] — Metrics ledger
 
 ### Added
