@@ -21,6 +21,12 @@ All notable changes to this Claude Code configuration template are documented he
 
 - **`.claude/scripts/cts-sync.sh`**: `merge_one`'s two `mktemp` temp files are now cleaned up on both the normal exit path and error exit via a `trap ... EXIT` that's explicitly cleared (`trap - EXIT`) right before the function's single return, instead of the old explicit `rm -f` before each of several early returns (which leaked the temp files if `git show`/`cp` failed under `set -euo pipefail`). The trap's temp-path variables (`MERGE_BASE`/`MERGE_RESULT`) are deliberately module-level globals, not `local` — testing showed that when `set -e` unwinds out of the function on a failed command, bash tears down the function's local scope *before* running the EXIT trap, so a trap referencing `local` vars crashes with "unbound variable" under `set -u` at exactly the moment cleanup is needed. Verified against a scratch repo covering fast-forward, preserve, merge, conflict, `--no-merge`, dry-run, and a forced `cp` permission-denied failure. Closes the follow-up tracked in `tasks/todo/2026-07-07-08-cts-sync-mergeone-trap-cleanup.md`.
 
+## [Unreleased] — Stale tester-role descriptions
+
+### Fixed
+
+- **`.claude/agents/{ba,dba,ddd-architect,debugger,devops,docs-writer,integration-architect,queue-specialist,refactoring-expert,security-scanner}.md`**: frontmatter `description` (and `docs-writer.md`'s scope-boundary line) reworded from generic "tests (tester)" to "test verification/coverage audits (tester)" — the TDD-shift task (`2026-07-07-02-tdd-shift-quality-gate`) redefined `tester` as the verify/coverage-audit stage rather than primary test author, but that redefinition had only reached `ba.md`/`debugger.md`'s body notes, not the frontmatter descriptions dispatchers actually read for routing. Closes `tasks/todo/2026-07-07-10-stale-tester-role-references.md`.
+
 ## [Unreleased] — Metrics ledger
 
 ### Added
