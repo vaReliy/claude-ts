@@ -8,7 +8,7 @@
 
 The orchestrator may use ONLY these tools directly:
 
-- `Agent`, `TeamCreate`, `TeamDelete`, `SendMessage` — dispatch & coordination
+- `Agent`, `SendMessage` — dispatch & coordination
 - `AskUserQuestion` — clarify ambiguous requirements
 - `TaskCreate`/`TaskUpdate` — track pipeline progress
 - `Read` — ONLY for @.claude/\*\* config files, @rules/\*\* and @AGENTS.md, plan files, agent reports
@@ -104,8 +104,8 @@ When it does not fire, the task is at most T1 — no `ba`, no blast-radius map, 
 ## Execution Model
 
 - **Sequential steps** → Agent tool with `subagent_type` (output feeds next step)
-- **Parallel phase** → TeamCreate + spawn teammates (2+ independent agents, no data dependency between them)
-- Do not create a team for a single agent
+- **Parallel phase** → spawn 2+ independent teammates via `Agent` (no data dependency between them)
+- Do not spawn a team of one — a single agent is a plain sequential dispatch
 
 ### Dispatch/report protocol
 
@@ -158,7 +158,7 @@ Team name: `impl-{feature-slug}` (e.g. `impl-user-registration`)
 **When to run as a team vs sequential:**
 
 - Backend-only change (no UI) → run `backend-developer` sequentially (no team needed)
-- Backend + UI change → TeamCreate with `backend-developer` + the relevant frontend agent(s)
+- Backend + UI change → spawn `backend-developer` + the relevant frontend agent(s) as parallel teammates
 - Frontend-only change → run the relevant frontend agent sequentially (no team needed)
 
 **Handoff checklist (orchestrator verifies before advancing to Phase 4):**
@@ -196,6 +196,8 @@ Spawn 3 teammates: `ba`, `ddd-architect`, `devil`.
 - Challenged agent responds directly
 - `devil` accepts response → silent on that point
 - `devil` escalates ignored challenge → orchestrator decides before proceeding to implementation phase
+
+**Spawn-context requirement**: when spawning a reviewer/challenger agent (e.g. `devil`) into an ongoing planning chain, paste every prior agent's **full** output into the new agent's spawn prompt up front — do not summarize and rely on the new agent fetching the rest via `SendMessage` to a teammate that may already be idle. A spawned agent cannot assume a previously-spawned teammate will re-serve its own past output on request once its own turn has ended; a direct `SendMessage` to an idle agent produces only an idle-notification ping, not the requested content, forcing a costly manual re-paste round-trip.
 
 ### Quality Gate (Mandatory — Sequential)
 
@@ -411,9 +413,8 @@ Append new entries using the same 3-line format (header line + `Why:` + `Belongs
 ## Team Conventions
 
 - **Naming**: `{purpose}-{slug}` — e.g. `qg-user-registration`, `verify-403-policy`
-- **Lifecycle**: TeamCreate before phase → spawn teammates → collect results → shutdown → TeamDelete
+- **Lifecycle**: spawn teammates with names under the phase's naming convention → collect results via their reports/`SendMessage` — there is no separate team object to create or delete
 - **No chatter**: quality gate agents report independently, orchestrator reads all reports and decides
-- **Always cleanup**: TeamDelete after phase completes (pass or fail)
 
 ## Skill Renaming
 
@@ -451,35 +452,27 @@ Also update any references in `AGENTS.md` skill tables and, in consumer projects
 
 ## Tool API Reference
 
-### TeamCreate
+**Team scoping is name-based, not object-based.** The `Agent` tool's `team_name` parameter is deprecated and ignored — the session has a single implicit team. There is no `TeamCreate`/`TeamDelete` call to make and nothing to explicitly tear down; a "team" is simply a set of agents spawned via plain `Agent` calls that address each other by name via `SendMessage`. If earlier revisions of this file (or a consumer project's copy) reference `TeamCreate`/`TeamDelete`/`team_name` as live tools, that documentation has drifted from the tool's actual behavior — update it to match this section rather than the reverse.
 
-```
-TeamCreate({ name: "qg-user-registration" })
-```
-
-### Spawn Agent into Team
+### Spawn agents into a team
 
 ```
 Agent({
   subagent_type: "tester",
-  team_name: "qg-user-registration",
+  name: "qg-user-registration-tester",
   prompt: "..."
 })
 ```
+
+Give each spawned agent a distinct `name` within the team's naming convention (see Team Conventions above) so other agents can address it directly.
 
 ### SendMessage (challenge / respond)
 
 ```
 SendMessage({
-  to: "ba",          // agent name within the team
+  to: "qg-user-registration-tester",  // agent name from its own spawn call
   message: "..."
 })
 ```
 
-### TeamDelete
-
-```
-TeamDelete({ name: "qg-user-registration" })
-```
-
-Always call TeamDelete after the team phase completes, whether it passed or failed.
+`SendMessage` only reaches an agent that is still active or idle-but-resumable in this session — it cannot fetch content from an agent whose turn has fully ended without a live process to resume. See the Planning Team section's "Spawn-context requirement" above: paste prior agents' full output into a new agent's spawn prompt rather than relying on a later `SendMessage` fetch.
