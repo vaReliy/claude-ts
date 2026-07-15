@@ -57,6 +57,10 @@ on:
 if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 ```
 
+### `on.branches` silently skips the entire job on non-matching branches
+
+When adding a new workflow, or adding CI coverage for a new branch, always verify the current branch is in the `on.branches` allow-list. A mismatch is fully silent — the job simply doesn't appear in the GitHub Actions UI for that branch, with no error or warning surfaced anywhere. This is easy to misdiagnose as a YAML syntax error or a workflow that "isn't running" for some other reason; check `on.branches` (or `on.push.branches` / `on.pull_request.branches`) first before a longer debugging pass.
+
 ## Secrets and Security
 
 - Never hardcode secrets — use `${{ secrets.NAME }}`
@@ -104,6 +108,7 @@ services:
     ports: ['5432:5432']
     options: >-
       --health-cmd="pg_isready" --health-interval=10s --health-timeout=5s --health-retries=3
+
 
   redis:
     image: redis:7

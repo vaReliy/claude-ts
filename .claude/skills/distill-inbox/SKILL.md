@@ -5,6 +5,7 @@ description: >-
   
   Українською: очистити inbox, дистилювати знання, перенести записи до rules, прибрати KNOWLEDGE_INBOX, розкласти по місцях.
 
+
 triggers:
   - distill-inbox
   - distill inbox
@@ -45,7 +46,11 @@ Use this routing map to match "Belongs in:" labels to the split rules structure:
 
 If a label says `rules/architecture.md` but the content is clearly NestJS-specific, route to `rules/architecture-backend.md` and note the reroute in the report.
 
-## Step 3 — Dispatch docs-writer
+## Step 3 — Check CTS-managed ledger obligation
+
+For each Category B target file about to be edited, check whether it is a template-inherited file: under `rules/**`, `.claude/agents/**`, `.claude/skills/**`, or is `CLAUDE.md` or `AGENTS.md`. If the target is template-inherited, the docs-writer dispatch in Step 4 MUST also append a `docs/CLAUDE_TS_CHANGELOG.md` entry (format per that file's own header) in the same pass — distilling content into a template-inherited file without ledgering it makes the change invisible to `/cts-contribute`. Files outside these paths (project-local docs, infrastructure) need no ledger entry.
+
+## Step 4 — Dispatch docs-writer
 
 Dispatch a `docs-writer` agent with:
 
@@ -72,7 +77,22 @@ TARGET: rules/architecture-backend.md
 [… grouped by target file …]
 ```
 
-## Step 4 — Report
+When inlining, follow these constraints to avoid fabricating broken examples or embellishing causal claims:
+
+- **Code examples**: Lift real code verbatim from the file or commit the inbox entry names (cite the path). Include no code at all if you cannot point to a real source — never invent illustrative snippets, as fabricated examples are where broken shell/pseudo-facts creep in.
+- **Causal claims**: Preserve the entry's stated mechanisms exactly. Do not upgrade, generalize, or reword explanations.
+
+## Step 4.5 — Verify against sources
+
+After docs-writer completes, re-read each distilled section side-by-side with the original inbox entry text. Check:
+
+1. Any code block traces to real code in the repo/commit history (cites a file path, doesn't invent).
+2. No semantic drift in causal claims — verify the distilled wording states the same mechanism, not a generalization.
+3. The target file's surrounding section still reads coherently and isn't corrupted by the splice (check for orphaned bullets, misplaced headings, or mangled lists).
+
+Any failure → fix before reporting.
+
+## Step 5 — Report
 
 After docs-writer completes, report:
 
