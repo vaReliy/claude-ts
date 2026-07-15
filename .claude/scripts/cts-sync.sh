@@ -8,6 +8,7 @@ DEFAULT_BRANCH="main"
 CACHE_DIR="$HOME/.cache/claude-ts"
 PAYLOAD_FILE="cts-payload.txt"
 VERSION_FILE=".cts-version"
+SOURCE_FILE=".cts-source"
 IGNORE_FILE=".ctsignore"
 
 usage() {
@@ -29,10 +30,11 @@ EOF
 [ $# -ge 1 ] || { usage; exit 1; }
 CMD="$1"; shift
 SOURCE="$DEFAULT_SOURCE"; BRANCH="$DEFAULT_BRANCH"; DRY_RUN=0; FORCE=0; NO_MERGE=0
+EXPLICIT_SOURCE=0; EXPLICIT_BRANCH=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    --source) SOURCE="$2"; shift 2 ;;
-    --branch) BRANCH="$2"; shift 2 ;;
+    --source) SOURCE="$2"; EXPLICIT_SOURCE=1; shift 2 ;;
+    --branch) BRANCH="$2"; EXPLICIT_BRANCH=1; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     --force) FORCE=1; shift ;;
     --no-merge) NO_MERGE=1; shift ;;
@@ -59,6 +61,24 @@ else
   SRC_DIR="$CACHE_DIR"
 fi
 NEW_SHA=$(git -C "$SRC_DIR" rev-parse HEAD 2>/dev/null || echo "local")
+
+# A plain re-run resolves the same DEFAULT_SOURCE/DEFAULT_BRANCH every time, but
+# a run that previously used an explicit --source/--branch (e.g. a local WIP
+# checkout) leaves no record of *which* source produced .cts-version's SHA.
+# A later plain-default run against a source with an older tip than that
+# previous one is then indistinguishable from upstream having lost commits —
+# only a diff against the wrong baseline. Record what was actually used, and
+# warn (don't block — the caller may legitimately be switching sources) when
+# an implicit (no flags passed) run's resolution disagrees with the last one.
+CURRENT_SOURCE_DESC="$SOURCE $BRANCH"
+if [ -f "$SOURCE_FILE" ] && [ "$EXPLICIT_SOURCE" != 1 ] && [ "$EXPLICIT_BRANCH" != 1 ]; then
+  PREV_SOURCE_DESC=$(cat "$SOURCE_FILE" 2>/dev/null || echo "")
+  if [ -n "$PREV_SOURCE_DESC" ] && [ "$PREV_SOURCE_DESC" != "$CURRENT_SOURCE_DESC" ]; then
+    echo "Warning: last sync used source \"$PREV_SOURCE_DESC\"; this run resolved \"$CURRENT_SOURCE_DESC\" — these differ." >&2
+    echo "         A large or unexpected diff below may reflect the source change, not upstream data loss." >&2
+    echo "         Pass --source/--branch to match the prior run, or continue to switch sources." >&2
+  fi
+fi
 
 mapfile -t PAYLOAD < <(grep -vE '^[[:space:]]*(#|$)' "$SRC_DIR/$PAYLOAD_FILE")
 
@@ -117,6 +137,28 @@ is_safe_rel() {
   return 0
 }
 
+# .claude/scripts/ contains this running script. Bash does not fully buffer a
+# script's source before executing straight-through code, so if copy_one wrote
+# the new .claude/scripts/cts-sync.sh directly, later reads of this script's
+# remaining bytes would land on the new file at the old file's byte offsets —
+# garbage that doesn't parse as any coherent statement, producing a spurious
+# non-zero exit (or worse) after all real work already completed correctly.
+# Fix: writes targeting .claude/scripts/ are staged here instead, and flushed
+# into place by flush_self_scripts as the literal last statement of the
+# script (see end of file) — nothing executes after that copy, so no
+# mid-read corruption is possible.
+SCRIPTS_STAGE=$(mktemp -d)
+is_self_script() {
+  case "$1" in .claude/scripts/*) return 0 ;; *) return 1 ;; esac
+}
+flush_self_scripts() {
+  if [ -d "$SCRIPTS_STAGE/.claude/scripts" ]; then
+    mkdir -p ./.claude/scripts
+    cp -rp "$SCRIPTS_STAGE/.claude/scripts/." ./.claude/scripts/
+  fi
+  rm -rf "$SCRIPTS_STAGE"
+}
+
 LOCALLY_MODIFIED=()
 
 # During update, a file is only fast-forwarded if the working copy still
@@ -162,7 +204,8 @@ CONFLICTS=()
 # locals dies with "unbound variable" under `set -u` at the worst possible
 # moment (mid-failure, right when cleanup is needed).
 merge_one() {
-  local rel="$1" clean=0
+  local rel="$1" clean=0 dest="./$1"
+  is_self_script "$rel" && dest="$SCRIPTS_STAGE/$rel"
   MERGE_BASE=$(mktemp); MERGE_RESULT=$(mktemp)
   trap 'rm -f "$MERGE_BASE" "$MERGE_RESULT"' EXIT
   git -C "$SRC_DIR" show "$OLD_SHA:$rel" > "$MERGE_BASE"
@@ -170,7 +213,8 @@ merge_one() {
   if [ "$DRY_RUN" = 1 ]; then
     if [ "$clean" = 1 ]; then echo "merge (dry-run): $rel"; else echo "conflict (dry-run): $rel"; fi
   else
-    cp "$MERGE_RESULT" "./$rel"
+    mkdir -p "$(dirname "$dest")"
+    cp "$MERGE_RESULT" "$dest"
     if [ "$clean" = 1 ]; then
       MERGED+=("$rel")
       echo "merged: $rel"
@@ -206,13 +250,16 @@ copy_one() {
     echo "copy: $rel"
     return
   fi
-  mkdir -p "$(dirname "./$rel")"
-  cp -p "$SRC_DIR/$rel" "./$rel"
+  local dest="./$rel"
+  is_self_script "$rel" && dest="$SCRIPTS_STAGE/$rel"
+  mkdir -p "$(dirname "$dest")"
+  cp -p "$SRC_DIR/$rel" "$dest"
 }
 
 # Walk a payload entry (file or directory) and copy every file under it.
-# .claude/scripts/ is last in the payload, so the running script overwrites
-# itself only after everything else has been copied.
+# .claude/scripts/ is last in the payload; its writes land in SCRIPTS_STAGE
+# (see is_self_script/flush_self_scripts above) rather than the real path, so
+# the running script's own on-disk bytes never change mid-execution.
 sync_path() {
   local entry="${1%/}"
   if [ -d "$SRC_DIR/$entry" ]; then
@@ -233,6 +280,7 @@ if [ "$CMD" = init ]; then
   for entry in "${PAYLOAD[@]}"; do sync_path "$entry"; done
   if [ "$DRY_RUN" != 1 ]; then
     echo "$NEW_SHA" > "$VERSION_FILE"
+    echo "$CURRENT_SOURCE_DESC" > "$SOURCE_FILE"
     [ -f "$IGNORE_FILE" ] || cat > "$IGNORE_FILE" <<'EOF'
 # .ctsignore — gitignore-syntax paths that `cts-sync.sh update` will never touch.
 # Use for: customized CTS files, pruned CTS files (prevents re-adding them),
@@ -274,6 +322,14 @@ else
       git -C "$SRC_DIR" log --oneline "$OLD_SHA..$NEW_SHA"
     fi
   fi
-  [ "$DRY_RUN" = 1 ] || echo "$NEW_SHA" > "$VERSION_FILE"
+  if [ "$DRY_RUN" != 1 ]; then
+    echo "$NEW_SHA" > "$VERSION_FILE"
+    echo "$CURRENT_SOURCE_DESC" > "$SOURCE_FILE"
+  fi
   echo "Done. Review with: git diff"
 fi
+
+# Must be the literal last statement — see the comment on SCRIPTS_STAGE above.
+# Everything above this line has already executed and produced its output;
+# nothing reads further into this script's own source after this call.
+flush_self_scripts
