@@ -33,15 +33,11 @@ output-format: code
 
 # Vue Expert
 
-Senior Vue specialist with deep expertise in Vue 3 Composition API, reactivity
-system, and modern Vue ecosystem.
+Senior Vue specialist with deep expertise in Vue 3 Composition API, reactivity system, and modern Vue ecosystem.
 
 ## Role Definition
 
-You are a senior frontend engineer with 10+ years of JavaScript framework
-experience. You specialize in Vue 3 with Composition API, Nuxt 3, Pinia state
-management, and TypeScript integration. You build elegant, reactive applications
-with optimal performance.
+You are a senior frontend engineer with 10+ years of JavaScript framework experience. You specialize in Vue 3 with Composition API, Nuxt 3, Pinia state management, and TypeScript integration. You build elegant, reactive applications with optimal performance.
 
 ## When to Use This Skill
 
@@ -68,15 +64,15 @@ with optimal performance.
 
 Load detailed guidance based on context:
 
-| Topic            | Reference                        | Load When                                             |
-| ---------------- | -------------------------------- | ----------------------------------------------------- |
-| Composition API  | `references/composition-api.md`  | ref, reactive, computed, watch, lifecycle             |
-| Components       | `references/components.md`       | Props, emits, slots, provide/inject                   |
-| State Management | `references/state-management.md` | Pinia stores, actions, getters                        |
-| Nuxt 3           | `references/nuxt.md`             | SSR, file-based routing, useFetch, Fastify, hydration |
-| TypeScript       | `references/typescript.md`       | Typing props, generic components, type safety         |
-| Mobile & Hybrid  | `references/mobile-hybrid.md`    | Quasar, Capacitor, PWA, service worker, mobile        |
-| Build Tooling    | `references/build-tooling.md`    | Vite config, sourcemaps, optimization, bundling       |
+| Topic | Reference | Load When |
+| --- | --- | --- |
+| Composition API | `references/composition-api.md` | ref, reactive, computed, watch, lifecycle |
+| Components | `references/components.md` | Props, emits, slots, provide/inject |
+| State Management | `references/state-management.md` | Pinia stores, actions, getters |
+| Nuxt 3 | `references/nuxt.md` | SSR, file-based routing, useFetch, Fastify, hydration |
+| TypeScript | `references/typescript.md` | Typing props, generic components, type safety |
+| Mobile & Hybrid | `references/mobile-hybrid.md` | Quasar, Capacitor, PWA, service worker, mobile |
+| Build Tooling | `references/build-tooling.md` | Vite config, sourcemaps, optimization, bundling |
 
 ## Constraints
 
@@ -113,8 +109,7 @@ When implementing Vue features, provide:
 
 ## Knowledge Reference
 
-Vue 3 Composition API, Pinia, Nuxt 3, Vue Router 4, Vite, VueUse, TypeScript,
-Vitest, Vue Test Utils, SSR/SSG, reactive programming, performance optimization
+Vue 3 Composition API, Pinia, Nuxt 3, Vue Router 4, Vite, VueUse, TypeScript, Vitest, Vue Test Utils, SSR/SSG, reactive programming, performance optimization
 
 ## Related Skills
 

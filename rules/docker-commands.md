@@ -69,5 +69,4 @@ docker compose exec app npm ci
 docker compose exec app npm ci --production
 ```
 
-> **NEVER run commands outside Docker** — all dependencies exist only in the container.
-> **NEVER put business logic in route handlers** — use UseCases/Services.
+> **NEVER run commands outside Docker** — all dependencies exist only in the container. **NEVER put business logic in route handlers** — use UseCases/Services.

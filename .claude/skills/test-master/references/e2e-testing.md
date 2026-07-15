@@ -1,12 +1,16 @@
 # E2E Testing
 
-> Reference for: Test Master
-> Load when: E2E strategy, user flow testing
+> Reference for: Test Master Load when: E2E strategy, user flow testing
 
 ## E2E Test Strategy
 
 ```typescript
-const criticalPaths = ['User registration and login', 'Core product/service workflow', 'Payment/checkout flow', 'Settings and profile management'];
+const criticalPaths = [
+  'User registration and login',
+  'Core product/service workflow',
+  'Payment/checkout flow',
+  'Settings and profile management',
+];
 ```
 
 ## User Flow Testing

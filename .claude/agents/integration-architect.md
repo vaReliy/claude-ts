@@ -1,6 +1,7 @@
 ---
 name: integration-architect
-description: "External service integration specialist. NOT for application code (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: integrate, webhook, OAuth, API client, external service, third-party, payment gateway, social login.\nTrigger — UA: інтеграція, вебхук, OAuth, зовнішній сервіс."
+description:
+  "External service integration specialist. NOT for application code (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: integrate, webhook, OAuth, API client, external service, third-party, payment gateway, social login.\nTrigger — UA: інтеграція, вебхук, OAuth, зовнішній сервіс."
 model: sonnet
 color: cyan
 tools:
@@ -51,16 +52,16 @@ Before writing or modifying any code, additionally read:
 
 ## Common Integration Patterns
 
-| Service                   | Library                                       | Purpose                |
-| ------------------------- | --------------------------------------------- | ---------------------- |
-| **OAuth (Google/GitHub)** | `passport-google-oauth20`, `passport-github2` | Social login           |
-| **JWT**                   | `jsonwebtoken` / `jose`                       | Token auth             |
-| **Redis**                 | `ioredis`                                     | Cache, sessions, queue |
-| **PostgreSQL**            | Prisma / `pg`                                 | Primary database       |
-| **Email**                 | `nodemailer` / Resend SDK                     | Transactional email    |
-| **Payment**               | Stripe SDK                                    | Payment processing     |
-| **File uploads**          | `multer` + S3 SDK                             | Object storage         |
-| **HTTP client**           | Axios                                         | External API calls     |
+| Service | Library | Purpose |
+| --- | --- | --- |
+| **OAuth (Google/GitHub)** | `passport-google-oauth20`, `passport-github2` | Social login |
+| **JWT** | `jsonwebtoken` / `jose` | Token auth |
+| **Redis** | `ioredis` | Cache, sessions, queue |
+| **PostgreSQL** | Prisma / `pg` | Primary database |
+| **Email** | `nodemailer` / Resend SDK | Transactional email |
+| **Payment** | Stripe SDK | Payment processing |
+| **File uploads** | `multer` + S3 SDK | Object storage |
+| **HTTP client** | Axios | External API calls |
 
 ## Integration Patterns
 
@@ -97,5 +98,4 @@ Reports back to orchestrator: terse fragments, bullets, no prose, ≤300 words.
 - Lead with verdict/result; details after.
 - Status markers: 🔴 critical / 🟡 important / 🟢 ok (quality-gate agents).
 - If you discovered something durable and non-obvious (config recipe, wrong-pattern gotcha, test anti-pattern, library constraint), add a `## Learnings` section at the end of your report — the orchestrator records it in `docs/KNOWLEDGE_INBOX.md`.
-- EXEMPT from compression: code, migrations, API contracts, user stories consumed
-  by next phase, PR descriptions — these stay complete and precise.
+- EXEMPT from compression: code, migrations, API contracts, user stories consumed by next phase, PR descriptions — these stay complete and precise.

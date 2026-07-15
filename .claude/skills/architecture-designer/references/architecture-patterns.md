@@ -4,13 +4,13 @@
 
 ## Pattern Comparison
 
-| Pattern              | Best For                    | Team Size | Trade-offs                                |
-| -------------------- | --------------------------- | --------- | ----------------------------------------- |
-| **Monolith**         | Simple domain, small team   | 1-10      | Simple deploy; hard to scale parts        |
-| **Modular Monolith** | Growing complexity          | 5-20      | Module boundaries; still single deploy    |
-| **Microservices**    | Complex domain, large org   | 20+       | Independent scale; operational complexity |
-| **Serverless**       | Variable load, event-driven | Any       | Auto-scale; cold starts, vendor lock      |
-| **Event-Driven**     | Async processing            | 10+       | Loose coupling; debugging complexity      |
+| Pattern | Best For | Team Size | Trade-offs |
+| --- | --- | --- | --- |
+| **Monolith** | Simple domain, small team | 1-10 | Simple deploy; hard to scale parts |
+| **Modular Monolith** | Growing complexity | 5-20 | Module boundaries; still single deploy |
+| **Microservices** | Complex domain, large org | 20+ | Independent scale; operational complexity |
+| **Serverless** | Variable load, event-driven | Any | Auto-scale; cold starts, vendor lock |
+| **Event-Driven** | Async processing | 10+ | Loose coupling; debugging complexity |
 
 ## Monolith
 
@@ -32,8 +32,7 @@
 - Simple domain
 - Rapid iteration needed
 
-**Pros**: Simple deployment, easy debugging, no network latency **Cons**: Hard
-to scale independently, technology locked, deployment risk
+**Pros**: Simple deployment, easy debugging, no network latency **Cons**: Hard to scale independently, technology locked, deployment risk
 
 ## Microservices
 
@@ -55,8 +54,7 @@ to scale independently, technology locked, deployment risk
 - Different scaling requirements per service
 - Polyglot technology needs
 
-**Pros**: Independent scaling, team autonomy, fault isolation **Cons**:
-Distributed system complexity, eventual consistency, operational overhead
+**Pros**: Independent scaling, team autonomy, fault isolation **Cons**: Distributed system complexity, eventual consistency, operational overhead
 
 ## Event-Driven
 
@@ -79,8 +77,7 @@ Distributed system complexity, eventual consistency, operational overhead
 - Event sourcing needs
 - High throughput messaging
 
-**Pros**: Decoupled services, scalable, audit trail **Cons**: Eventual
-consistency, debugging complexity, message ordering
+**Pros**: Decoupled services, scalable, audit trail **Cons**: Eventual consistency, debugging complexity, message ordering
 
 ## CQRS (Command Query Responsibility Segregation)
 

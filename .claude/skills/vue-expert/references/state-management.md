@@ -1,7 +1,6 @@
 # State Management with Pinia
 
-> Reference for: Vue Expert Load when: Pinia stores, actions, getters, state
-> management
+> Reference for: Vue Expert Load when: Pinia stores, actions, getters, state management
 
 ## Basic Store Setup
 
@@ -82,7 +81,7 @@ const { increment, decrement } = counter
 
 ```typescript
 // stores/user.ts
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
 interface User {
   id: number;
@@ -96,7 +95,7 @@ interface UserState {
   loading: boolean;
 }
 
-export const useUserStore = defineStore("user", {
+export const useUserStore = defineStore('user', {
   // State
   state: (): UserState => ({
     user: null,
@@ -125,10 +124,10 @@ export const useUserStore = defineStore("user", {
     async fetchUsers() {
       this.loading = true;
       try {
-        const response = await fetch("/api/users");
+        const response = await fetch('/api/users');
         this.users = await response.json();
       } catch (error) {
-        console.error("Failed to fetch users:", error);
+        console.error('Failed to fetch users:', error);
       } finally {
         this.loading = false;
       }
@@ -137,14 +136,14 @@ export const useUserStore = defineStore("user", {
     async login(email: string, password: string) {
       this.loading = true;
       try {
-        const response = await fetch("/api/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
         });
         this.user = await response.json();
       } catch (error) {
-        console.error("Login failed:", error);
+        console.error('Login failed:', error);
         throw error;
       } finally {
         this.loading = false;
@@ -169,8 +168,8 @@ export const useUserStore = defineStore("user", {
 
 ```typescript
 // stores/todos.ts
-import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
 
 interface Todo {
   id: number;
@@ -179,21 +178,21 @@ interface Todo {
   createdAt: Date;
 }
 
-type TodoFilter = "all" | "active" | "completed";
+type TodoFilter = 'all' | 'active' | 'completed';
 
-export const useTodoStore = defineStore("todos", () => {
+export const useTodoStore = defineStore('todos', () => {
   // State
   const todos = ref<Todo[]>([]);
-  const filter = ref<TodoFilter>("all");
+  const filter = ref<TodoFilter>('all');
   const loading = ref(false);
   const error = ref<string | null>(null);
 
   // Getters
   const filteredTodos = computed(() => {
     switch (filter.value) {
-      case "active":
+      case 'active':
         return todos.value.filter((t) => !t.completed);
-      case "completed":
+      case 'completed':
         return todos.value.filter((t) => t.completed);
       default:
         return todos.value;
@@ -213,11 +212,11 @@ export const useTodoStore = defineStore("todos", () => {
     loading.value = true;
     error.value = null;
     try {
-      const response = await fetch("/api/todos");
-      if (!response.ok) throw new Error("Failed to fetch todos");
+      const response = await fetch('/api/todos');
+      if (!response.ok) throw new Error('Failed to fetch todos');
       todos.value = await response.json();
     } catch (e) {
-      error.value = e instanceof Error ? e.message : "Unknown error";
+      error.value = e instanceof Error ? e.message : 'Unknown error';
     } finally {
       loading.value = false;
     }
@@ -280,17 +279,17 @@ export const useTodoStore = defineStore("todos", () => {
 
 ```typescript
 // stores/cart.ts
-import { defineStore } from "pinia";
-import { ref, computed } from "vue";
-import { useUserStore } from "./user";
-import { useProductStore } from "./product";
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { useUserStore } from './user';
+import { useProductStore } from './product';
 
 interface CartItem {
   productId: number;
   quantity: number;
 }
 
-export const useCartStore = defineStore("cart", () => {
+export const useCartStore = defineStore('cart', () => {
   const items = ref<CartItem[]>([]);
 
   const userStore = useUserStore();
@@ -314,7 +313,7 @@ export const useCartStore = defineStore("cart", () => {
 
   async function checkout() {
     if (!userStore.isLoggedIn) {
-      throw new Error("User must be logged in to checkout");
+      throw new Error('User must be logged in to checkout');
     }
 
     // Checkout logic
@@ -325,9 +324,9 @@ export const useCartStore = defineStore("cart", () => {
     };
 
     // Make API call
-    await fetch("/api/checkout", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    await fetch('/api/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(order),
     });
 
@@ -342,18 +341,18 @@ export const useCartStore = defineStore("cart", () => {
 
 ```typescript
 // plugins/pinia-logger.ts
-import { PiniaPluginContext } from "pinia";
+import { PiniaPluginContext } from 'pinia';
 
 export function piniaLogger({ store }: PiniaPluginContext) {
   store.$subscribe((mutation, state) => {
     console.log(`[${store.$id}]:`, mutation.type, mutation.payload);
-    console.log("New state:", state);
+    console.log('New state:', state);
   });
 }
 
 // main.ts
-import { createPinia } from "pinia";
-import { piniaLogger } from "./plugins/pinia-logger";
+import { createPinia } from 'pinia';
+import { piniaLogger } from './plugins/pinia-logger';
 
 const pinia = createPinia();
 pinia.use(piniaLogger);
@@ -367,20 +366,20 @@ app.use(pinia);
 // Install: npm install pinia-plugin-persistedstate
 
 // main.ts
-import { createPinia } from "pinia";
-import piniaPluginPersistedstate from "pinia-plugin-persistedstate";
+import { createPinia } from 'pinia';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
 
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
 
 // stores/settings.ts
 export const useSettingsStore = defineStore(
-  "settings",
+  'settings',
   () => {
-    const theme = ref<"light" | "dark">("light");
-    const language = ref("en");
+    const theme = ref<'light' | 'dark'>('light');
+    const language = ref('en');
 
-    function setTheme(newTheme: "light" | "dark") {
+    function setTheme(newTheme: 'light' | 'dark') {
       theme.value = newTheme;
     }
 
@@ -393,7 +392,7 @@ export const useSettingsStore = defineStore(
 
 // Advanced persistence
 export const useAuthStore = defineStore(
-  "auth",
+  'auth',
   () => {
     const token = ref<string | null>(null);
     const user = ref<User | null>(null);
@@ -402,9 +401,9 @@ export const useAuthStore = defineStore(
   },
   {
     persist: {
-      key: "auth-storage",
+      key: 'auth-storage',
       storage: sessionStorage,
-      paths: ["token"], // Only persist token, not user
+      paths: ['token'], // Only persist token, not user
     },
   },
 );
@@ -414,29 +413,29 @@ export const useAuthStore = defineStore(
 
 ```typescript
 // stores/__tests__/counter.spec.ts
-import { setActivePinia, createPinia } from "pinia";
-import { describe, it, expect, beforeEach } from "vitest";
-import { useCounterStore } from "../counter";
+import { setActivePinia, createPinia } from 'pinia';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { useCounterStore } from '../counter';
 
-describe("Counter Store", () => {
+describe('Counter Store', () => {
   beforeEach(() => {
     setActivePinia(createPinia());
   });
 
-  it("increments count", () => {
+  it('increments count', () => {
     const counter = useCounterStore();
     expect(counter.count).toBe(0);
     counter.increment();
     expect(counter.count).toBe(1);
   });
 
-  it("doubles count", () => {
+  it('doubles count', () => {
     const counter = useCounterStore();
     counter.count = 5;
     expect(counter.doubleCount).toBe(10);
   });
 
-  it("resets count", () => {
+  it('resets count', () => {
     const counter = useCounterStore();
     counter.count = 10;
     counter.reset();

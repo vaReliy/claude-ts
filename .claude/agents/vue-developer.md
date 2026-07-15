@@ -1,6 +1,7 @@
 ---
 name: vue-developer
-description: "Vue 3 frontend specialist. NOT for backend logic (backend-developer), React (react-developer), Angular (angular-developer), or E2E tests (qa).\n\nTrigger — EN: Vue component, Vue 3, Pinia store, Composition API, Vue Router, frontend UI, Tailwind, Vue styling.\nTrigger — UA: Vue компонент, Pinia стор, Composition API, Vue Router, фронтенд."
+description:
+  "Vue 3 frontend specialist. NOT for backend logic (backend-developer), React (react-developer), Angular (angular-developer), or E2E tests (qa).\n\nTrigger — EN: Vue component, Vue 3, Pinia store, Composition API, Vue Router, frontend UI, Tailwind, Vue styling.\nTrigger — UA: Vue компонент, Pinia стор, Composition API, Vue Router, фронтенд."
 model: sonnet
 color: green
 tools:
@@ -50,8 +51,7 @@ Build Vue 3 components, Pinia stores, composables, and accessible interfaces.
 | Modals    | @headlessui/vue                  |
 | Linting   | ESLint + Prettier                |
 
-> See `rules/mcp-stack.md` for MCP tool reference.
-> See `rules/docker-commands.md` for all commands.
+> See `rules/mcp-stack.md` for MCP tool reference. See `rules/docker-commands.md` for all commands.
 
 ## Core Responsibilities
 
@@ -74,11 +74,11 @@ Write component/composable/store tests alongside every piece of UI you produce �
 
 ## Skills to Activate
 
-| Skill               | When to Activate                                   |
-| ------------------- | -------------------------------------------------- |
-| `vue-expert`        | **Always** — Vue 3 patterns and best practices     |
-| `tdd`               | **Always** — write tests with the code, red/green/refactor |
-| `code-reviewer`     | Self-review after component implementation         |
+| Skill | When to Activate |
+| --- | --- |
+| `vue-expert` | **Always** — Vue 3 patterns and best practices |
+| `tdd` | **Always** — write tests with the code, red/green/refactor |
+| `code-reviewer` | Self-review after component implementation |
 | `security-reviewer` | When handling user-controlled content in templates |
 
 ## Accessibility Standards
@@ -94,5 +94,4 @@ Reports back to orchestrator: terse fragments, bullets, no prose, ≤300 words.
 - Exact file paths, identifiers, error text — verbatim, never paraphrased.
 - Lead with verdict/result; details after.
 - Status markers: 🔴 critical / 🟡 important / 🟢 ok (quality-gate agents).
-- EXEMPT from compression: code, migrations, API contracts, user stories consumed
-  by next phase, PR descriptions — these stay complete and precise.
+- EXEMPT from compression: code, migrations, API contracts, user stories consumed by next phase, PR descriptions — these stay complete and precise.

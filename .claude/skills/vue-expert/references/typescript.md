@@ -1,7 +1,6 @@
 # TypeScript with Vue 3
 
-> Reference for: Vue Expert Load when: TypeScript integration, typing props,
-> generic components
+> Reference for: Vue Expert Load when: TypeScript integration, typing props, generic components
 
 ## Component Props Typing
 
@@ -26,8 +25,8 @@ const propsWithDefaults = withDefaults(defineProps<Props>(), {
 
 // Union types
 interface PropsWithUnion {
-  status: "success" | "error" | "warning";
-  size: "sm" | "md" | "lg";
+  status: 'success' | 'error' | 'warning';
+  size: 'sm' | 'md' | 'lg';
 }
 
 // Complex types
@@ -54,16 +53,16 @@ const complexProps = defineProps<ComplexProps>();
 <script setup lang="ts">
 // Type-safe emits
 interface Emits {
-  (e: "update", value: string): void;
-  (e: "delete", id: number): void;
-  (e: "submit", payload: { name: string; email: string }): void;
+  (e: 'update', value: string): void;
+  (e: 'delete', id: number): void;
+  (e: 'submit', payload: { name: string; email: string }): void;
 }
 
 const emit = defineEmits<Emits>();
 
 // Usage
 function handleUpdate(value: string) {
-  emit("update", value); // Type-safe
+  emit('update', value); // Type-safe
   // emit('update', 123) // Error: number not assignable to string
 }
 
@@ -82,11 +81,11 @@ const emit2 = defineEmits<EmitsType>();
 
 ```vue
 <script setup lang="ts">
-import { ref, Ref } from "vue";
+import { ref, Ref } from 'vue';
 
 // Type inference
 const count = ref(0); // Ref<number>
-const message = ref("hello"); // Ref<string>
+const message = ref('hello'); // Ref<string>
 
 // Explicit typing
 const user = ref<User | null>(null);
@@ -100,8 +99,8 @@ interface FormData {
 }
 
 const form = ref<FormData>({
-  username: "",
-  email: "",
+  username: '',
+  email: '',
   age: 0,
 });
 
@@ -118,7 +117,7 @@ updateCount(count);
 
 ```vue
 <script setup lang="ts">
-import { reactive } from "vue";
+import { reactive } from 'vue';
 
 interface State {
   count: number;
@@ -133,8 +132,8 @@ interface State {
 const state = reactive<State>({
   count: 0,
   user: {
-    name: "",
-    email: "",
+    name: '',
+    email: '',
   },
   items: [],
 });
@@ -142,7 +141,7 @@ const state = reactive<State>({
 // Type inference
 const inferredState = reactive({
   count: 0, // number
-  message: "hello", // string
+  message: 'hello', // string
   active: true, // boolean
 });
 </script>
@@ -152,7 +151,7 @@ const inferredState = reactive({
 
 ```vue
 <script setup lang="ts">
-import { ref, computed, ComputedRef } from "vue";
+import { ref, computed, ComputedRef } from 'vue';
 
 const count = ref(0);
 
@@ -168,7 +167,7 @@ interface User {
   lastName: string;
 }
 
-const user = ref<User>({ firstName: "John", lastName: "Doe" });
+const user = ref<User>({ firstName: 'John', lastName: 'Doe' });
 
 const fullName = computed<string>(() => {
   return `${user.value.firstName} ${user.value.lastName}`;
@@ -180,7 +179,7 @@ const fullNameWritable = computed<string>({
     return `${user.value.firstName} ${user.value.lastName}`;
   },
   set(value: string) {
-    const [first, last] = value.split(" ");
+    const [first, last] = value.split(' ');
     user.value.firstName = first;
     user.value.lastName = last;
   },
@@ -192,7 +191,7 @@ const fullNameWritable = computed<string>({
 
 ```vue
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted } from 'vue';
 
 // HTML element refs
 const inputRef = ref<HTMLInputElement | null>(null);
@@ -206,7 +205,7 @@ onMounted(() => {
 });
 
 // Component refs
-import ChildComponent from "./ChildComponent.vue";
+import ChildComponent from './ChildComponent.vue';
 
 const childRef = ref<InstanceType<typeof ChildComponent> | null>(null);
 
@@ -326,14 +325,14 @@ interface Props {
 }
 
 interface Emits {
-  (e: "select", item: T): void;
+  (e: 'select', item: T): void;
 }
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
 
 function handleSelect(item: T) {
-  emit("select", item);
+  emit('select', item);
 }
 </script>
 
@@ -353,10 +352,10 @@ interface User {
   email: string;
 }
 
-const users: User[] = [{ id: 1, name: "John", email: "john@example.com" }];
+const users: User[] = [{ id: 1, name: 'John', email: 'john@example.com' }];
 
 function handleUserSelect(user: User) {
-  console.log("Selected user:", user.name);
+  console.log('Selected user:', user.name);
 }
 </script>
 
@@ -384,8 +383,8 @@ function handleInput(event: Event) {
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  if (event.key === "Enter") {
-    console.log("Enter pressed");
+  if (event.key === 'Enter') {
+    console.log('Enter pressed');
   }
 }
 
@@ -412,7 +411,7 @@ function handleCustomEvent(payload: CustomPayload) {
 ```vue
 <!-- Parent.vue -->
 <script setup lang="ts">
-import { provide, InjectionKey, Ref, ref } from "vue";
+import { provide, InjectionKey, Ref, ref } from 'vue';
 
 interface UserContext {
   user: Ref<User>;
@@ -422,7 +421,7 @@ interface UserContext {
 // Create typed injection key
 export const userContextKey = Symbol() as InjectionKey<UserContext>;
 
-const user = ref<User>({ id: 1, name: "John", email: "john@example.com" });
+const user = ref<User>({ id: 1, name: 'John', email: 'john@example.com' });
 
 function updateUser(newUser: User) {
   user.value = newUser;
@@ -437,15 +436,15 @@ provide(userContextKey, {
 
 <!-- Child.vue -->
 <script setup lang="ts">
-import { inject } from "vue";
-import { userContextKey } from "./Parent.vue";
+import { inject } from 'vue';
+import { userContextKey } from './Parent.vue';
 
 // Inject with type safety
 const userContext = inject(userContextKey);
 
 // With default value
 const defaultContext: UserContext = {
-  user: ref({ id: 0, name: "", email: "" }),
+  user: ref({ id: 0, name: '', email: '' }),
   updateUser: () => {},
 };
 
@@ -454,7 +453,7 @@ const contextWithDefault = inject(userContextKey, defaultContext);
 // Or throw if not provided
 const requiredContext = inject(userContextKey);
 if (!requiredContext) {
-  throw new Error("User context not provided");
+  throw new Error('User context not provided');
 }
 </script>
 ```
@@ -463,23 +462,23 @@ if (!requiredContext) {
 
 ```typescript
 // stores/user.ts
-import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
 
 interface User {
   id: number;
   name: string;
   email: string;
-  role: "admin" | "user";
+  role: 'admin' | 'user';
 }
 
-export const useUserStore = defineStore("user", () => {
+export const useUserStore = defineStore('user', () => {
   // State
   const user = ref<User | null>(null);
   const users = ref<User[]>([]);
 
   // Getters
-  const isAdmin = computed(() => user.value?.role === "admin");
+  const isAdmin = computed(() => user.value?.role === 'admin');
   const userCount = computed(() => users.value.length);
 
   // Actions

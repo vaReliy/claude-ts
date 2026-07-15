@@ -1,6 +1,7 @@
 ---
 name: docs-writer
-description: "Technical documentation specialist and PR creator. NOT for application code (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: write docs, README, API docs, architecture guide, deployment guide, JSDoc, create PR.\nTrigger — UA: документація, README, задокументуй, PR."
+description:
+  "Technical documentation specialist and PR creator. NOT for application code (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: write docs, README, API docs, architecture guide, deployment guide, JSDoc, create PR.\nTrigger — UA: документація, README, задокументуй, PR."
 model: haiku
 color: gray
 tools:
@@ -75,5 +76,4 @@ Reports back to orchestrator: terse fragments, bullets, no prose, ≤300 words.
 - Exact file paths, identifiers, error text — verbatim, never paraphrased.
 - Lead with verdict/result; details after.
 - Status markers: 🔴 critical / 🟡 important / 🟢 ok (quality-gate agents).
-- EXEMPT from compression: code, migrations, API contracts, user stories consumed
-  by next phase, PR descriptions — these stay complete and precise.
+- EXEMPT from compression: code, migrations, API contracts, user stories consumed by next phase, PR descriptions — these stay complete and precise.

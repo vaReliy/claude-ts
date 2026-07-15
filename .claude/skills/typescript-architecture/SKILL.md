@@ -1,12 +1,10 @@
 ---
 name: typescript-architecture
 description: >-
-  Clean Architecture patterns for Node.js/TypeScript. Use when designing
-  UseCase/Service/Repository layers, domain organization, dependency injection,
-  or making architecture decisions for Node.js backends.
+  Clean Architecture patterns for Node.js/TypeScript. Use when designing UseCase/Service/Repository layers, domain organization, dependency injection, or making architecture decisions for Node.js backends.
+  
+  Українською: архітектура Node.js, чиста архітектура, UseCase, сервіс, репозиторій, шари архітектури, ін'єкція залежностей, доменна логіка.
 
-  Українською: архітектура Node.js, чиста архітектура, UseCase, сервіс,
-  репозиторій, шари архітектури, ін'єкція залежностей, доменна логіка.
 triggers:
   - Clean Architecture
   - UseCase
@@ -118,7 +116,11 @@ Constructor injection (works with NestJS, tsyringe, inversify, or manual wiring)
 // Manual wiring (no framework)
 const postRepository = new PrismaPostRepository(prisma);
 const slugService = new SlugService();
-const createPostUseCase = new CreatePostUseCase(postRepository, slugService, eventBus);
+const createPostUseCase = new CreatePostUseCase(
+  postRepository,
+  slugService,
+  eventBus,
+);
 ```
 
 ## Directory Structure

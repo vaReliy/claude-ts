@@ -1,7 +1,6 @@
 # Build Tooling & Vite
 
-> Reference for: Vue Expert Load when: Vite config, build optimization,
-> sourcemaps, bundling, tree shaking, chunk splitting
+> Reference for: Vue Expert Load when: Vite config, build optimization, sourcemaps, bundling, tree shaking, chunk splitting
 
 ---
 
@@ -11,22 +10,22 @@
 
 ```typescript
 // vite.config.ts
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
   plugins: [vue()],
   resolve: {
     alias: {
-      "@": fileURLToPath(new URL("./src", import.meta.url)),
-      "@components": fileURLToPath(
-        new URL("./src/components", import.meta.url),
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
+      '@components': fileURLToPath(
+        new URL('./src/components', import.meta.url),
       ),
-      "@composables": fileURLToPath(
-        new URL("./src/composables", import.meta.url),
+      '@composables': fileURLToPath(
+        new URL('./src/composables', import.meta.url),
       ),
-      "@stores": fileURLToPath(new URL("./src/stores", import.meta.url)),
+      '@stores': fileURLToPath(new URL('./src/stores', import.meta.url)),
     },
   },
 });
@@ -36,12 +35,12 @@ export default defineConfig({
 
 ```typescript
 // vite.config.ts
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import VueDevTools from "vite-plugin-vue-devtools";
-import Components from "unplugin-vue-components/vite";
-import AutoImport from "unplugin-auto-import/vite";
-import { QuasarResolver } from "unplugin-vue-components/resolvers";
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import VueDevTools from 'vite-plugin-vue-devtools';
+import Components from 'unplugin-vue-components/vite';
+import AutoImport from 'unplugin-auto-import/vite';
+import { QuasarResolver } from 'unplugin-vue-components/resolvers';
 
 export default defineConfig({
   plugins: [
@@ -52,16 +51,16 @@ export default defineConfig({
 
     // Auto-import components
     Components({
-      dirs: ["src/components"],
+      dirs: ['src/components'],
       resolvers: [QuasarResolver()],
-      dts: "src/components.d.ts",
+      dts: 'src/components.d.ts',
     }),
 
     // Auto-import Vue APIs
     AutoImport({
-      imports: ["vue", "vue-router", "pinia"],
-      dts: "src/auto-imports.d.ts",
-      dirs: ["src/composables"],
+      imports: ['vue', 'vue-router', 'pinia'],
+      dts: 'src/auto-imports.d.ts',
+      dirs: ['src/composables'],
       vueTemplate: true,
     }),
   ],
@@ -116,13 +115,13 @@ export default defineConfig({
     port: 5173,
     host: true,
     proxy: {
-      "/api": {
-        target: "http://localhost:3000",
+      '/api': {
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, ""),
+        rewrite: (path) => path.replace(/^\/api/, ''),
       },
-      "/ws": {
-        target: "ws://localhost:3000",
+      '/ws': {
+        target: 'ws://localhost:3000',
         ws: true,
       },
     },
@@ -153,7 +152,7 @@ export default defineConfig({
 export default defineConfig({
   build: {
     // Options: true | 'inline' | 'hidden' | false
-    sourcemap: process.env.NODE_ENV === "production" ? "hidden" : true,
+    sourcemap: process.env.NODE_ENV === 'production' ? 'hidden' : true,
   },
 });
 ```
@@ -190,7 +189,7 @@ export default defineConfig({
 
 ```typescript
 // vite.config.ts
-import { sentryVitePlugin } from "@sentry/vite-plugin";
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig({
   build: {
@@ -198,12 +197,12 @@ export default defineConfig({
   },
   plugins: [
     sentryVitePlugin({
-      org: "your-org",
-      project: "your-project",
+      org: 'your-org',
+      project: 'your-project',
       authToken: process.env.SENTRY_AUTH_TOKEN,
       sourcemaps: {
-        assets: "./dist/**",
-        filesToDeleteAfterUpload: "./dist/**/*.map",
+        assets: './dist/**',
+        filesToDeleteAfterUpload: './dist/**/*.map',
       },
     }),
   ],
@@ -218,13 +217,13 @@ export default defineConfig({
 
 ```typescript
 // Good: Named imports enable tree shaking
-import { ref, computed, watch } from "vue";
-import { storeToRefs } from "pinia";
-import { format, parseISO } from "date-fns";
+import { ref, computed, watch } from 'vue';
+import { storeToRefs } from 'pinia';
+import { format, parseISO } from 'date-fns';
 
 // Bad: Namespace imports include everything
-import * as Vue from "vue";
-import * as dateFns from "date-fns";
+import * as Vue from 'vue';
+import * as dateFns from 'date-fns';
 ```
 
 ```typescript
@@ -244,23 +243,23 @@ import * as dateFns from "date-fns";
 // Route-based code splitting
 const routes = [
   {
-    path: "/dashboard",
-    component: () => import("./views/Dashboard.vue"),
+    path: '/dashboard',
+    component: () => import('./views/Dashboard.vue'),
   },
   {
-    path: "/settings",
-    component: () => import("./views/Settings.vue"),
+    path: '/settings',
+    component: () => import('./views/Settings.vue'),
   },
 ];
 
 // Component-level lazy loading
 const HeavyChart = defineAsyncComponent(
-  () => import("./components/HeavyChart.vue"),
+  () => import('./components/HeavyChart.vue'),
 );
 
 // With loading/error states
 const AsyncModal = defineAsyncComponent({
-  loader: () => import("./components/Modal.vue"),
+  loader: () => import('./components/Modal.vue'),
   loadingComponent: LoadingSpinner,
   errorComponent: ErrorDisplay,
   delay: 200,
@@ -278,13 +277,13 @@ export default defineConfig({
       output: {
         manualChunks: {
           // Vendor chunk for core dependencies
-          vendor: ["vue", "vue-router", "pinia"],
+          vendor: ['vue', 'vue-router', 'pinia'],
 
           // UI framework chunk
-          ui: ["quasar", "@quasar/extras"],
+          ui: ['quasar', '@quasar/extras'],
 
           // Utility libraries
-          utils: ["lodash-es", "date-fns", "axios"],
+          utils: ['lodash-es', 'date-fns', 'axios'],
         },
       },
     },
@@ -299,9 +298,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes("node_modules")) {
+          if (id.includes('node_modules')) {
             // Split each package into its own chunk
-            const packageName = id.split("node_modules/")[1].split("/")[0];
+            const packageName = id.split('node_modules/')[1].split('/')[0];
             return `vendor-${packageName}`;
           }
         },
@@ -323,9 +322,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Ensure CSS is extracted
-        assetFileNames: "assets/[name]-[hash][extname]",
-        chunkFileNames: "js/[name]-[hash].js",
-        entryFileNames: "js/[name]-[hash].js",
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'js/[name]-[hash].js',
+        entryFileNames: 'js/[name]-[hash].js',
       },
     },
   },
@@ -336,21 +335,21 @@ export default defineConfig({
 
 ```typescript
 // vite.config.ts
-import viteCompression from "vite-plugin-compression";
+import viteCompression from 'vite-plugin-compression';
 
 export default defineConfig({
   plugins: [
     // Gzip compression
     viteCompression({
-      algorithm: "gzip",
-      ext: ".gz",
+      algorithm: 'gzip',
+      ext: '.gz',
       threshold: 1024,
     }),
 
     // Brotli compression (better ratio)
     viteCompression({
-      algorithm: "brotliCompress",
-      ext: ".br",
+      algorithm: 'brotliCompress',
+      ext: '.br',
       threshold: 1024,
     }),
   ],
@@ -361,7 +360,7 @@ export default defineConfig({
 
 ```typescript
 // vite.config.ts
-import viteImagemin from "vite-plugin-imagemin";
+import viteImagemin from 'vite-plugin-imagemin';
 
 export default defineConfig({
   plugins: [
@@ -371,8 +370,8 @@ export default defineConfig({
       mozjpeg: { quality: 80 },
       svgo: {
         plugins: [
-          { name: "removeViewBox", active: false },
-          { name: "removeEmptyAttrs", active: true },
+          { name: 'removeViewBox', active: false },
+          { name: 'removeEmptyAttrs', active: true },
         ],
       },
       webp: { quality: 80 },
@@ -389,16 +388,16 @@ export default defineConfig({
 
 ```typescript
 // vite.config.ts
-import { visualizer } from "rollup-plugin-visualizer";
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
   plugins: [
     visualizer({
-      filename: "stats.html",
+      filename: 'stats.html',
       open: true,
       gzipSize: true,
       brotliSize: true,
-      template: "treemap", // or 'sunburst', 'network'
+      template: 'treemap', // or 'sunburst', 'network'
     }),
   ],
 });
@@ -417,10 +416,10 @@ npm run build
 export default defineConfig({
   build: {
     // Faster builds with esbuild minification
-    minify: "esbuild",
+    minify: 'esbuild',
 
     // Target modern browsers only
-    target: "esnext",
+    target: 'esnext',
 
     // Disable CSS code splitting for faster builds
     cssCodeSplit: false,
@@ -428,8 +427,8 @@ export default defineConfig({
 
   // Optimize dependency pre-bundling
   optimizeDeps: {
-    include: ["vue", "vue-router", "pinia", "axios"],
-    exclude: ["your-local-package"],
+    include: ['vue', 'vue-router', 'pinia', 'axios'],
+    exclude: ['your-local-package'],
   },
 });
 ```
@@ -438,12 +437,12 @@ export default defineConfig({
 
 ```typescript
 // src/utils/vitals.ts
-import { onCLS, onFID, onLCP, onFCP, onTTFB } from "web-vitals";
+import { onCLS, onFID, onLCP, onFCP, onTTFB } from 'web-vitals';
 
 type VitalMetric = {
   name: string;
   value: number;
-  rating: "good" | "needs-improvement" | "poor";
+  rating: 'good' | 'needs-improvement' | 'poor';
 };
 
 function sendToAnalytics(metric: VitalMetric) {
@@ -462,7 +461,7 @@ export function initVitals() {
 
 ```typescript
 // main.ts
-import { initVitals } from "./utils/vitals";
+import { initVitals } from './utils/vitals';
 
 if (import.meta.env.PROD) {
   initVitals();

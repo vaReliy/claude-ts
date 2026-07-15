@@ -89,7 +89,9 @@ describe('CreatePostUseCase', () => {
 
   it('throws ConflictError if slug exists', async () => {
     mockRepository.existsBySlug.mockResolvedValue(true);
-    await expect(useCase.execute({ title: 'Test', body: 'Content' })).rejects.toThrow(ConflictError);
+    await expect(
+      useCase.execute({ title: 'Test', body: 'Content' }),
+    ).rejects.toThrow(ConflictError);
   });
 });
 ```
@@ -100,7 +102,10 @@ describe('CreatePostUseCase', () => {
 import supertest from 'supertest';
 
 it('POST /posts returns 201', async () => {
-  const response = await supertest(app).post('/posts').set('Authorization', `Bearer ${testToken}`).send({ title: 'Test Post', body: 'Content' });
+  const response = await supertest(app)
+    .post('/posts')
+    .set('Authorization', `Bearer ${testToken}`)
+    .send({ title: 'Test Post', body: 'Content' });
 
   expect(response.status).toBe(201);
   expect(response.body.title).toBe('Test Post');

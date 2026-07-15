@@ -1,7 +1,6 @@
 # Nuxt 3
 
-> Reference for: Vue Expert Load when: Nuxt 3, SSR, file-based routing,
-> useFetch, server routes, Fastify, hydration, custom SSR
+> Reference for: Vue Expert Load when: Nuxt 3, SSR, file-based routing, useFetch, server routes, Fastify, hydration, custom SSR
 
 ## Project Structure
 
@@ -49,8 +48,8 @@ my-nuxt-app/
 <!-- pages/index.vue -->
 <script setup lang="ts">
 definePageMeta({
-  title: "Home",
-  layout: "default",
+  title: 'Home',
+  layout: 'default',
 });
 </script>
 
@@ -110,7 +109,7 @@ const slug = route.params.slug; // ['2024', '12', 'my-post']
 <!-- layouts/admin.vue -->
 <script setup lang="ts">
 definePageMeta({
-  middleware: "auth", // Protect with middleware
+  middleware: 'auth', // Protect with middleware
 });
 </script>
 
@@ -126,7 +125,7 @@ definePageMeta({
 <!-- pages/admin/dashboard.vue -->
 <script setup lang="ts">
 definePageMeta({
-  layout: "admin",
+  layout: 'admin',
 });
 </script>
 
@@ -151,30 +150,30 @@ const {
   pending,
   error,
   refresh,
-} = await useFetch<User[]>("/api/users");
+} = await useFetch<User[]>('/api/users');
 
 // With options
-const { data } = await useFetch("/api/users", {
-  method: "POST",
-  body: { name: "John" },
+const { data } = await useFetch('/api/users', {
+  method: 'POST',
+  body: { name: 'John' },
   headers: {
-    Authorization: "Bearer token",
+    Authorization: 'Bearer token',
   },
   query: { page: 1, limit: 10 },
   // Transform response
   transform: (data) =>
-    data.map((u) => ({ ...u, fullName: u.firstName + " " + u.lastName })),
+    data.map((u) => ({ ...u, fullName: u.firstName + ' ' + u.lastName })),
   // Pick specific keys
-  pick: ["id", "name"],
+  pick: ['id', 'name'],
   // Watch for changes
   watch: [page, limit],
 });
 
 // useAsyncData - More control
 const { data: user } = await useAsyncData(
-  "user-123", // Unique key for caching
+  'user-123', // Unique key for caching
   async () => {
-    const response = await fetch("/api/users/123");
+    const response = await fetch('/api/users/123');
     return response.json();
   },
   {
@@ -185,11 +184,11 @@ const { data: user } = await useAsyncData(
 );
 
 // useLazyFetch - Non-blocking
-const { data: posts } = await useLazyFetch("/api/posts");
+const { data: posts } = await useLazyFetch('/api/posts');
 
 // useLazyAsyncData - Non-blocking with custom fetcher
-const { data: comments } = await useLazyAsyncData("comments", () =>
-  $fetch("/api/comments"),
+const { data: comments } = await useLazyAsyncData('comments', () =>
+  $fetch('/api/comments'),
 );
 
 // Manual refresh
@@ -232,7 +231,7 @@ export default defineEventHandler(async (event) => {
 
 // server/api/users/[id].get.ts
 export default defineEventHandler(async (event) => {
-  const id = getRouterParam(event, "id");
+  const id = getRouterParam(event, 'id');
 
   const user = await prisma.user.findUnique({
     where: { id: Number(id) },
@@ -241,7 +240,7 @@ export default defineEventHandler(async (event) => {
   if (!user) {
     throw createError({
       statusCode: 404,
-      message: "User not found",
+      message: 'User not found',
     });
   }
 
@@ -256,7 +255,7 @@ export default defineEventHandler(async (event) => {
   if (!body.email || !body.name) {
     throw createError({
       statusCode: 400,
-      message: "Email and name are required",
+      message: 'Email and name are required',
     });
   }
 
@@ -280,15 +279,15 @@ export default defineEventHandler(async (event) => {
   if (!user) {
     throw createError({
       statusCode: 401,
-      message: "Invalid credentials",
+      message: 'Invalid credentials',
     });
   }
 
   // Set session cookie
-  setCookie(event, "session", user.sessionToken, {
+  setCookie(event, 'session', user.sessionToken, {
     httpOnly: true,
     secure: true,
-    sameSite: "strict",
+    sameSite: 'strict',
     maxAge: 60 * 60 * 24 * 7, // 7 days
   });
 
@@ -304,7 +303,7 @@ export default defineNuxtRouteMiddleware((to, from) => {
   const { isLoggedIn } = useAuthStore();
 
   if (!isLoggedIn) {
-    return navigateTo("/login");
+    return navigateTo('/login');
   }
 });
 
@@ -409,7 +408,7 @@ const users = await $api('/users')
 export default defineNuxtConfig({
   devtools: { enabled: true },
 
-  modules: ["@pinia/nuxt", "@nuxtjs/tailwindcss", "@vueuse/nuxt"],
+  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@vueuse/nuxt'],
 
   runtimeConfig: {
     // Server-only (never exposed to client)
@@ -417,26 +416,26 @@ export default defineNuxtConfig({
 
     // Exposed to client
     public: {
-      apiBase: process.env.API_BASE || "/api",
+      apiBase: process.env.API_BASE || '/api',
     },
   },
 
   app: {
     head: {
-      title: "My App",
+      title: 'My App',
       meta: [
-        { charset: "utf-8" },
+        { charset: 'utf-8' },
         {
-          name: "viewport",
-          content: "width=device-width, initial-scale=1",
+          name: 'viewport',
+          content: 'width=device-width, initial-scale=1',
         },
-        { name: "description", content: "My amazing site" },
+        { name: 'description', content: 'My amazing site' },
       ],
-      link: [{ rel: "icon", type: "image/x-icon", href: "/favicon.ico" }],
+      link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     },
   },
 
-  css: ["~/assets/css/main.css"],
+  css: ['~/assets/css/main.css'],
 
   typescript: {
     strict: true,
@@ -447,13 +446,13 @@ export default defineNuxtConfig({
   // Note: webpack is deprecated - use Vite for all new projects
   vite: {
     optimizeDeps: {
-      include: ["vue", "vue-router", "pinia"],
+      include: ['vue', 'vue-router', 'pinia'],
     },
     build: {
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ["vue", "pinia"],
+            vendor: ['vue', 'pinia'],
           },
         },
       },
@@ -461,7 +460,7 @@ export default defineNuxtConfig({
   },
 
   nitro: {
-    preset: "vercel", // or 'node-server', 'cloudflare', 'bun', etc.
+    preset: 'vercel', // or 'node-server', 'cloudflare', 'bun', etc.
   },
 });
 ```
@@ -476,19 +475,19 @@ const title = computed(() => `User ${route.params.id}`);
 useHead({
   title,
   meta: [
-    { name: "description", content: "User profile page" },
-    { property: "og:title", content: title },
-    { property: "og:description", content: "User profile" },
+    { name: 'description', content: 'User profile page' },
+    { property: 'og:title', content: title },
+    { property: 'og:description', content: 'User profile' },
   ],
 });
 
 // Or use useSeoMeta
 useSeoMeta({
-  title: "My Page",
-  ogTitle: "My Page",
-  description: "Page description",
-  ogDescription: "Page description",
-  ogImage: "https://example.com/image.png",
+  title: 'My Page',
+  ogTitle: 'My Page',
+  description: 'Page description',
+  ogDescription: 'Page description',
+  ogImage: 'https://example.com/image.png',
 });
 </script>
 ```
@@ -499,14 +498,14 @@ For custom Vue 3 SSR without Nuxt, using Fastify as the server:
 
 ```typescript
 // server.ts
-import Fastify from "fastify";
-import { createSSRApp } from "vue";
-import { renderToString } from "vue/server-renderer";
-import App from "./App.vue";
+import Fastify from 'fastify';
+import { createSSRApp } from 'vue';
+import { renderToString } from 'vue/server-renderer';
+import App from './App.vue';
 
 const fastify = Fastify({ logger: true });
 
-fastify.get("*", async (request, reply) => {
+fastify.get('*', async (request, reply) => {
   const app = createSSRApp(App);
 
   // Server-side data fetching
@@ -514,7 +513,7 @@ fastify.get("*", async (request, reply) => {
 
   const html = await renderToString(app);
 
-  reply.type("text/html").send(`
+  reply.type('text/html').send(`
     <!DOCTYPE html>
     <html>
       <head>
@@ -534,23 +533,23 @@ fastify.listen({ port: 3000 });
 
 ```typescript
 // entry-client.ts
-import { createApp } from "vue";
-import App from "./App.vue";
+import { createApp } from 'vue';
+import App from './App.vue';
 
 const app = createApp(App);
 
 // Hydrate with server state
 if (window.__INITIAL_STATE__) {
-  app.provide("initialState", window.__INITIAL_STATE__);
+  app.provide('initialState', window.__INITIAL_STATE__);
 }
 
-app.mount("#app");
+app.mount('#app');
 ```
 
 ```typescript
 // vite.config.ts for SSR
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
 
 export default defineConfig({
   plugins: [vue()],
@@ -558,8 +557,8 @@ export default defineConfig({
     ssr: true,
     rollupOptions: {
       input: {
-        server: "./server.ts",
-        client: "./src/entry-client.ts",
+        server: './server.ts',
+        client: './src/entry-client.ts',
       },
     },
   },
@@ -572,11 +571,11 @@ export default defineConfig({
 
 ```vue
 <script setup lang="ts">
-import { defineAsyncComponent } from "vue";
+import { defineAsyncComponent } from 'vue';
 
 // Heavy component loaded only on client
 const HeavyChart = defineAsyncComponent(
-  () => import("./components/HeavyChart.vue"),
+  () => import('./components/HeavyChart.vue'),
 );
 </script>
 
@@ -594,7 +593,7 @@ const HeavyChart = defineAsyncComponent(
 
 ```vue
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted } from 'vue';
 
 // Avoid hydration mismatch for client-only values
 const currentTime = ref<string | null>(null);
@@ -628,7 +627,7 @@ onMounted(() => {
 // Use nuxt-delay-hydration for non-critical content
 definePageMeta({
   // Delay hydration until visible or idle
-  hydration: "when-visible", // or 'on-idle'
+  hydration: 'when-visible', // or 'on-idle'
 });
 </script>
 
@@ -646,11 +645,11 @@ definePageMeta({
 ```typescript
 // nuxt.config.ts - Configure delay hydration
 export default defineNuxtConfig({
-  modules: ["nuxt-delay-hydration"],
+  modules: ['nuxt-delay-hydration'],
 
   delayHydration: {
-    mode: "init", // or 'mount'
-    debug: process.env.NODE_ENV === "development",
+    mode: 'init', // or 'mount'
+    debug: process.env.NODE_ENV === 'development',
   },
 });
 ```

@@ -1,6 +1,7 @@
 ---
 name: qa
-description: "E2E and browser automation specialist using Playwright MCP. NOT for unit tests (tester).\n\nTrigger — EN: E2E test, browser test, Playwright, visual regression, user scenario, flaky test, smoke test.\nTrigger — UA: E2E, браузерний тест, Playwright, перевір UI."
+description:
+  "E2E and browser automation specialist using Playwright MCP. NOT for unit tests (tester).\n\nTrigger — EN: E2E test, browser test, Playwright, visual regression, user scenario, flaky test, smoke test.\nTrigger — UA: E2E, браузерний тест, Playwright, перевір UI."
 model: sonnet
 color: cyan
 tools:
@@ -51,14 +52,14 @@ Before writing or modifying any code, additionally read (QA runs E2E tests again
 
 ## Scope Boundary
 
-| This Agent (QA)          | Tester Agent (verify)    |
-| ------------------------ | ------------------------ |
-| E2E browser tests        | Suite verification       |
-| Third-party integrations | Coverage-gap audit       |
-| Visual regression        | Mutation testing         |
-| Security testing (UI)    | Gap-filling tests only   |
-| User journey testing     |                          |
-| API integration tests    |                          |
+| This Agent (QA)          | Tester Agent (verify)  |
+| ------------------------ | ---------------------- |
+| E2E browser tests        | Suite verification     |
+| Third-party integrations | Coverage-gap audit     |
+| Visual regression        | Mutation testing       |
+| Security testing (UI)    | Gap-filling tests only |
+| User journey testing     |                        |
+| API integration tests    |                        |
 
 > Note: primary test authorship (unit/feature/integration) now belongs to the implementation agent per the `tdd` skill — `tester` verifies and audits, no longer authors from scratch.
 
@@ -105,5 +106,4 @@ Reports back to orchestrator: terse fragments, bullets, no prose, ≤300 words.
 - Lead with verdict/result; details after.
 - Status markers: 🔴 critical / 🟡 important / 🟢 ok (quality-gate agents).
 - If you discovered something durable and non-obvious (config recipe, wrong-pattern gotcha, test anti-pattern, library constraint), add a `## Learnings` section at the end of your report — the orchestrator records it in `docs/KNOWLEDGE_INBOX.md`.
-- EXEMPT from compression: code, migrations, API contracts, user stories consumed
-  by next phase, PR descriptions — these stay complete and precise.
+- EXEMPT from compression: code, migrations, API contracts, user stories consumed by next phase, PR descriptions — these stay complete and precise.

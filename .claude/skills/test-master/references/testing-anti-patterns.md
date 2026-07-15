@@ -1,7 +1,6 @@
 # Testing Anti-Patterns
 
-> Reference for: Test Master
-> Load when: test review, mock issues, test quality problems
+> Reference for: Test Master Load when: test review, mock issues, test quality problems
 
 ## Core Principle
 
@@ -76,7 +75,9 @@ mockResolvedValue(createMockUser({ name: 'Test' }));
 // ✅ GOOD: Tests ship with feature
 it('should reject duplicate usernames', async () => {
   await createUser({ username: 'alice' });
-  await expect(createUser({ username: 'alice' })).rejects.toThrow('Username already exists');
+  await expect(createUser({ username: 'alice' })).rejects.toThrow(
+    'Username already exists',
+  );
 });
 ```
 

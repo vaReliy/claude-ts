@@ -9,10 +9,10 @@
 
 ## Bounded context catalog
 
-| Context  | Responsibility                            | Upstream dependencies | Downstream consumers |
-| -------- | ----------------------------------------- | --------------------- | -------------------- |
-| Catalog  | Product data lifecycle                    | Supplier feed         | Checkout, Search     |
-| Checkout | Order placement and payment authorization | Catalog, Pricing      | Fulfillment, Billing |
+| Context | Responsibility | Upstream dependencies | Downstream consumers |
+| --- | --- | --- | --- |
+| Catalog | Product data lifecycle | Supplier feed | Checkout, Search |
+| Checkout | Order placement and payment authorization | Catalog, Pricing | Fulfillment, Billing |
 
 ## Ubiquitous language
 

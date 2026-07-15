@@ -1,7 +1,6 @@
 # Mobile & Hybrid Apps
 
-> Reference for: Vue Expert Load when: Quasar, Capacitor, PWA, service worker,
-> mobile, hybrid app, offline
+> Reference for: Vue Expert Load when: Quasar, Capacitor, PWA, service worker, mobile, hybrid app, offline
 
 ---
 
@@ -20,9 +19,9 @@ npm install -D @quasar/vite-plugin
 
 ```typescript
 // vite.config.ts - Quasar plugin setup
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import { quasar, transformAssetUrls } from "@quasar/vite-plugin";
+import { defineConfig } from 'vite';
+import vue from '@vitejs/plugin-vue';
+import { quasar, transformAssetUrls } from '@quasar/vite-plugin';
 
 export default defineConfig({
   plugins: [
@@ -30,7 +29,7 @@ export default defineConfig({
       template: { transformAssetUrls },
     }),
     quasar({
-      sassVariables: "src/quasar-variables.scss",
+      sassVariables: 'src/quasar-variables.scss',
     }),
   ],
 });
@@ -42,23 +41,23 @@ export default defineConfig({
 // quasar.config.js
 export default configure((ctx) => ({
   // Build modes: spa, pwa, ssr, capacitor, electron, bex
-  boot: ["axios", "i18n"],
+  boot: ['axios', 'i18n'],
 
-  css: ["app.scss"],
+  css: ['app.scss'],
 
-  extras: ["roboto-font", "material-icons"],
+  extras: ['roboto-font', 'material-icons'],
 
   framework: {
-    plugins: ["Notify", "Dialog", "Loading", "LocalStorage"],
+    plugins: ['Notify', 'Dialog', 'Loading', 'LocalStorage'],
     config: {
-      notify: { position: "top-right" },
-      loading: { spinnerColor: "primary" },
+      notify: { position: 'top-right' },
+      loading: { spinnerColor: 'primary' },
     },
   },
 
   build: {
-    target: { browser: ["es2022", "firefox115", "chrome115", "safari14"] },
-    vueRouterMode: "history",
+    target: { browser: ['es2022', 'firefox115', 'chrome115', 'safari14'] },
+    vueRouterMode: 'history',
   },
 }));
 ```
@@ -67,23 +66,23 @@ export default configure((ctx) => ({
 
 ```vue
 <script setup lang="ts">
-import { useQuasar } from "quasar";
+import { useQuasar } from 'quasar';
 
 const $q = useQuasar();
 
 function showNotification() {
   $q.notify({
-    message: "Action completed successfully",
-    type: "positive",
-    position: "top",
+    message: 'Action completed successfully',
+    type: 'positive',
+    position: 'top',
     timeout: 3000,
   });
 }
 
 function showConfirmDialog() {
   $q.dialog({
-    title: "Confirm",
-    message: "Are you sure you want to proceed?",
+    title: 'Confirm',
+    message: 'Are you sure you want to proceed?',
     cancel: true,
     persistent: true,
   }).onOk(() => {
@@ -92,7 +91,7 @@ function showConfirmDialog() {
 }
 
 async function showLoading() {
-  $q.loading.show({ message: "Processing..." });
+  $q.loading.show({ message: 'Processing...' });
   await doAsyncWork();
   $q.loading.hide();
 }
@@ -130,7 +129,7 @@ async function showLoading() {
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref } from 'vue';
 
 const leftDrawerOpen = ref(false);
 
@@ -144,7 +143,7 @@ function toggleLeftDrawer() {
 
 ```vue
 <script setup lang="ts">
-import { useQuasar } from "quasar";
+import { useQuasar } from 'quasar';
 
 const $q = useQuasar();
 
@@ -195,16 +194,16 @@ npx cap open android
 
 ```typescript
 // capacitor.config.ts
-import type { CapacitorConfig } from "@capacitor/cli";
+import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: "com.example.myapp",
-  appName: "My App",
-  webDir: "dist/spa",
+  appId: 'com.example.myapp',
+  appName: 'My App',
+  webDir: 'dist/spa',
   server: {
-    androidScheme: "https",
+    androidScheme: 'https',
     // For development
-    url: "http://192.168.1.100:9000",
+    url: 'http://192.168.1.100:9000',
     cleartext: true,
   },
   plugins: {
@@ -213,7 +212,7 @@ const config: CapacitorConfig = {
       showSpinner: true,
     },
     PushNotifications: {
-      presentationOptions: ["badge", "sound", "alert"],
+      presentationOptions: ['badge', 'sound', 'alert'],
     },
   },
 };
@@ -225,8 +224,8 @@ export default config;
 
 ```typescript
 // composables/useCamera.ts
-import { ref } from "vue";
-import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
+import { ref } from 'vue';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 
 export function useCamera() {
   const photo = ref<string | null>(null);
@@ -264,8 +263,8 @@ export function useCamera() {
 
 ```typescript
 // composables/useGeolocation.ts
-import { ref, onMounted, onUnmounted } from "vue";
-import { Geolocation, Position } from "@capacitor/geolocation";
+import { ref, onMounted, onUnmounted } from 'vue';
+import { Geolocation, Position } from '@capacitor/geolocation';
 
 export function useGeolocation() {
   const position = ref<Position | null>(null);
@@ -312,13 +311,13 @@ export function useGeolocation() {
 
 ```typescript
 // composables/usePushNotifications.ts
-import { ref, onMounted } from "vue";
+import { ref, onMounted } from 'vue';
 import {
   PushNotifications,
   Token,
   PushNotificationSchema,
-} from "@capacitor/push-notifications";
-import { Capacitor } from "@capacitor/core";
+} from '@capacitor/push-notifications';
+import { Capacitor } from '@capacitor/core';
 
 export function usePushNotifications() {
   const token = ref<string | null>(null);
@@ -328,7 +327,7 @@ export function usePushNotifications() {
     if (!Capacitor.isNativePlatform()) return;
 
     const permission = await PushNotifications.requestPermissions();
-    if (permission.receive !== "granted") return;
+    if (permission.receive !== 'granted') return;
 
     await PushNotifications.register();
   }
@@ -336,22 +335,22 @@ export function usePushNotifications() {
   onMounted(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    PushNotifications.addListener("registration", (t: Token) => {
+    PushNotifications.addListener('registration', (t: Token) => {
       token.value = t.value;
     });
 
     PushNotifications.addListener(
-      "pushNotificationReceived",
+      'pushNotificationReceived',
       (notification) => {
         notifications.value.push(notification);
       },
     );
 
     PushNotifications.addListener(
-      "pushNotificationActionPerformed",
+      'pushNotificationActionPerformed',
       (action) => {
         // Handle notification tap
-        console.log("Action:", action.actionId);
+        console.log('Action:', action.actionId);
       },
     );
   });
@@ -364,15 +363,15 @@ export function usePushNotifications() {
 
 ```typescript
 // composables/useAppLifecycle.ts
-import { onMounted, onUnmounted } from "vue";
-import { App } from "@capacitor/app";
-import { Capacitor } from "@capacitor/core";
+import { onMounted, onUnmounted } from 'vue';
+import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 
 export function useAppLifecycle() {
   onMounted(() => {
     if (!Capacitor.isNativePlatform()) return;
 
-    App.addListener("appStateChange", ({ isActive }) => {
+    App.addListener('appStateChange', ({ isActive }) => {
       if (isActive) {
         // App came to foreground
         refreshData();
@@ -382,7 +381,7 @@ export function useAppLifecycle() {
       }
     });
 
-    App.addListener("backButton", ({ canGoBack }) => {
+    App.addListener('backButton', ({ canGoBack }) => {
       if (!canGoBack) {
         App.exitApp();
       } else {
@@ -407,7 +406,7 @@ export function useAppLifecycle() {
 // quasar.config.js
 export default configure((ctx) => ({
   pwa: {
-    workboxMode: "GenerateSW", // or 'InjectManifest'
+    workboxMode: 'GenerateSW', // or 'InjectManifest'
 
     workboxOptions: {
       skipWaiting: true,
@@ -419,9 +418,9 @@ export default configure((ctx) => ({
         {
           // Cache API responses
           urlPattern: /^https:\/\/api\./,
-          handler: "NetworkFirst",
+          handler: 'NetworkFirst',
           options: {
-            cacheName: "api-cache",
+            cacheName: 'api-cache',
             networkTimeoutSeconds: 10,
             expiration: {
               maxEntries: 100,
@@ -432,9 +431,9 @@ export default configure((ctx) => ({
         {
           // Cache images
           urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
-          handler: "CacheFirst",
+          handler: 'CacheFirst',
           options: {
-            cacheName: "image-cache",
+            cacheName: 'image-cache',
             expiration: {
               maxEntries: 50,
               maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
@@ -444,9 +443,9 @@ export default configure((ctx) => ({
         {
           // Cache fonts
           urlPattern: /\.(?:woff|woff2|ttf|eot)$/,
-          handler: "CacheFirst",
+          handler: 'CacheFirst',
           options: {
-            cacheName: "font-cache",
+            cacheName: 'font-cache',
             expiration: {
               maxAgeSeconds: 60 * 60 * 24 * 365, // 1 year
             },
@@ -465,24 +464,24 @@ export default configure((ctx) => ({
 export default configure((ctx) => ({
   pwa: {
     manifest: {
-      name: "My Progressive App",
-      short_name: "MyApp",
-      description: "A Progressive Web Application",
-      display: "standalone",
-      orientation: "portrait",
-      background_color: "#ffffff",
-      theme_color: "#1976D2",
-      start_url: "/",
+      name: 'My Progressive App',
+      short_name: 'MyApp',
+      description: 'A Progressive Web Application',
+      display: 'standalone',
+      orientation: 'portrait',
+      background_color: '#ffffff',
+      theme_color: '#1976D2',
+      start_url: '/',
       icons: [
         {
-          src: "icons/icon-128x128.png",
-          sizes: "128x128",
-          type: "image/png",
+          src: 'icons/icon-128x128.png',
+          sizes: '128x128',
+          type: 'image/png',
         },
         {
-          src: "icons/icon-512x512.png",
-          sizes: "512x512",
-          type: "image/png",
+          src: 'icons/icon-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
         },
       ],
     },
@@ -494,11 +493,11 @@ export default configure((ctx) => ({
 
 ```typescript
 // composables/usePWAInstall.ts
-import { ref, onMounted } from "vue";
+import { ref, onMounted } from 'vue';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
 export function usePWAInstall() {
@@ -508,15 +507,15 @@ export function usePWAInstall() {
 
   onMounted(() => {
     // Check if already installed
-    isInstalled.value = window.matchMedia("(display-mode: standalone)").matches;
+    isInstalled.value = window.matchMedia('(display-mode: standalone)').matches;
 
-    window.addEventListener("beforeinstallprompt", (e) => {
+    window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e as BeforeInstallPromptEvent;
       canInstall.value = true;
     });
 
-    window.addEventListener("appinstalled", () => {
+    window.addEventListener('appinstalled', () => {
       isInstalled.value = true;
       canInstall.value = false;
       deferredPrompt = null;
@@ -532,7 +531,7 @@ export function usePWAInstall() {
     deferredPrompt = null;
     canInstall.value = false;
 
-    return outcome === "accepted";
+    return outcome === 'accepted';
   }
 
   return { canInstall, isInstalled, install };
@@ -543,8 +542,8 @@ export function usePWAInstall() {
 
 ```typescript
 // composables/usePWAUpdate.ts
-import { ref, onMounted } from "vue";
-import { useQuasar } from "quasar";
+import { ref, onMounted } from 'vue';
+import { useQuasar } from 'quasar';
 
 export function usePWAUpdate() {
   const $q = useQuasar();
@@ -552,18 +551,18 @@ export function usePWAUpdate() {
   let registration: ServiceWorkerRegistration | null = null;
 
   onMounted(() => {
-    if (!("serviceWorker" in navigator)) return;
+    if (!('serviceWorker' in navigator)) return;
 
     navigator.serviceWorker.ready.then((reg) => {
       registration = reg;
 
-      reg.addEventListener("updatefound", () => {
+      reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         if (!newWorker) return;
 
-        newWorker.addEventListener("statechange", () => {
+        newWorker.addEventListener('statechange', () => {
           if (
-            newWorker.state === "installed" &&
+            newWorker.state === 'installed' &&
             navigator.serviceWorker.controller
           ) {
             needsUpdate.value = true;
@@ -576,17 +575,17 @@ export function usePWAUpdate() {
 
   function promptUpdate() {
     $q.notify({
-      message: "A new version is available",
+      message: 'A new version is available',
       timeout: 0,
       actions: [
         {
-          label: "Update",
-          color: "white",
+          label: 'Update',
+          color: 'white',
           handler: updateApp,
         },
         {
-          label: "Later",
-          color: "white",
+          label: 'Later',
+          color: 'white',
         },
       ],
     });
@@ -594,7 +593,7 @@ export function usePWAUpdate() {
 
   function updateApp() {
     if (registration?.waiting) {
-      registration.waiting.postMessage({ type: "SKIP_WAITING" });
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
     }
     window.location.reload();
   }
@@ -607,7 +606,7 @@ export function usePWAUpdate() {
 
 ```typescript
 // composables/useOnlineStatus.ts
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from 'vue';
 
 export function useOnlineStatus() {
   const isOnline = ref(navigator.onLine);
@@ -617,13 +616,13 @@ export function useOnlineStatus() {
   }
 
   onMounted(() => {
-    window.addEventListener("online", updateOnlineStatus);
-    window.addEventListener("offline", updateOnlineStatus);
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
   });
 
   onUnmounted(() => {
-    window.removeEventListener("online", updateOnlineStatus);
-    window.removeEventListener("offline", updateOnlineStatus);
+    window.removeEventListener('online', updateOnlineStatus);
+    window.removeEventListener('offline', updateOnlineStatus);
   });
 
   return { isOnline };

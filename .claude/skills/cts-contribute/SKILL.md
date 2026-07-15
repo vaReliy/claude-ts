@@ -1,6 +1,7 @@
 ---
 name: cts-contribute
-description: "Consumer-side flow for contributing improvements back to the CTS template. Diffs the current project against its CTS baseline, classifies changes into three cases (net-new skills, CTS-managed file edits, .ctsignore'd file improvements), interactively guides hunk-level decisions for overridden files, then writes accepted changes to the local CTS repo and updates both changelogs. NOT for first-time installs (cts-setup), upstream sync (cts-update), or importing external third-party skills into CTS (cts-import-skill).\n\nTrigger — EN: cts-contribute, export to CTS, contribute back, push improvements upstream, share with CTS, export skill to template.\nTrigger — UA: експортувати до CTS, поділитися з CTS, зворотній експорт, contribute до шаблону, передати зміни в CTS."
+description:
+  "Consumer-side flow for contributing improvements back to the CTS template. Diffs the current project against its CTS baseline, classifies changes into three cases (net-new skills, CTS-managed file edits, .ctsignore'd file improvements), interactively guides hunk-level decisions for overridden files, then writes accepted changes to the local CTS repo and updates both changelogs. NOT for first-time installs (cts-setup), upstream sync (cts-update), or importing external third-party skills into CTS (cts-import-skill).\n\nTrigger — EN: cts-contribute, export to CTS, contribute back, push improvements upstream, share with CTS, export skill to template.\nTrigger — UA: експортувати до CTS, поділитися з CTS, зворотній експорт, contribute до шаблону, передати зміни в CTS."
 ---
 
 # /cts-contribute
@@ -11,17 +12,13 @@ Guides a consumer project through contributing its improvements back to a local 
 
 Run all four checks before doing anything else:
 
-**a. Consumer identity**
-`.cts-version` must exist. If missing: "This project was not installed via cts-sync.sh — `/cts-contribute` cannot run here."
+**a. Consumer identity** `.cts-version` must exist. If missing: "This project was not installed via cts-sync.sh — `/cts-contribute` cannot run here."
 
-**b. CTS target**
-Resolve the CTS path: `../claude-ts` by default, or the path the user passed. If the directory exists, verify it looks like a CTS repo (`cts-payload.txt` present). If the directory does **not** exist, create it as an empty patch folder and skip the sync-check below — the user is building a patch, not writing to a live CTS. Report: "CTS not found at `<path>` — creating patch folder."
+**b. CTS target** Resolve the CTS path: `../claude-ts` by default, or the path the user passed. If the directory exists, verify it looks like a CTS repo (`cts-payload.txt` present). If the directory does **not** exist, create it as an empty patch folder and skip the sync-check below — the user is building a patch, not writing to a live CTS. Report: "CTS not found at `<path>` — creating patch folder."
 
-**c. Sync alignment** (skip if patch-folder mode from b)
-Read `.cts-version` (the consumer's pinned CTS commit). Run `git -C <cts-path> rev-parse HEAD`. If they differ: "Your project is N commits behind CTS HEAD. Run `/cts-update` first, then re-run `/cts-contribute`." Hard stop.
+**c. Sync alignment** (skip if patch-folder mode from b) Read `.cts-version` (the consumer's pinned CTS commit). Run `git -C <cts-path> rev-parse HEAD`. If they differ: "Your project is N commits behind CTS HEAD. Run `/cts-update` first, then re-run `/cts-contribute`." Hard stop.
 
-**d. Knowledge inbox**
-Read `docs/KNOWLEDGE_INBOX.md`. If it contains entries in the standard 3-line format (lines starting with `**`) that are not explicitly marked `status: keep` or `status: undecided`, prompt: "Inbox has unplaced entries — run `/distill-inbox` first, or confirm they are all undecided/keep to proceed." Wait for confirmation before continuing.
+**d. Knowledge inbox** Read `docs/KNOWLEDGE_INBOX.md`. If it contains entries in the standard 3-line format (lines starting with `**`) that are not explicitly marked `status: keep` or `status: undecided`, prompt: "Inbox has unplaced entries — run `/distill-inbox` first, or confirm they are all undecided/keep to proceed." Wait for confirmation before continuing.
 
 ---
 
@@ -122,8 +119,7 @@ Report each write: `✓ wrote <path>`.
 
 One bullet per contributed item. Use the standard Added/Changed/Fixed grouping.
 
-**Consumer `docs/CLAUDE_TS_CHANGELOG.md`** — distill post-export:
-Show the current file. For each entry, ask: "Was this contributed to CTS just now, or is it still pending / project-specific?" Remove contributed entries, keep the rest. If the file ends up empty (or only a header), say so — that's a healthy state.
+**Consumer `docs/CLAUDE_TS_CHANGELOG.md`** — distill post-export: Show the current file. For each entry, ask: "Was this contributed to CTS just now, or is it still pending / project-specific?" Remove contributed entries, keep the rest. If the file ends up empty (or only a header), say so — that's a healthy state.
 
 ---
 

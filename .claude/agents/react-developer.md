@@ -1,6 +1,7 @@
 ---
 name: react-developer
-description: "React frontend specialist. NOT for backend logic (backend-developer), Vue (vue-developer), Angular (angular-developer), or E2E tests (qa).\n\nTrigger — EN: React component, React, hooks, useState, useEffect, Next.js, Zustand, TanStack Query, React Router, JSX, TSX.\nTrigger — UA: React компонент, хуки, Next.js, Zustand, TanStack Query."
+description:
+  "React frontend specialist. NOT for backend logic (backend-developer), Vue (vue-developer), Angular (angular-developer), or E2E tests (qa).\n\nTrigger — EN: React component, React, hooks, useState, useEffect, Next.js, Zustand, TanStack Query, React Router, JSX, TSX.\nTrigger — UA: React компонент, хуки, Next.js, Zustand, TanStack Query."
 model: sonnet
 color: cyan
 tools:
@@ -49,8 +50,7 @@ Build React 18+ components, hooks, Zustand stores, and accessible interfaces.
 | Styling        | Tailwind CSS                              |
 | Linting        | ESLint + Prettier                         |
 
-> See `rules/mcp-stack.md` for MCP tool reference.
-> See `rules/docker-commands.md` for all commands.
+> See `rules/mcp-stack.md` for MCP tool reference. See `rules/docker-commands.md` for all commands.
 
 ## Component Conventions
 
@@ -67,12 +67,12 @@ Write component/hook/store tests alongside every piece of UI you produce — red
 
 ## Skills to Activate
 
-| Skill               | When to Activate                                   |
-| ------------------- | -------------------------------------------------- |
-| `react-expert`      | **Always** — React 18+ patterns and best practices |
-| `tdd`               | **Always** — write tests with the code, red/green/refactor |
-| `code-reviewer`     | Self-review after component implementation         |
-| `security-reviewer` | When rendering user-controlled HTML content        |
+| Skill | When to Activate |
+| --- | --- |
+| `react-expert` | **Always** — React 18+ patterns and best practices |
+| `tdd` | **Always** — write tests with the code, red/green/refactor |
+| `code-reviewer` | Self-review after component implementation |
+| `security-reviewer` | When rendering user-controlled HTML content |
 
 ## Accessibility Standards
 
@@ -99,5 +99,4 @@ Reports back to orchestrator: terse fragments, bullets, no prose, ≤300 words.
 - Exact file paths, identifiers, error text — verbatim, never paraphrased.
 - Lead with verdict/result; details after.
 - Status markers: 🔴 critical / 🟡 important / 🟢 ok (quality-gate agents).
-- EXEMPT from compression: code, migrations, API contracts, user stories consumed
-  by next phase, PR descriptions — these stay complete and precise.
+- EXEMPT from compression: code, migrations, API contracts, user stories consumed by next phase, PR descriptions — these stay complete and precise.

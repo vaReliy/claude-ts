@@ -82,6 +82,7 @@ When a task exhausts the quality-gate restart budget (2 full cycles with open `#
 **Planning row:** Planning already happened at original authoring; do not re-run ba/devil/ddd-architect roles. All roles are marked `done` (inherited state from the original task).
 
 **Body sections:**
+
 1. `# Task — <original-title> (continuation)`
 2. `## Context / Why` — reference the original task and the `handoff` skill
 3. `## Open Fix Now items` — copied from the last gate report
@@ -107,10 +108,7 @@ One task = one clean session. Split when the task would touch **>3 files**, cros
 
 ### Blast-radius map (seam-touching tasks)
 
-When the foresight gate fires (see rules/workflow.md), the task body must include a
-`## Blast radius` section listing all files/layers that consume the changed contract and all
-foreseeable follow-on tasks. This section is the explicit evidence that the task was scoped
-correctly up front.
+When the foresight gate fires (see rules/workflow.md), the task body must include a `## Blast radius` section listing all files/layers that consume the changed contract and all foreseeable follow-on tasks. This section is the explicit evidence that the task was scoped correctly up front.
 
 ### Parked tasks
 

@@ -1,12 +1,10 @@
 ---
 name: vitest-testing
 description: >-
-  Testing with Vitest (or Jest) for TypeScript applications. Use when writing
-  unit tests, integration tests, mocking, coverage, mutation testing (Stryker),
-  or TDD workflows in Node.js/TypeScript.
+  Testing with Vitest (or Jest) for TypeScript applications. Use when writing unit tests, integration tests, mocking, coverage, mutation testing (Stryker), or TDD workflows in Node.js/TypeScript.
+  
+  Українською: тестування Vitest, Jest, написати тест, юніт тест, інтеграційний тест, мок, покриття, мутаційне тестування, TDD, vi.fn, vi.mock, describe, it.
 
-  Українською: тестування Vitest, Jest, написати тест, юніт тест, інтеграційний
-  тест, мок, покриття, мутаційне тестування, TDD, vi.fn, vi.mock, describe, it.
 triggers:
   - Vitest
   - Jest
@@ -65,7 +63,9 @@ describe('CreatePostUseCase', () => {
   it('throws ConflictError if slug exists', async () => {
     mockRepo.existsBySlug.mockResolvedValue(true);
 
-    await expect(useCase.execute({ title: 'Test', body: 'Content' })).rejects.toThrow(ConflictError);
+    await expect(
+      useCase.execute({ title: 'Test', body: 'Content' }),
+    ).rejects.toThrow(ConflictError);
   });
 });
 ```
@@ -78,7 +78,9 @@ vi.mock('../services/email.service');
 
 // Spy on method
 const spy = vi.spyOn(emailService, 'send').mockResolvedValue(undefined);
-expect(spy).toHaveBeenCalledWith(expect.objectContaining({ to: 'user@example.com' }));
+expect(spy).toHaveBeenCalledWith(
+  expect.objectContaining({ to: 'user@example.com' }),
+);
 ```
 
 ## HTTP Integration Tests
@@ -88,7 +90,10 @@ import supertest from 'supertest';
 import { app } from '@/app';
 
 it('POST /posts returns 201', async () => {
-  const response = await supertest(app).post('/posts').set('Authorization', `Bearer ${testToken}`).send({ title: 'New Post', body: 'Content' });
+  const response = await supertest(app)
+    .post('/posts')
+    .set('Authorization', `Bearer ${testToken}`)
+    .send({ title: 'New Post', body: 'Content' });
 
   expect(response.status).toBe(201);
   expect(response.body).toMatchObject({
@@ -98,7 +103,10 @@ it('POST /posts returns 201', async () => {
 });
 
 it('POST /posts returns 422 for invalid input', async () => {
-  const response = await supertest(app).post('/posts').set('Authorization', `Bearer ${testToken}`).send({ title: '' });
+  const response = await supertest(app)
+    .post('/posts')
+    .set('Authorization', `Bearer ${testToken}`)
+    .send({ title: '' });
 
   expect(response.status).toBe(422);
   expect(response.body.fields).toHaveProperty('title');
@@ -107,14 +115,14 @@ it('POST /posts returns 422 for invalid input', async () => {
 
 ## Assertions Reference
 
-| Pattern                                       | Use                            |
-| --------------------------------------------- | ------------------------------ |
-| `expect(x).toBe(y)`                           | Strict equality (`===`)        |
-| `expect(x).toEqual(y)`                        | Deep equality                  |
-| `expect(x).toMatchObject(partial)`            | Partial object match           |
-| `expect(fn).toHaveBeenCalledOnce()`           | Mock called exactly once       |
-| `expect(fn).toHaveBeenCalledWith(...)`        | Mock called with specific args |
-| `expect(promise).rejects.toThrow(ErrorClass)` | Async error assertion          |
+| Pattern | Use |
+| --- | --- |
+| `expect(x).toBe(y)` | Strict equality (`===`) |
+| `expect(x).toEqual(y)` | Deep equality |
+| `expect(x).toMatchObject(partial)` | Partial object match |
+| `expect(fn).toHaveBeenCalledOnce()` | Mock called exactly once |
+| `expect(fn).toHaveBeenCalledWith(...)` | Mock called with specific args |
+| `expect(promise).rejects.toThrow(ErrorClass)` | Async error assertion |
 
 ## Models Testing Policy
 

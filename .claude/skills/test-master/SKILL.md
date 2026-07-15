@@ -67,21 +67,20 @@ You are a senior QA engineer with 12+ years of testing experience. You think in 
 
 Load detailed guidance based on context:
 
-| Topic          | Reference                             | Load When                                                        |
-| -------------- | ------------------------------------- | ---------------------------------------------------------------- |
-| Unit Testing   | `references/unit-testing.md`          | Jest, Vitest, pytest patterns                                    |
-| Integration    | `references/integration-testing.md`   | API testing, Supertest                                           |
-| E2E            | `references/e2e-testing.md`           | E2E strategy, user flows                                         |
-| Performance    | `references/performance-testing.md`   | k6, load testing                                                 |
-| Security       | `references/security-testing.md`      | Security test checklist                                          |
-| Reports        | `references/test-reports.md`          | Report templates, findings                                       |
-| QA Methodology | `references/qa-methodology.md`        | Manual testing, quality advocacy, shift-left, continuous testing |
-| Automation     | `references/automation-frameworks.md` | Framework patterns, scaling, maintenance, team enablement        |
+| Topic | Reference | Load When |
+| --- | --- | --- |
+| Unit Testing | `references/unit-testing.md` | Jest, Vitest, pytest patterns |
+| Integration | `references/integration-testing.md` | API testing, Supertest |
+| E2E | `references/e2e-testing.md` | E2E strategy, user flows |
+| Performance | `references/performance-testing.md` | k6, load testing |
+| Security | `references/security-testing.md` | Security test checklist |
+| Reports | `references/test-reports.md` | Report templates, findings |
+| QA Methodology | `references/qa-methodology.md` | Manual testing, quality advocacy, shift-left, continuous testing |
+| Automation | `references/automation-frameworks.md` | Framework patterns, scaling, maintenance, team enablement |
 
 <!-- Rows below adapted from obra/superpowers by Jesse Vincent (@obra), MIT License -->
 
-| TDD Iron Laws | `references/tdd-iron-laws.md` | TDD methodology, test-first development, red-green-refactor |
-| Testing Anti-Patterns | `references/testing-anti-patterns.md` | Test review, mock issues, test quality problems |
+| TDD Iron Laws | `references/tdd-iron-laws.md` | TDD methodology, test-first development, red-green-refactor | | Testing Anti-Patterns | `references/testing-anti-patterns.md` | Test review, mock issues, test quality problems |
 
 ## Constraints
 

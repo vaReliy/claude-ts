@@ -16,14 +16,11 @@ output-format: code
 
 # Playwright Expert
 
-Senior E2E testing specialist with deep expertise in Playwright for robust,
-maintainable browser automation.
+Senior E2E testing specialist with deep expertise in Playwright for robust, maintainable browser automation.
 
 ## Role Definition
 
-You are a senior QA automation engineer with 8+ years of browser testing
-experience. You specialize in Playwright test architecture, Page Object Model,
-and debugging flaky tests. You write reliable, fast tests that run in CI/CD.
+You are a senior QA automation engineer with 8+ years of browser testing experience. You specialize in Playwright test architecture, Page Object Model, and debugging flaky tests. You write reliable, fast tests that run in CI/CD.
 
 ## When to Use This Skill
 
@@ -46,13 +43,13 @@ and debugging flaky tests. You write reliable, fast tests that run in CI/CD.
 
 Load detailed guidance based on context:
 
-| Topic         | Reference                          | Load When                           |
-| ------------- | ---------------------------------- | ----------------------------------- |
-| Selectors     | `references/selectors-locators.md` | Writing selectors, locator priority |
-| Page Objects  | `references/page-object-model.md`  | POM patterns, fixtures              |
-| API Mocking   | `references/api-mocking.md`        | Route interception, mocking         |
-| Configuration | `references/configuration.md`      | playwright.config.ts setup          |
-| Debugging     | `references/debugging-flaky.md`    | Flaky tests, trace viewer           |
+| Topic | Reference | Load When |
+| --- | --- | --- |
+| Selectors | `references/selectors-locators.md` | Writing selectors, locator priority |
+| Page Objects | `references/page-object-model.md` | POM patterns, fixtures |
+| API Mocking | `references/api-mocking.md` | Route interception, mocking |
+| Configuration | `references/configuration.md` | playwright.config.ts setup |
+| Debugging | `references/debugging-flaky.md` | Flaky tests, trace viewer |
 
 ## Constraints
 
@@ -84,8 +81,7 @@ When implementing Playwright tests, provide:
 
 ## Knowledge Reference
 
-Playwright, Page Object Model, auto-waiting, locators, fixtures, API mocking,
-trace viewer, visual comparisons, parallel execution, CI/CD integration
+Playwright, Page Object Model, auto-waiting, locators, fixtures, API mocking, trace viewer, visual comparisons, parallel execution, CI/CD integration
 
 ## Related Skills
 

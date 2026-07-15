@@ -15,24 +15,24 @@ Full tier definitions and the foresight gate: `rules/workflow.md`.
 
 **Routing**:
 
-| Need                                | Agent                                                                                       |
-| ----------------------------------- | ------------------------------------------------------------------------------------------- |
-| Backend (API/services/queues)       | `backend-developer`                                                                         |
+| Need | Agent |
+| --- | --- |
+| Backend (API/services/queues) | `backend-developer` |
 | Frontend (pick ONE — never combine) | `vue-developer` (Vue 3) · `react-developer` (React 18+) · `angular-developer` (Angular 17+) |
-| DB schema/migrations                | `dba`                                                                                       |
-| Unit/integration tests              | `tester`                                                                                    |
-| E2E browser tests                   | `qa`                                                                                        |
-| Code review                         | `reviewer`                                                                                  |
-| Bug investigation                   | `debugger`                                                                                  |
-| Security audit                      | `security-scanner`                                                                          |
-| DDD/domain design                   | `ddd-architect`                                                                             |
-| Integrations/OAuth/webhooks         | `integration-architect`                                                                     |
-| Queue jobs                          | `queue-specialist`                                                                          |
-| DevOps/Docker/CI                    | `devops`                                                                                    |
-| Refactoring                         | `refactoring-expert`                                                                        |
-| Requirements/user stories           | `ba`                                                                                        |
-| Challenge requirements              | `devil`                                                                                     |
-| Docs/PR description                 | `docs-writer`                                                                               |
+| DB schema/migrations | `dba` |
+| Unit/integration tests | `tester` |
+| E2E browser tests | `qa` |
+| Code review | `reviewer` |
+| Bug investigation | `debugger` |
+| Security audit | `security-scanner` |
+| DDD/domain design | `ddd-architect` |
+| Integrations/OAuth/webhooks | `integration-architect` |
+| Queue jobs | `queue-specialist` |
+| DevOps/Docker/CI | `devops` |
+| Refactoring | `refactoring-expert` |
+| Requirements/user stories | `ba` |
+| Challenge requirements | `devil` |
+| Docs/PR description | `docs-writer` |
 
 **Pipeline**: `ba` → `ddd-architect`? → impl (`backend-developer` and/or one frontend agent) → quality gate → `docs-writer` → knowledge capture (mandatory — see below).
 

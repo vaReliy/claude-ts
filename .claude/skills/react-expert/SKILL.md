@@ -1,12 +1,10 @@
 ---
 name: react-expert
 description: >-
-  React specialist for building modern React applications. Use when working
-  with React components, hooks, state management (Zustand/Redux), React Router,
-  Next.js, TanStack Query, or TypeScript+React patterns.
+  React specialist for building modern React applications. Use when working with React components, hooks, state management (Zustand/Redux), React Router, Next.js, TanStack Query, or TypeScript+React patterns.
+  
+  Українською: React, компонент, хуки, стан, useState, useEffect, Next.js, Zustand, Redux, TanStack Query, React Router, JSX, TSX, React компонент.
 
-  Українською: React, компонент, хуки, стан, useState, useEffect, Next.js,
-  Zustand, Redux, TanStack Query, React Router, JSX, TSX, React компонент.
 triggers:
   - React
   - JSX
@@ -79,7 +77,7 @@ Rules:
 ## Global State (Zustand)
 
 ```tsx
-import { create } from "zustand";
+import { create } from 'zustand';
 
 interface PostStore {
   posts: Post[];
@@ -97,7 +95,7 @@ export const usePostStore = create<PostStore>((set) => ({
 ## Server State (TanStack Query)
 
 ```tsx
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 export function PostList() {
   const {
@@ -105,8 +103,8 @@ export function PostList() {
     isLoading,
     error,
   } = useQuery({
-    queryKey: ["posts"],
-    queryFn: () => api.get<Post[]>("/posts"),
+    queryKey: ['posts'],
+    queryFn: () => api.get<Post[]>('/posts'),
   });
 
   if (isLoading) return <LoadingSpinner />;
@@ -125,7 +123,7 @@ export function PostList() {
 ## Forms
 
 ```tsx
-import { useForm } from "react-hook-form";
+import { useForm } from 'react-hook-form';
 
 interface CreatePostFormData {
   title: string;
@@ -145,7 +143,7 @@ export function CreatePostForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <input {...register("title", { required: "Title is required" })} />
+      <input {...register('title', { required: 'Title is required' })} />
       {errors.title && (
         <span className="text-red-500">{errors.title.message}</span>
       )}
@@ -161,7 +159,7 @@ export function CreatePostForm() {
 ```tsx
 export function usePosts(filters?: PostFilters) {
   return useQuery({
-    queryKey: ["posts", filters],
+    queryKey: ['posts', filters],
     queryFn: () => api.getPosts(filters),
   });
 }

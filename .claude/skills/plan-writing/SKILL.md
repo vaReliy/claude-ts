@@ -59,11 +59,11 @@ This skill provides a framework for breaking down work into clear, actionable ta
 
 ### Principle 2: Be SPECIFIC, Not Generic
 
-| ❌ Wrong             | ✅ Right                                                 |
-| -------------------- | -------------------------------------------------------- |
-| "Set up project"     | "Run `npx create-next-app`"                              |
+| ❌ Wrong | ✅ Right |
+| --- | --- |
+| "Set up project" | "Run `npx create-next-app`" |
 | "Add authentication" | "Install next-auth, create `/api/auth/[...nextauth].ts`" |
-| "Style the UI"       | "Add Tailwind classes to `Header.tsx`"                   |
+| "Style the UI" | "Add Tailwind classes to `Header.tsx`" |
 
 > **Rule:** Each task should have a clear, verifiable outcome.
 
@@ -103,18 +103,17 @@ This skill provides a framework for breaking down work into clear, actionable ta
 | Database       | `schema_validator.py`                     |
 | Full-stack     | Mix of above based on what you touched    |
 
-**Wrong:** Adding all scripts to every plan
-**Right:** Only scripts relevant to THIS task
+**Wrong:** Adding all scripts to every plan **Right:** Only scripts relevant to THIS task
 
 ---
 
 ### Principle 5: Verification is Simple
 
-| ❌ Wrong                               | ✅ Right                                      |
-| -------------------------------------- | --------------------------------------------- |
-| "Verify the component works correctly" | "Run `npm run dev`, click button, see toast"  |
-| "Test the API"                         | "curl localhost:3000/api/users returns 200"   |
-| "Check styles"                         | "Open browser, verify dark mode toggle works" |
+| ❌ Wrong | ✅ Right |
+| --- | --- |
+| "Verify the component works correctly" | "Run `npm run dev`, click button, see toast" |
+| "Test the API" | "curl localhost:3000/api/users returns 200" |
+| "Check styles" | "Open browser, verify dark mode toggle works" |
 
 ---
 
@@ -135,8 +134,7 @@ One sentence: What are we building/fixing?
 - [ ] [Main success criteria]
 ```
 
-> **That's it.** No phases, no sub-sections unless truly needed.
-> Keep it minimal. Add complexity only when required.
+> **That's it.** No phases, no sub-sections unless truly needed. Keep it minimal. Add complexity only when required.
 
 ## Notes
 

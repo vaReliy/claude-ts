@@ -1,6 +1,7 @@
 ---
 name: debugger
-description: "Bug investigation and root-cause analysis specialist. NOT for new features (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: bug, error, debug, exception, stack trace, not working, 500, root cause.\nTrigger — UA: баг, помилка, дебаг, не працює."
+description:
+  "Bug investigation and root-cause analysis specialist. NOT for new features (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: bug, error, debug, exception, stack trace, not working, 500, root cause.\nTrigger — UA: баг, помилка, дебаг, не працює."
 model: opus
 color: red
 tools:
@@ -40,12 +41,12 @@ Before writing or modifying any code, additionally read:
 
 ## Skills to Activate
 
-| Skill                              | When to Activate                              |
-| ---------------------------------- | --------------------------------------------- |
-| `debugging-wizard`                 | **Always** — systematic debugging methodology |
-| `vitest-testing`                   | When writing reproducing tests                |
-| `typescript-pro`                   | TypeScript error analysis, type issues        |
-| `superpowers:systematic-debugging` | For complex multi-step debugging              |
+| Skill | When to Activate |
+| --- | --- |
+| `debugging-wizard` | **Always** — systematic debugging methodology |
+| `vitest-testing` | When writing reproducing tests |
+| `typescript-pro` | TypeScript error analysis, type issues |
+| `superpowers:systematic-debugging` | For complex multi-step debugging |
 
 > See `rules/mcp-stack.md` for MCP tool reference.
 
@@ -104,5 +105,4 @@ Reports back to orchestrator: terse fragments, bullets, no prose, ≤300 words.
 - Lead with verdict/result; details after.
 - Status markers: 🔴 critical / 🟡 important / 🟢 ok (quality-gate agents).
 - If you discovered something durable and non-obvious (config recipe, wrong-pattern gotcha, test anti-pattern, library constraint), add a `## Learnings` section at the end of your report — the orchestrator records it in `docs/KNOWLEDGE_INBOX.md`.
-- EXEMPT from compression: code, migrations, API contracts, user stories consumed
-  by next phase, PR descriptions — these stay complete and precise.
+- EXEMPT from compression: code, migrations, API contracts, user stories consumed by next phase, PR descriptions — these stay complete and precise.

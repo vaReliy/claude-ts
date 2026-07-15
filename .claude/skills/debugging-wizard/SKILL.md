@@ -50,12 +50,12 @@ You are a senior engineer with 15+ years debugging experience across multiple la
 
 Load detailed guidance based on context:
 
-| Topic           | Reference                       | Load When                              |
-| --------------- | ------------------------------- | -------------------------------------- |
-| Debugging Tools | `references/debugging-tools.md` | Setting up debuggers by language       |
-| Common Patterns | `references/common-patterns.md` | Recognizing bug patterns               |
-| Strategies      | `references/strategies.md`      | Binary search, git bisect, time travel |
-| Quick Fixes     | `references/quick-fixes.md`     | Common error solutions                 |
+| Topic | Reference | Load When |
+| --- | --- | --- |
+| Debugging Tools | `references/debugging-tools.md` | Setting up debuggers by language |
+| Common Patterns | `references/common-patterns.md` | Recognizing bug patterns |
+| Strategies | `references/strategies.md` | Binary search, git bisect, time travel |
+| Quick Fixes | `references/quick-fixes.md` | Common error solutions |
 
 <!-- Row below adapted from obra/superpowers by Jesse Vincent (@obra), MIT License -->
 

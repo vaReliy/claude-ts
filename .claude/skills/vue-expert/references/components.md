@@ -1,7 +1,6 @@
 # Components
 
-> Reference for: Vue Expert Load when: Props, emits, slots, provide/inject,
-> teleport
+> Reference for: Vue Expert Load when: Props, emits, slots, provide/inject, teleport
 
 ## Props with TypeScript
 
@@ -58,24 +57,24 @@ console.log(props.count);
 <script setup lang="ts">
 // TypeScript emits
 interface Emits {
-  (e: "update", value: string): void;
-  (e: "delete", id: number): void;
-  (e: "submit", payload: { name: string; email: string }): void;
+  (e: 'update', value: string): void;
+  (e: 'delete', id: number): void;
+  (e: 'submit', payload: { name: string; email: string }): void;
 }
 
 const emit = defineEmits<Emits>();
 
 // Emit events
 function handleUpdate() {
-  emit("update", "new value");
+  emit('update', 'new value');
 }
 
 function handleDelete(id: number) {
-  emit("delete", id);
+  emit('delete', id);
 }
 
 function handleSubmit() {
-  emit("submit", { name: "John", email: "john@example.com" });
+  emit('submit', { name: 'John', email: 'john@example.com' });
 }
 
 // Runtime emits with validation
@@ -100,11 +99,11 @@ const runtimeEmit = defineEmits({
 ```vue
 <!-- Parent Component -->
 <script setup lang="ts">
-import { ref } from "vue";
-import CustomInput from "./CustomInput.vue";
+import { ref } from 'vue';
+import CustomInput from './CustomInput.vue';
 
-const searchQuery = ref("");
-const filters = ref({ category: "", price: 0 });
+const searchQuery = ref('');
+const filters = ref({ category: '', price: 0 });
 </script>
 
 <template>
@@ -125,7 +124,7 @@ interface Props {
 }
 
 interface Emits {
-  (e: "update:modelValue", value: string): void;
+  (e: 'update:modelValue', value: string): void;
 }
 
 const props = defineProps<Props>();
@@ -133,7 +132,7 @@ const emit = defineEmits<Emits>();
 
 function handleInput(event: Event) {
   const target = event.target as HTMLInputElement;
-  emit("update:modelValue", target.value);
+  emit('update:modelValue', target.value);
 }
 </script>
 
@@ -149,8 +148,8 @@ interface Props {
 }
 
 interface Emits {
-  (e: "update:category", value: string): void;
-  (e: "update:price", value: number): void;
+  (e: 'update:category', value: string): void;
+  (e: 'update:price', value: number): void;
 }
 
 const props = defineProps<Props>();
@@ -199,7 +198,7 @@ const emit = defineEmits<Emits>();
 
 <!-- Card.vue -->
 <script setup lang="ts">
-import { useSlots } from "vue";
+import { useSlots } from 'vue';
 
 const slots = useSlots();
 
@@ -208,7 +207,7 @@ const hasHeader = !!slots.header;
 const hasFooter = !!slots.footer;
 
 function close() {
-  console.log("Closing card");
+  console.log('Closing card');
 }
 </script>
 
@@ -266,7 +265,7 @@ const props = defineProps<Props>();
 ```vue
 <!-- Parent Component (Provider) -->
 <script setup lang="ts">
-import { provide, ref, readonly, InjectionKey } from "vue";
+import { provide, ref, readonly, InjectionKey } from 'vue';
 
 // Type-safe injection key
 interface UserData {
@@ -277,8 +276,8 @@ interface UserData {
 export const userKey = Symbol() as InjectionKey<UserData>;
 
 const user = ref<UserData>({
-  name: "John Doe",
-  email: "john@example.com",
+  name: 'John Doe',
+  email: 'john@example.com',
 });
 
 function updateUser(newUser: UserData) {
@@ -287,24 +286,24 @@ function updateUser(newUser: UserData) {
 
 // Provide data
 provide(userKey, readonly(user.value));
-provide("updateUser", updateUser);
+provide('updateUser', updateUser);
 </script>
 
 <!-- Child Component (Injector) -->
 <script setup lang="ts">
-import { inject } from "vue";
-import { userKey } from "./Parent.vue";
+import { inject } from 'vue';
+import { userKey } from './Parent.vue';
 
 // Inject with type safety
 const user = inject(userKey);
-const updateUser = inject<(user: UserData) => void>("updateUser");
+const updateUser = inject<(user: UserData) => void>('updateUser');
 
 // Inject with default value
-const theme = inject("theme", "light");
+const theme = inject('theme', 'light');
 
 function handleUpdate() {
   if (updateUser) {
-    updateUser({ name: "Jane", email: "jane@example.com" });
+    updateUser({ name: 'Jane', email: 'jane@example.com' });
   }
 }
 </script>
@@ -322,7 +321,7 @@ function handleUpdate() {
 
 ```vue
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref } from 'vue';
 
 const showModal = ref(false);
 </script>
@@ -377,10 +376,10 @@ const showModal = ref(false);
 
 ```vue
 <script setup lang="ts">
-import { ref, shallowRef, Component } from "vue";
-import HomeView from "./HomeView.vue";
-import AboutView from "./AboutView.vue";
-import ContactView from "./ContactView.vue";
+import { ref, shallowRef, Component } from 'vue';
+import HomeView from './HomeView.vue';
+import AboutView from './AboutView.vue';
+import ContactView from './ContactView.vue';
 
 // Use shallowRef for component references (performance)
 const currentView = shallowRef<Component>(HomeView);
@@ -412,18 +411,18 @@ function switchView(view: keyof typeof components) {
 
 ```vue
 <script setup lang="ts">
-import { defineAsyncComponent } from "vue";
+import { defineAsyncComponent } from 'vue';
 
 // Lazy load component
 const HeavyComponent = defineAsyncComponent(
-  () => import("./HeavyComponent.vue"),
+  () => import('./HeavyComponent.vue'),
 );
 
 // With loading and error states
 const AdminPanel = defineAsyncComponent({
-  loader: () => import("./AdminPanel.vue"),
-  loadingComponent: () => import("./LoadingSpinner.vue"),
-  errorComponent: () => import("./ErrorDisplay.vue"),
+  loader: () => import('./AdminPanel.vue'),
+  loadingComponent: () => import('./LoadingSpinner.vue'),
+  errorComponent: () => import('./ErrorDisplay.vue'),
   delay: 200, // Delay before showing loading component
   timeout: 3000, // Timeout before showing error
 });

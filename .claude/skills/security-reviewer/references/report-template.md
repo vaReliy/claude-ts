@@ -43,8 +43,7 @@
 | **CWE**      | CWE-89                |
 | **CVSS**     | 9.8 (Critical)        |
 
-**Description** User input directly concatenated into SQL query without
-sanitization.
+**Description** User input directly concatenated into SQL query without sanitization.
 
 **Vulnerable Code**
 
@@ -86,8 +85,7 @@ db.query(query, [`%${searchTerm}%`]);
 | **CWE**      | CWE-521                     |
 | **CVSS**     | 7.5 (High)                  |
 
-**Description** Password policy requires only 6 characters with no complexity
-requirements.
+**Description** Password policy requires only 6 characters with no complexity requirements.
 
 **Current Policy**
 
@@ -103,7 +101,12 @@ const isValid = password.length >= 6;
 **Remediation** Implement stronger requirements:
 
 ```typescript
-const isValid = password.length >= 12 && /[A-Z]/.test(password) && /[a-z]/.test(password) && /[0-9]/.test(password) && /[^A-Za-z0-9]/.test(password);
+const isValid =
+  password.length >= 12 &&
+  /[A-Z]/.test(password) &&
+  /[a-z]/.test(password) &&
+  /[0-9]/.test(password) &&
+  /[^A-Za-z0-9]/.test(password);
 ```
 
 **Effort**: 30 minutes **Priority**: Before deployment
