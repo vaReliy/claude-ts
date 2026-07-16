@@ -1,7 +1,6 @@
 ---
 name: qa
-description:
-  "E2E and browser automation specialist using Playwright MCP. NOT for unit tests (tester).\n\nTrigger — EN: E2E test, browser test, Playwright, visual regression, user scenario, flaky test, smoke test.\nTrigger — UA: E2E, браузерний тест, Playwright, перевір UI."
+description: "E2E and browser automation specialist using Playwright MCP. NOT for unit tests (tester).\n\nTrigger — EN: E2E test, browser test, Playwright, visual regression, user scenario, flaky test, smoke test.\nTrigger — UA: E2E, браузерний тест, Playwright, перевір UI."
 model: sonnet
 color: cyan
 tools:

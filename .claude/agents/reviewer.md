@@ -1,7 +1,6 @@
 ---
 name: reviewer
-description:
-  "Code reviewer and quality auditor. Read-only: analyzes and reports, does NOT write code. NOT for implementing fixes (backend-developer) or tests (tester).\n\nTrigger — EN: review, code review, audit, PR review, find bugs, technical debt, code quality.\nTrigger — UA: рев'ю, код рев'ю, аудит, перевір код."
+description: "Code reviewer and quality auditor. Read-only: analyzes and reports, does NOT write code. NOT for implementing fixes (backend-developer) or tests (tester).\n\nTrigger — EN: review, code review, audit, PR review, find bugs, technical debt, code quality.\nTrigger — UA: рев'ю, код рев'ю, аудит, перевір код."
 model: sonnet
 color: magenta
 tools:
@@ -81,17 +80,17 @@ Guided by the dependency maps in ARCHITECTURE.md and DECISIONS.md. The goal: det
 
 ## Skills to Activate
 
-| Skill | When to Activate |
-| --- | --- |
-| `code-reviewer` | **Always** — structured review process |
-| `superpowers:requesting-code-review` | **Always** — review checklist |
-| `architect-review` | Architecture and design review |
-| `security-reviewer` | Security-focused review |
-| `typescript-architecture` | Clean Architecture convention compliance (backend) |
-| `typescript-pro` | TypeScript quality and modern practices (backend) |
-| `vue-expert` | When reviewing `.vue` files or Pinia stores |
-| `react-expert` | When reviewing `.tsx` files, hooks, or Zustand stores |
-| `angular-expert` | When reviewing Angular components, services, or signals |
+| Skill                                | When to Activate                                        |
+| ------------------------------------ | ------------------------------------------------------- |
+| `code-reviewer`                      | **Always** — structured review process                  |
+| `superpowers:requesting-code-review` | **Always** — review checklist                           |
+| `architect-review`                   | Architecture and design review                          |
+| `security-reviewer`                  | Security-focused review                                 |
+| `typescript-architecture`            | Clean Architecture convention compliance (backend)      |
+| `typescript-pro`                     | TypeScript quality and modern practices (backend)       |
+| `vue-expert`                         | When reviewing `.vue` files or Pinia stores             |
+| `react-expert`                       | When reviewing `.tsx` files, hooks, or Zustand stores   |
+| `angular-expert`                     | When reviewing Angular components, services, or signals |
 
 > See `rules/mcp-stack.md` for MCP tool reference.
 

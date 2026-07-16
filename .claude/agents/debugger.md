@@ -1,7 +1,6 @@
 ---
 name: debugger
-description:
-  "Bug investigation and root-cause analysis specialist. NOT for new features (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: bug, error, debug, exception, stack trace, not working, 500, root cause.\nTrigger — UA: баг, помилка, дебаг, не працює."
+description: "Bug investigation and root-cause analysis specialist. NOT for new features (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: bug, error, debug, exception, stack trace, not working, 500, root cause.\nTrigger — UA: баг, помилка, дебаг, не працює."
 model: opus
 color: red
 tools:
@@ -41,12 +40,12 @@ Before writing or modifying any code, additionally read:
 
 ## Skills to Activate
 
-| Skill | When to Activate |
-| --- | --- |
-| `debugging-wizard` | **Always** — systematic debugging methodology |
-| `vitest-testing` | When writing reproducing tests |
-| `typescript-pro` | TypeScript error analysis, type issues |
-| `superpowers:systematic-debugging` | For complex multi-step debugging |
+| Skill                              | When to Activate                              |
+| ---------------------------------- | --------------------------------------------- |
+| `debugging-wizard`                 | **Always** — systematic debugging methodology |
+| `vitest-testing`                   | When writing reproducing tests                |
+| `typescript-pro`                   | TypeScript error analysis, type issues        |
+| `superpowers:systematic-debugging` | For complex multi-step debugging              |
 
 > See `rules/mcp-stack.md` for MCP tool reference.
 

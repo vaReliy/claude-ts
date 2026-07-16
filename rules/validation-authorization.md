@@ -88,9 +88,7 @@ The fix — split into two guards, applied in order:
 @Injectable()
 export class StatusGuard implements CanActivate {
   public canActivate(context: ExecutionContext): boolean {
-    const req = context
-      .switchToHttp()
-      .getRequest<Request & { user?: SessionUser }>();
+    const req = context.switchToHttp().getRequest<Request & { user?: SessionUser }>();
     if (!req.user || req.user.status !== UserStatus.ACTIVE) {
       throw new ForbiddenException();
     }

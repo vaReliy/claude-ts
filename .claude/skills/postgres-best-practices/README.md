@@ -1,7 +1,6 @@
 # Postgres Best Practices - Contributor Guide
 
-This repository contains Postgres performance optimization rules optimized for
-AI agents and LLMs.
+This repository contains Postgres performance optimization rules optimized for AI agents and LLMs.
 
 ## Quick Start
 

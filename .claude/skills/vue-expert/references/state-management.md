@@ -199,13 +199,9 @@ export const useTodoStore = defineStore('todos', () => {
     }
   });
 
-  const completedCount = computed(
-    () => todos.value.filter((t) => t.completed).length,
-  );
+  const completedCount = computed(() => todos.value.filter((t) => t.completed).length);
 
-  const activeCount = computed(
-    () => todos.value.filter((t) => !t.completed).length,
-  );
+  const activeCount = computed(() => todos.value.filter((t) => !t.completed).length);
 
   // Actions
   async function fetchTodos() {

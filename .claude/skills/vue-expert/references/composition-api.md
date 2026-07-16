@@ -109,9 +109,7 @@ const fullNameWritable = computed({
 
 // Computed with complex logic (cached until dependencies change)
 const filteredItems = computed(() => {
-  return items.value.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.value.toLowerCase()),
-  );
+  return items.value.filter((item) => item.name.toLowerCase().includes(searchQuery.value.toLowerCase()));
 });
 ```
 
@@ -167,15 +165,7 @@ stop();
 ## Lifecycle Hooks
 
 ```typescript
-import {
-  onBeforeMount,
-  onMounted,
-  onBeforeUpdate,
-  onUpdated,
-  onBeforeUnmount,
-  onUnmounted,
-  onErrorCaptured,
-} from 'vue';
+import { onBeforeMount, onMounted, onBeforeUpdate, onUpdated, onBeforeUnmount, onUnmounted, onErrorCaptured } from 'vue';
 
 // Before component is mounted
 onBeforeMount(() => {

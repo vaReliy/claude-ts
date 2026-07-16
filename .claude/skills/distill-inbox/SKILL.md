@@ -5,7 +5,6 @@ description: >-
   
   Українською: очистити inbox, дистилювати знання, перенести записи до rules, прибрати KNOWLEDGE_INBOX, розкласти по місцях.
 
-
 triggers:
   - distill-inbox
   - distill inbox
@@ -21,11 +20,11 @@ Reads `docs/KNOWLEDGE_INBOX.md`, categorizes each entry, and delegates writes to
 
 Read `docs/KNOWLEDGE_INBOX.md` in full, then sort every entry into one of:
 
-| Bucket | Criteria | Action |
-| --- | --- | --- |
-| **A — Done** | Heading contains `(RESOLVED …)` or `(already applied)`, or entry body says it was fixed/resolved | Delete from inbox — no content to migrate |
-| **B — Clear target** | Has `Belongs in: <exact-file>` (no "guess") pointing to a committed file | Inline into that file; delete entry from inbox |
-| **C — Uncertain** | Has `Belongs in (guess):`, lists multiple candidates, or content spans >1 file | Keep in inbox untouched; compute gate (see below) |
+| Bucket               | Criteria                                                                                         | Action                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------- |
+| **A — Done**         | Heading contains `(RESOLVED …)` or `(already applied)`, or entry body says it was fixed/resolved | Delete from inbox — no content to migrate         |
+| **B — Clear target** | Has `Belongs in: <exact-file>` (no "guess") pointing to a committed file                         | Inline into that file; delete entry from inbox    |
+| **C — Uncertain**    | Has `Belongs in (guess):`, lists multiple candidates, or content spans >1 file                   | Keep in inbox untouched; compute gate (see below) |
 
 ### Step 1a — Compute gate for Category C entries
 
@@ -82,18 +81,18 @@ If this skill was invoked by a human and stale entries exist, interactively prom
 
 Use this routing map to match "Belongs in:" labels to the split rules structure:
 
-| Label matches | Target file |
-| --- | --- |
-| `rules/architecture.md` | `rules/architecture.md` — onion/DDD/boundary core |
-| `rules/architecture-angular.md` | `rules/architecture-angular.md` — InjectionToken, FE boundaries |
-| `rules/architecture-backend.md` | `rules/architecture-backend.md` — NestJS DI, MongoDB, auth patterns |
-| `rules/code-style.md` | `rules/code-style.md` — shared TS conventions |
-| `rules/code-style-angular.md` | `rules/code-style-angular.md` — signals, templates, SCSS |
-| `rules/code-style-backend.md` | `rules/code-style-backend.md` — pino, LIVR, cookies, InfrastructureError |
-| `rules/testing.md` | `rules/testing.md` — Vitest patterns, integration test limits |
-| `rules/validation-authorization.md` | `rules/validation-authorization.md` — LIVR rules, JWT claims |
-| `rules/workflow.md` | `rules/workflow.md` — pipeline, quality gate, pre-flight |
-| `PROJECT_CONTEXT` | `docs/PROJECT_CONTEXT.md` — domain patterns, infra plumbing |
+| Label matches                       | Target file                                                              |
+| ----------------------------------- | ------------------------------------------------------------------------ |
+| `rules/architecture.md`             | `rules/architecture.md` — onion/DDD/boundary core                        |
+| `rules/architecture-angular.md`     | `rules/architecture-angular.md` — InjectionToken, FE boundaries          |
+| `rules/architecture-backend.md`     | `rules/architecture-backend.md` — NestJS DI, MongoDB, auth patterns      |
+| `rules/code-style.md`               | `rules/code-style.md` — shared TS conventions                            |
+| `rules/code-style-angular.md`       | `rules/code-style-angular.md` — signals, templates, SCSS                 |
+| `rules/code-style-backend.md`       | `rules/code-style-backend.md` — pino, LIVR, cookies, InfrastructureError |
+| `rules/testing.md`                  | `rules/testing.md` — Vitest patterns, integration test limits            |
+| `rules/validation-authorization.md` | `rules/validation-authorization.md` — LIVR rules, JWT claims             |
+| `rules/workflow.md`                 | `rules/workflow.md` — pipeline, quality gate, pre-flight                 |
+| `PROJECT_CONTEXT`                   | `docs/PROJECT_CONTEXT.md` — domain patterns, infra plumbing              |
 
 If a label says `rules/architecture.md` but the content is clearly NestJS-specific, route to `rules/architecture-backend.md` and note the reroute in the report.
 

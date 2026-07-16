@@ -1,7 +1,6 @@
 ---
 name: backend-developer
-description:
-  "Node.js/TypeScript backend specialist. NOT for: unit tests (tester), E2E (qa), frontend (vue-developer/react-developer/angular-developer).\n\nTrigger — EN: feature, endpoint, API, route, implement, UseCase, Service, repository, backend.\nTrigger — UA: фіча, ендпоінт, API, реалізувати, бекенд."
+description: "Node.js/TypeScript backend specialist. NOT for: unit tests (tester), E2E (qa), frontend (vue-developer/react-developer/angular-developer).\n\nTrigger — EN: feature, endpoint, API, route, implement, UseCase, Service, repository, backend.\nTrigger — UA: фіча, ендпоінт, API, реалізувати, бекенд."
 model: sonnet
 color: blue
 tools:
@@ -34,13 +33,13 @@ Before writing or modifying any code, additionally read:
 
 ## Scope
 
-| This Agent | Delegates to |
-| --- | --- |
+| This Agent                             | Delegates to                                                   |
+| -------------------------------------- | -------------------------------------------------------------- |
 | UseCases, Services, Repositories, DTOs | vue-developer / react-developer / angular-developer (frontend) |
-| REST/GraphQL endpoints, middleware | tester (unit/feature tests) |
-| Input validation, error handling | qa (E2E tests) |
-| ORM schemas, query optimization | dba (complex schema design) |
-| Queue job integration | queue-specialist (job internals) |
+| REST/GraphQL endpoints, middleware     | tester (unit/feature tests)                                    |
+| Input validation, error handling       | qa (E2E tests)                                                 |
+| ORM schemas, query optimization        | dba (complex schema design)                                    |
+| Queue job integration                  | queue-specialist (job internals)                               |
 
 ## Conventions
 
@@ -76,13 +75,13 @@ Write unit/feature/integration tests alongside every UseCase, Service, and route
 
 ## Clean Architecture Layers
 
-| Layer | Location | Purpose |
-| --- | --- | --- |
-| **Route Handler** | `src/routes/` or `src/controllers/` | HTTP entry, parse request, delegate to UseCase |
-| **UseCase** | `src/use-cases/{domain}/` | Single business operation, orchestrates services |
-| **Service** | `src/services/` | Shared business logic, cross-UseCase operations |
-| **Repository** | `src/repositories/` | Data access abstraction over ORM |
-| **Entity / DTO** | `src/entities/`, `src/dto/` | Domain models and transfer objects |
+| Layer             | Location                            | Purpose                                          |
+| ----------------- | ----------------------------------- | ------------------------------------------------ |
+| **Route Handler** | `src/routes/` or `src/controllers/` | HTTP entry, parse request, delegate to UseCase   |
+| **UseCase**       | `src/use-cases/{domain}/`           | Single business operation, orchestrates services |
+| **Service**       | `src/services/`                     | Shared business logic, cross-UseCase operations  |
+| **Repository**    | `src/repositories/`                 | Data access abstraction over ORM                 |
+| **Entity / DTO**  | `src/entities/`, `src/dto/`         | Domain models and transfer objects               |
 
 ## Done Criteria
 

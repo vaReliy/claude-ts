@@ -282,16 +282,13 @@ export function useGeolocation() {
   }
 
   async function watchPosition() {
-    watchId = await Geolocation.watchPosition(
-      { enableHighAccuracy: true },
-      (pos, err) => {
-        if (err) {
-          error.value = err.message;
-        } else if (pos) {
-          position.value = pos;
-        }
-      },
-    );
+    watchId = await Geolocation.watchPosition({ enableHighAccuracy: true }, (pos, err) => {
+      if (err) {
+        error.value = err.message;
+      } else if (pos) {
+        position.value = pos;
+      }
+    });
   }
 
   function stopWatching() {
@@ -312,11 +309,7 @@ export function useGeolocation() {
 ```typescript
 // composables/usePushNotifications.ts
 import { ref, onMounted } from 'vue';
-import {
-  PushNotifications,
-  Token,
-  PushNotificationSchema,
-} from '@capacitor/push-notifications';
+import { PushNotifications, Token, PushNotificationSchema } from '@capacitor/push-notifications';
 import { Capacitor } from '@capacitor/core';
 
 export function usePushNotifications() {
@@ -339,20 +332,14 @@ export function usePushNotifications() {
       token.value = t.value;
     });
 
-    PushNotifications.addListener(
-      'pushNotificationReceived',
-      (notification) => {
-        notifications.value.push(notification);
-      },
-    );
+    PushNotifications.addListener('pushNotificationReceived', (notification) => {
+      notifications.value.push(notification);
+    });
 
-    PushNotifications.addListener(
-      'pushNotificationActionPerformed',
-      (action) => {
-        // Handle notification tap
-        console.log('Action:', action.actionId);
-      },
-    );
+    PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
+      // Handle notification tap
+      console.log('Action:', action.actionId);
+    });
   });
 
   return { token, notifications, register };
@@ -561,10 +548,7 @@ export function usePWAUpdate() {
         if (!newWorker) return;
 
         newWorker.addEventListener('statechange', () => {
-          if (
-            newWorker.state === 'installed' &&
-            navigator.serviceWorker.controller
-          ) {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             needsUpdate.value = true;
             promptUpdate();
           }

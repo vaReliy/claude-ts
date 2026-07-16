@@ -10,13 +10,13 @@
 
 ## Naming Conventions
 
-| Construct | Convention | Example |
-| --- | --- | --- |
-| Classes, Interfaces, Types, Enums | PascalCase | `CreatePostUseCase`, `IPostRepository` |
-| Variables, functions, methods | camelCase | `createPost`, `postId` |
-| Constants | UPPER_SNAKE_CASE | `MAX_RETRY_COUNT` |
-| File names | kebab-case | `create-post.usecase.ts` |
-| Enum values | UPPER_SNAKE_CASE | `PostStatus.PUBLISHED` |
+| Construct                         | Convention       | Example                                |
+| --------------------------------- | ---------------- | -------------------------------------- |
+| Classes, Interfaces, Types, Enums | PascalCase       | `CreatePostUseCase`, `IPostRepository` |
+| Variables, functions, methods     | camelCase        | `createPost`, `postId`                 |
+| Constants                         | UPPER_SNAKE_CASE | `MAX_RETRY_COUNT`                      |
+| File names                        | kebab-case       | `create-post.usecase.ts`               |
+| Enum values                       | UPPER_SNAKE_CASE | `PostStatus.PUBLISHED`                 |
 
 ## Class Organization
 
@@ -81,18 +81,18 @@ Comments are the exception, not the default. Well-named code is the primary docu
 
 Describe the work, not the task number. After completing deferred work, delete the `TODO`/`FIXME` comment — stale markers are noise.
 
-| ✓ Acceptable | ✗ Never |
-| --- | --- |
-| `// TODO: add rate limiting once Redis is wired up` | `// TODO: see task 14` |
+| ✓ Acceptable                                        | ✗ Never                                 |
+| --------------------------------------------------- | --------------------------------------- |
+| `// TODO: add rate limiting once Redis is wired up` | `// TODO: see task 14`                  |
 | `// see PaymentGatewayService for the retry detail` | `// see PaymentGatewayService, task 11` |
 
 ## Code Quality Tools
 
-| Tool | Purpose | Config |
-| --- | --- | --- |
-| ESLint + @typescript-eslint | Linting and code quality | `.eslintrc` with strict ruleset |
-| Prettier | Code formatting | `.prettierrc` |
-| tsc | Type checking | `tsconfig.json` with `"strict": true` |
+| Tool                        | Purpose                  | Config                                |
+| --------------------------- | ------------------------ | ------------------------------------- |
+| ESLint + @typescript-eslint | Linting and code quality | `.eslintrc` with strict ruleset       |
+| Prettier                    | Code formatting          | `.prettierrc`                         |
+| tsc                         | Type checking            | `tsconfig.json` with `"strict": true` |
 
 ## Shell Script Conventions
 

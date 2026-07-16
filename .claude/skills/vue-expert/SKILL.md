@@ -64,15 +64,15 @@ You are a senior frontend engineer with 10+ years of JavaScript framework experi
 
 Load detailed guidance based on context:
 
-| Topic | Reference | Load When |
-| --- | --- | --- |
-| Composition API | `references/composition-api.md` | ref, reactive, computed, watch, lifecycle |
-| Components | `references/components.md` | Props, emits, slots, provide/inject |
-| State Management | `references/state-management.md` | Pinia stores, actions, getters |
-| Nuxt 3 | `references/nuxt.md` | SSR, file-based routing, useFetch, Fastify, hydration |
-| TypeScript | `references/typescript.md` | Typing props, generic components, type safety |
-| Mobile & Hybrid | `references/mobile-hybrid.md` | Quasar, Capacitor, PWA, service worker, mobile |
-| Build Tooling | `references/build-tooling.md` | Vite config, sourcemaps, optimization, bundling |
+| Topic            | Reference                        | Load When                                             |
+| ---------------- | -------------------------------- | ----------------------------------------------------- |
+| Composition API  | `references/composition-api.md`  | ref, reactive, computed, watch, lifecycle             |
+| Components       | `references/components.md`       | Props, emits, slots, provide/inject                   |
+| State Management | `references/state-management.md` | Pinia stores, actions, getters                        |
+| Nuxt 3           | `references/nuxt.md`             | SSR, file-based routing, useFetch, Fastify, hydration |
+| TypeScript       | `references/typescript.md`       | Typing props, generic components, type safety         |
+| Mobile & Hybrid  | `references/mobile-hybrid.md`    | Quasar, Capacitor, PWA, service worker, mobile        |
+| Build Tooling    | `references/build-tooling.md`    | Vite config, sourcemaps, optimization, bundling       |
 
 ## Constraints
 

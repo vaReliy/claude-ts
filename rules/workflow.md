@@ -78,14 +78,14 @@ When it does not fire, the task is at most T1 — no `ba`, no blast-radius map, 
 
 **Always invoke project targets via `nx`. Never call underlying tools directly.**
 
-| Task | ✅ Use | ❌ Never use |
-| --- | --- | --- |
-| Build | `nx build <project>` | `tsc -p tsconfig.json`, `webpack …` |
-| Type-check only | `nx typecheck <project>` _or_ `nx build <project> --skip-nx-cache` | `pnpm tsc --noEmit`, `npx tsc …` |
-| Test | `nx test <project>` | `npx vitest run --config …`, `jest …` |
-| Lint | `nx lint <project>` | `npx eslint apps/…/src`, `eslint .` |
-| E2E | `nx e2e <project>` | `npx playwright test` |
-| All projects | `nx run-many --target=<t>` | — |
+| Task            | ✅ Use                                                             | ❌ Never use                          |
+| --------------- | ------------------------------------------------------------------ | ------------------------------------- |
+| Build           | `nx build <project>`                                               | `tsc -p tsconfig.json`, `webpack …`   |
+| Type-check only | `nx typecheck <project>` _or_ `nx build <project> --skip-nx-cache` | `pnpm tsc --noEmit`, `npx tsc …`      |
+| Test            | `nx test <project>`                                                | `npx vitest run --config …`, `jest …` |
+| Lint            | `nx lint <project>`                                                | `npx eslint apps/…/src`, `eslint .`   |
+| E2E             | `nx e2e <project>`                                                 | `npx playwright test`                 |
+| All projects    | `nx run-many --target=<t>`                                         | —                                     |
 
 **Why:** nx targets encode the executor, config path, and working directory. Direct commands require the agent to know all three — wrong guesses often exit 0 with no output (e.g., `vitest run` with no matched files silently succeeds). Nx eliminates the guess.
 
@@ -129,14 +129,14 @@ ba → ddd-architect? → impl-{slug} team ══╣
 
 This diagram is the T2/T3 path (`ba` required). **T1 skips Phase 1 entirely**: the orchestrator writes the 5-line acceptance criteria itself (see Tiered Planning Ladder above) and starts directly at Phase 3 — everything from Phase 3 onward (impl team, quality gate, docs, knowledge capture) still runs unchanged.
 
-| Phase | Mode | Agent(s) | Output |
-| --- | --- | --- | --- |
-| 1. Requirements | sequential _(skipped for T1 — orchestrator writes acceptance criteria instead)_ | `ba` | User stories, scope, API contract |
-| 2. Architecture | sequential _(skip if no arch decision)_ | `ddd-architect` | Domain model, placement |
-| 3. Implementation | **team** `impl-{slug}` | `backend-developer` + frontend agent(s) if UI | Code + ESLint + tsc |
-| 4. Quality Gate | sequential then parallel (mandatory) | `tester(verify)` → `reviewer` → conditional parallel | Stage reports; restart from tester(verify) |
-| 5. Documentation | sequential | `docs-writer` | PR description + `gh pr create` |
-| 6. Knowledge Capture | orchestrator (mandatory — never skip) | — | Updated docs + inbox/permanent home |
+| Phase                | Mode                                                                            | Agent(s)                                             | Output                                     |
+| -------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------ |
+| 1. Requirements      | sequential _(skipped for T1 — orchestrator writes acceptance criteria instead)_ | `ba`                                                 | User stories, scope, API contract          |
+| 2. Architecture      | sequential _(skip if no arch decision)_                                         | `ddd-architect`                                      | Domain model, placement                    |
+| 3. Implementation    | **team** `impl-{slug}`                                                          | `backend-developer` + frontend agent(s) if UI        | Code + ESLint + tsc                        |
+| 4. Quality Gate      | sequential then parallel (mandatory)                                            | `tester(verify)` → `reviewer` → conditional parallel | Stage reports; restart from tester(verify) |
+| 5. Documentation     | sequential                                                                      | `docs-writer`                                        | PR description + `gh pr create`            |
+| 6. Knowledge Capture | orchestrator (mandatory — never skip)                                           | —                                                    | Updated docs + inbox/permanent home        |
 
 ### Pre-flight obligation for technical agents
 
@@ -261,12 +261,12 @@ Rationale: a warm-context resume skips session bootstrap and pre-flight re-reads
 
 Origin (introduced vs. pre-existing) decides Fix-Now vs. Emit. Severity decides Emit vs. Drop. Below the floor, a pre-existing finding does NOT become a task file.
 
-| Tier | Examples | Action |
-| --- | --- | --- |
-| Correctness / Security | bug, race, auth gap, PII leak, injection | always (Fix Now or Emit) |
-| Comprehension | misleading code, stale/lying comment, name that contradicts behavior, dead code implying live behavior | Emit |
-| Consistency-with-operational-impact | uses wrong logger, wrong cookie name, formatting that diverges from enforced ESLint rule | Emit |
-| Polish / preference | "could be cleaner," restructure without behavior/comprehension change, style the linter doesn't enforce, "more idiomatic" | **Drop** |
+| Tier                                | Examples                                                                                                                  | Action                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
+| Correctness / Security              | bug, race, auth gap, PII leak, injection                                                                                  | always (Fix Now or Emit) |
+| Comprehension                       | misleading code, stale/lying comment, name that contradicts behavior, dead code implying live behavior                    | Emit                     |
+| Consistency-with-operational-impact | uses wrong logger, wrong cookie name, formatting that diverges from enforced ESLint rule                                  | Emit                     |
+| Polish / preference                 | "could be cleaner," restructure without behavior/comprehension change, style the linter doesn't enforce, "more idiomatic" | **Drop**                 |
 
 Floor test (one sentence): "Does the current code mislead a reader or behave wrong — or is it merely not the preferred style?"
 
@@ -292,11 +292,11 @@ debugger → responsible agent ═══╗
                               done
 ```
 
-| Phase | Mode | Agent(s) | Output |
-| --- | --- | --- | --- |
-| 1. Diagnosis | sequential | `debugger` | Root cause analysis + layer identified |
-| 2. Fix | sequential | `backend-developer` OR relevant frontend agent | Minimal fix |
-| 3. Verify | **team** `verify-{slug}` | `tester`, `reviewer` | Regression test + fix review |
+| Phase        | Mode                     | Agent(s)                                       | Output                                 |
+| ------------ | ------------------------ | ---------------------------------------------- | -------------------------------------- |
+| 1. Diagnosis | sequential               | `debugger`                                     | Root cause analysis + layer identified |
+| 2. Fix       | sequential               | `backend-developer` OR relevant frontend agent | Minimal fix                            |
+| 3. Verify    | **team** `verify-{slug}` | `tester`, `reviewer`                           | Regression test + fix review           |
 
 **Phase 2 routing:** `debugger` output must identify the layer. Route to:
 
@@ -318,10 +318,10 @@ devops ══╗
        done
 ```
 
-| Phase | Mode | Agent(s) | Output |
-| --- | --- | --- | --- |
-| 1. Implementation | sequential | `devops` | Config changes |
-| 2. Quality Gate | **team** `qg-ci-{slug}` | `reviewer`, `security-scanner` | Review + security |
+| Phase             | Mode                    | Agent(s)                       | Output            |
+| ----------------- | ----------------------- | ------------------------------ | ----------------- |
+| 1. Implementation | sequential              | `devops`                       | Config changes    |
+| 2. Quality Gate   | **team** `qg-ci-{slug}` | `reviewer`, `security-scanner` | Review + security |
 
 No `tester` or `qa` for infra-only changes.
 
@@ -335,14 +335,14 @@ When any subagent's final report contains a `## Learnings` section, the orchestr
 
 ### What to update
 
-| Artifact | When to update | What goes in |
-| --- | --- | --- |
-| `CHANGELOG.md` | **Always** | Concise summary of what changed and why; one entry per task |
-| `PROJECT_CONTEXT.md` (or equivalent) | Architecture/domain changed | New modules, domain rule changes, infra changes, historical incidents |
-| `docs/KNOWLEDGE_INBOX.md` | Durable, project-relevant learning (default path) | A 3-line entry (see Knowledge Inbox below) |
-| `docs/CLAUDE_TS_CHANGELOG.md` | Template-inherited file changed | Divergence/fix log entry (see entry format in that file) |
-| `docs/METRICS.md` | **Always** | One append-only table row per completed task (see format in that file); never `@`-referenced, same constraint as `docs/KNOWLEDGE_INBOX.md` |
-| Auto-memory (`feedback` type) | Personal workflow preference — this user only | Agent behavior to repeat or avoid for this user's sessions |
+| Artifact                             | When to update                                    | What goes in                                                                                                                               |
+| ------------------------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CHANGELOG.md`                       | **Always**                                        | Concise summary of what changed and why; one entry per task                                                                                |
+| `PROJECT_CONTEXT.md` (or equivalent) | Architecture/domain changed                       | New modules, domain rule changes, infra changes, historical incidents                                                                      |
+| `docs/KNOWLEDGE_INBOX.md`            | Durable, project-relevant learning (default path) | A 3-line entry (see Knowledge Inbox below)                                                                                                 |
+| `docs/CLAUDE_TS_CHANGELOG.md`        | Template-inherited file changed                   | Divergence/fix log entry (see entry format in that file)                                                                                   |
+| `docs/METRICS.md`                    | **Always**                                        | One append-only table row per completed task (see format in that file); never `@`-referenced, same constraint as `docs/KNOWLEDGE_INBOX.md` |
+| Auto-memory (`feedback` type)        | Personal workflow preference — this user only     | Agent behavior to repeat or avoid for this user's sessions                                                                                 |
 
 ### Decision rules
 

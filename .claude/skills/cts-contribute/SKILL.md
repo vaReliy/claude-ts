@@ -1,7 +1,6 @@
 ---
 name: cts-contribute
-description:
-  "Consumer-side flow for contributing improvements back to the CTS template. Diffs the current project against its CTS baseline, classifies changes into three cases (net-new skills, CTS-managed file edits, .ctsignore'd file improvements), interactively guides hunk-level decisions for overridden files, then writes accepted changes to the local CTS repo and updates both changelogs. NOT for first-time installs (cts-setup), upstream sync (cts-update), or importing external third-party skills into CTS (cts-import-skill).\n\nTrigger — EN: cts-contribute, export to CTS, contribute back, push improvements upstream, share with CTS, export skill to template.\nTrigger — UA: експортувати до CTS, поділитися з CTS, зворотній експорт, contribute до шаблону, передати зміни в CTS."
+description: "Consumer-side flow for contributing improvements back to the CTS template. Diffs the current project against its CTS baseline, classifies changes into three cases (net-new skills, CTS-managed file edits, .ctsignore'd file improvements), interactively guides hunk-level decisions for overridden files, then writes accepted changes to the local CTS repo and updates both changelogs. NOT for first-time installs (cts-setup), upstream sync (cts-update), or importing external third-party skills into CTS (cts-import-skill).\n\nTrigger — EN: cts-contribute, export to CTS, contribute back, push improvements upstream, share with CTS, export skill to template.\nTrigger — UA: експортувати до CTS, поділитися з CTS, зворотній експорт, contribute до шаблону, передати зміни в CTS."
 ---
 
 # /cts-contribute

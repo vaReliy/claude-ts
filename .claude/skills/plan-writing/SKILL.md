@@ -59,11 +59,11 @@ This skill provides a framework for breaking down work into clear, actionable ta
 
 ### Principle 2: Be SPECIFIC, Not Generic
 
-| ❌ Wrong | ✅ Right |
-| --- | --- |
-| "Set up project" | "Run `npx create-next-app`" |
+| ❌ Wrong             | ✅ Right                                                 |
+| -------------------- | -------------------------------------------------------- |
+| "Set up project"     | "Run `npx create-next-app`"                              |
 | "Add authentication" | "Install next-auth, create `/api/auth/[...nextauth].ts`" |
-| "Style the UI" | "Add Tailwind classes to `Header.tsx`" |
+| "Style the UI"       | "Add Tailwind classes to `Header.tsx`"                   |
 
 > **Rule:** Each task should have a clear, verifiable outcome.
 
@@ -109,11 +109,11 @@ This skill provides a framework for breaking down work into clear, actionable ta
 
 ### Principle 5: Verification is Simple
 
-| ❌ Wrong | ✅ Right |
-| --- | --- |
-| "Verify the component works correctly" | "Run `npm run dev`, click button, see toast" |
-| "Test the API" | "curl localhost:3000/api/users returns 200" |
-| "Check styles" | "Open browser, verify dark mode toggle works" |
+| ❌ Wrong                               | ✅ Right                                      |
+| -------------------------------------- | --------------------------------------------- |
+| "Verify the component works correctly" | "Run `npm run dev`, click button, see toast"  |
+| "Test the API"                         | "curl localhost:3000/api/users returns 200"   |
+| "Check styles"                         | "Open browser, verify dark mode toggle works" |
 
 ---
 

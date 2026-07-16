@@ -155,13 +155,13 @@ At the threshold:
 
 ## Red Flags Requiring Process Reset
 
-| Red Flag | Why It's Wrong |
-| --- | --- |
-| Proposing solutions before tracing data flow | Guessing, not debugging |
-| Making multiple simultaneous changes | Can't identify which change worked |
-| Skipping test creation | Bug will recur |
-| "Let's try this and see if it works" | Shotgun debugging |
-| Fixing without understanding the cause | Band-aid, not cure |
+| Red Flag                                     | Why It's Wrong                     |
+| -------------------------------------------- | ---------------------------------- |
+| Proposing solutions before tracing data flow | Guessing, not debugging            |
+| Making multiple simultaneous changes         | Can't identify which change worked |
+| Skipping test creation                       | Bug will recur                     |
+| "Let's try this and see if it works"         | Shotgun debugging                  |
+| Fixing without understanding the cause       | Band-aid, not cure                 |
 
 ---
 

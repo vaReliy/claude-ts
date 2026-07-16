@@ -24,45 +24,45 @@ Non-Claude tools should read `AGENTS.md` + `rules/` only — the orchestrator/pi
 
 Specialized AI agents that handle different aspects of development. Each agent has an explicit `tools:` list in its frontmatter — only the tools it actually needs (principle of least privilege).
 
-| Agent | Purpose | Model | Write? | Key extras |
-| --- | --- | --- | --- | --- |
-| `ba` | Business analysis, requirements, user stories | sonnet | — | Web, Context7, Agent |
-| `dba` | Database design, migrations, query optimization | sonnet | + | — |
-| `ddd-architect` | Domain modeling, Clean Architecture placement | opus | — | Context7, Agent |
-| `debugger` | Bug investigation, root-cause analysis | opus | + | — |
-| `backend-developer` | Node.js/TypeScript backend features | sonnet | + | Context7, IDE, Agent |
-| `vue-developer` | Vue 3 components, Pinia, Tailwind, a11y | sonnet | + | Context7, Figma, IDE |
-| `react-developer` | React 18+ components, Zustand, TanStack Query | sonnet | + | Context7, Figma, IDE |
-| `angular-developer` | Angular 17+ standalone components, signals, RxJS | sonnet | + | Context7, Figma, IDE |
-| `devil` | Devil's advocate in planning phase | sonnet | — | SendMessage only |
-| `devops` | Docker, CI/CD, PM2, GitHub Actions, infrastructure | haiku | + | GitHub MCP |
-| `docs-writer` | Technical documentation, README, API docs | haiku | + | GitHub MCP |
-| `integration-architect` | OAuth, webhooks, third-party services | sonnet | + | Web, Context7 |
-| `refactoring-expert` | Refactoring, N+1 fixes, code quality | sonnet | + | — |
-| `qa` | E2E testing, Playwright, visual regression | sonnet | + | All 21 Playwright tools |
-| `queue-specialist` | BullMQ workers, jobs, async processing | sonnet | + | — |
-| `reviewer` | Code review, architecture audit | sonnet | — | GitHub MCP (review) |
-| `security-scanner` | OWASP, auth/authz, credential leaks | sonnet | — | Web (CVE lookup) |
-| `tester` | Unit/integration tests, Vitest, Stryker mutation | sonnet | + | — |
+| Agent                   | Purpose                                            | Model  | Write? | Key extras              |
+| ----------------------- | -------------------------------------------------- | ------ | ------ | ----------------------- |
+| `ba`                    | Business analysis, requirements, user stories      | sonnet | —      | Web, Context7, Agent    |
+| `dba`                   | Database design, migrations, query optimization    | sonnet | +      | —                       |
+| `ddd-architect`         | Domain modeling, Clean Architecture placement      | opus   | —      | Context7, Agent         |
+| `debugger`              | Bug investigation, root-cause analysis             | opus   | +      | —                       |
+| `backend-developer`     | Node.js/TypeScript backend features                | sonnet | +      | Context7, IDE, Agent    |
+| `vue-developer`         | Vue 3 components, Pinia, Tailwind, a11y            | sonnet | +      | Context7, Figma, IDE    |
+| `react-developer`       | React 18+ components, Zustand, TanStack Query      | sonnet | +      | Context7, Figma, IDE    |
+| `angular-developer`     | Angular 17+ standalone components, signals, RxJS   | sonnet | +      | Context7, Figma, IDE    |
+| `devil`                 | Devil's advocate in planning phase                 | sonnet | —      | SendMessage only        |
+| `devops`                | Docker, CI/CD, PM2, GitHub Actions, infrastructure | haiku  | +      | GitHub MCP              |
+| `docs-writer`           | Technical documentation, README, API docs          | haiku  | +      | GitHub MCP              |
+| `integration-architect` | OAuth, webhooks, third-party services              | sonnet | +      | Web, Context7           |
+| `refactoring-expert`    | Refactoring, N+1 fixes, code quality               | sonnet | +      | —                       |
+| `qa`                    | E2E testing, Playwright, visual regression         | sonnet | +      | All 21 Playwright tools |
+| `queue-specialist`      | BullMQ workers, jobs, async processing             | sonnet | +      | —                       |
+| `reviewer`              | Code review, architecture audit                    | sonnet | —      | GitHub MCP (review)     |
+| `security-scanner`      | OWASP, auth/authz, credential leaks                | sonnet | —      | Web (CVE lookup)        |
+| `tester`                | Unit/integration tests, Vitest, Stryker mutation   | sonnet | +      | —                       |
 
 ### Rules (12)
 
 Portable rule files in root `rules/`, referenced from `AGENTS.md`'s on-demand index and loaded by agents and orchestrator on demand:
 
-| Rule | Purpose |
-| --- | --- |
-| `architecture.md` | Clean Architecture layers, domain organization |
-| `code-style.md` | TypeScript strict mode, ESLint/Prettier/tsc conventions, comments |
-| `dependencies.md` | Exact-pin dependency audit procedure (npm/pnpm ranges) |
-| `docker-commands.md` | Docker-prefixed commands reference (Node.js/npm/Prisma) |
-| `validation-authorization.md` | js-validator-livr (primary) / Zod + Guards / CASL RBAC |
-| `git-operations.md` | Commit/push safety, PR description format |
-| `mcp-stack.md` | MCP tool usage guide (Context7, GitHub, Figma) |
-| `migrations-queue.md` | Prisma migration conventions, BullMQ queue pattern |
-| `nx-generators.md` | Nx generator-output audit checklist (Nx workspaces only) |
-| `task-authoring.md` | Backlog task-file conventions for plan/grill/grooming sessions |
-| `testing.md` | Vitest/Jest, Stryker mutation testing, ORM testing policy |
-| `workflow.md` | Agent pipeline orchestration + agent routing table + quality gate |
+| Rule                          | Purpose                                                           |
+| ----------------------------- | ----------------------------------------------------------------- |
+| `architecture.md`             | Clean Architecture layers, domain organization                    |
+| `code-style.md`               | TypeScript strict mode, ESLint/Prettier/tsc conventions, comments |
+| `dependencies.md`             | Exact-pin dependency audit procedure (npm/pnpm ranges)            |
+| `docker-commands.md`          | Docker-prefixed commands reference (Node.js/npm/Prisma)           |
+| `validation-authorization.md` | js-validator-livr (primary) / Zod + Guards / CASL RBAC            |
+| `git-operations.md`           | Commit/push safety, PR description format                         |
+| `mcp-stack.md`                | MCP tool usage guide (Context7, GitHub, Figma)                    |
+| `migrations-queue.md`         | Prisma migration conventions, BullMQ queue pattern                |
+| `nx-generators.md`            | Nx generator-output audit checklist (Nx workspaces only)          |
+| `task-authoring.md`           | Backlog task-file conventions for plan/grill/grooming sessions    |
+| `testing.md`                  | Vitest/Jest, Stryker mutation testing, ORM testing policy         |
+| `workflow.md`                 | Agent pipeline orchestration + agent routing table + quality gate |
 
 `CLAUDE.md` carries a single `@AGENTS.md` import (the portable core, needed every turn). `rules/` files are referenced by plain path and loaded by agents on demand only when relevant, instead of being force-loaded into every conversation's context.
 

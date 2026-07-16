@@ -5,6 +5,7 @@
 AGENTS.md
 CLAUDE.md
 .mcp.json
+.editorconfig
 rules/
 docs/RECIPES.md
 docs/METRICS.md

@@ -1,7 +1,6 @@
 ---
 name: cts-setup
-description:
-  "Guided install or merge of the CTS template (agents, skills, rules, AGENTS.md/CLAUDE.md) into the current project, including profile pruning for your frontend stack. NOT for routine re-syncs of an already-installed project (use cts-update) and NOT for editing application source code.\n\nTrigger — EN: cts-setup, install CTS, set up claude-ts, configure template, install profile, prune agents.\nTrigger — UA: встановити CTS, налаштувати шаблон, встановлення claude-ts, профіль установки, обрати фреймворк."
+description: "Guided install or merge of the CTS template (agents, skills, rules, AGENTS.md/CLAUDE.md) into the current project, including profile pruning for your frontend stack. NOT for routine re-syncs of an already-installed project (use cts-update) and NOT for editing application source code.\n\nTrigger — EN: cts-setup, install CTS, set up claude-ts, configure template, install profile, prune agents.\nTrigger — UA: встановити CTS, налаштувати шаблон, встановлення claude-ts, профіль установки, обрати фреймворк."
 ---
 
 # /cts-setup

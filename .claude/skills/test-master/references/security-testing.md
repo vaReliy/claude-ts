@@ -7,30 +7,19 @@
 ```typescript
 describe('Authentication Security', () => {
   it('rejects invalid credentials', async () => {
-    await request(app)
-      .post('/api/login')
-      .send({ email: 'user@test.com', password: 'wrong' })
-      .expect(401);
+    await request(app).post('/api/login').send({ email: 'user@test.com', password: 'wrong' }).expect(401);
   });
 
   it('rejects expired tokens', async () => {
     const expiredToken = createExpiredToken();
-    await request(app)
-      .get('/api/protected')
-      .set('Authorization', `Bearer ${expiredToken}`)
-      .expect(401);
+    await request(app).get('/api/protected').set('Authorization', `Bearer ${expiredToken}`).expect(401);
   });
 
   it('enforces rate limiting on login', async () => {
     for (let i = 0; i < 6; i++) {
-      await request(app)
-        .post('/api/login')
-        .send({ email: 'user@test.com', password: 'wrong' });
+      await request(app).post('/api/login').send({ email: 'user@test.com', password: 'wrong' });
     }
-    await request(app)
-      .post('/api/login')
-      .send({ email: 'user@test.com', password: 'correct' })
-      .expect(429);
+    await request(app).post('/api/login').send({ email: 'user@test.com', password: 'correct' }).expect(429);
   });
 });
 ```

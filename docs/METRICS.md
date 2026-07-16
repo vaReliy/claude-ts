@@ -8,23 +8,23 @@ Append-only ledger of completed tasks, one table row per task, written during Ph
 
 Each completed task is one row in the table below.
 
-| Field | Meaning |
-| --- | --- |
-| `Date` | ISO date the task completed (`YYYY-MM-DD`) |
-| `Repo` | Repo name |
-| `Task` | Task file slug or short identifier |
-| `Tier` | Triage tier at dispatch (`T0`–`T3`) |
-| `Cycles` | Number of quality-gate restart cycles consumed (0 if it passed first try) |
+| Field               | Meaning                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `Date`              | ISO date the task completed (`YYYY-MM-DD`)                                                                    |
+| `Repo`              | Repo name                                                                                                     |
+| `Task`              | Task file slug or short identifier                                                                            |
+| `Tier`              | Triage tier at dispatch (`T0`–`T3`)                                                                           |
+| `Cycles`            | Number of quality-gate restart cycles consumed (0 if it passed first try)                                     |
 | `Fix Now (t/r/s/q)` | `## Fix Now` item counts per gate stage, in order: tester / reviewer / security-scanner / qa (e.g. `1/0/0/2`) |
-| `Emitted` | Count of pre-existing findings routed to `## Emit as Task` (backlog, not blocking) |
-| `Hardstop` | `yes`/`no` — whether the 2-cycle hard-stop limit was hit |
-| `Model` | Model tier used for the implementation agent (`deep`/`standard`/`cheap`) |
+| `Emitted`           | Count of pre-existing findings routed to `## Emit as Task` (backlog, not blocking)                            |
+| `Hardstop`          | `yes`/`no` — whether the 2-cycle hard-stop limit was hit                                                      |
+| `Model`             | Model tier used for the implementation agent (`deep`/`standard`/`cheap`)                                      |
 
 ## Entries
 
 <!-- Append one row per completed task to the table below. -->
 
-| Date | Repo | Task | Tier | Cycles | Fix Now (t/r/s/q) | Emitted | Hardstop | Model |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-07-16 | claude-ts | distill-inbox-guess-resolution | T1 | 2 | 0/5/0/0 | 1 | no | standard |
-| 2026-07-16 | claude-ts | distill-inbox-step3-host-repo-ledger | T1 | 0 | 0/0/0/0 | 0 | no | standard |
+| Date       | Repo      | Task                                 | Tier | Cycles | Fix Now (t/r/s/q) | Emitted | Hardstop | Model    |
+| ---------- | --------- | ------------------------------------ | ---- | ------ | ----------------- | ------- | -------- | -------- |
+| 2026-07-16 | claude-ts | distill-inbox-guess-resolution       | T1   | 2      | 0/5/0/0           | 1       | no       | standard |
+| 2026-07-16 | claude-ts | distill-inbox-step3-host-repo-ledger | T1   | 0      | 0/0/0/0           | 0       | no       | standard |

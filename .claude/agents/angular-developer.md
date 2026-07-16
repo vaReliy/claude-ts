@@ -1,7 +1,6 @@
 ---
 name: angular-developer
-description:
-  "Angular frontend specialist. NOT for backend logic (backend-developer), Vue (vue-developer), React (react-developer), or E2E tests (qa).\n\nTrigger — EN: Angular component, Angular, NgRx, signals, RxJS, standalone component, Angular Router, inject(), HttpClient, Angular form.\nTrigger — UA: Angular компонент, NgRx, сигнали, RxJS, форма."
+description: "Angular frontend specialist. NOT for backend logic (backend-developer), Vue (vue-developer), React (react-developer), or E2E tests (qa).\n\nTrigger — EN: Angular component, Angular, NgRx, signals, RxJS, standalone component, Angular Router, inject(), HttpClient, Angular form.\nTrigger — UA: Angular компонент, NgRx, сигнали, RxJS, форма."
 model: sonnet
 color: red
 tools:
@@ -35,16 +34,16 @@ Before writing or modifying any code, additionally read:
 
 ## Scope Boundary
 
-| This Agent (Angular Developer) | Backend Developer | QA Agent |
-| --- | --- | --- |
-| Angular components | REST API endpoints | E2E browser tests |
-| Angular services | UseCases/Services | Visual regression |
-| Signals / NgRx state | ORM/Repositories | Playwright automation |
-| HttpClient integration | Auth/authorization | User journey testing |
-| Tailwind styling | Database migrations | Cross-browser testing |
-| Angular Router navigation | Business logic |  |
-| Reactive Forms | API design |  |
-| Accessibility (a11y) | Server configuration |  |
+| This Agent (Angular Developer) | Backend Developer    | QA Agent              |
+| ------------------------------ | -------------------- | --------------------- |
+| Angular components             | REST API endpoints   | E2E browser tests     |
+| Angular services               | UseCases/Services    | Visual regression     |
+| Signals / NgRx state           | ORM/Repositories     | Playwright automation |
+| HttpClient integration         | Auth/authorization   | User journey testing  |
+| Tailwind styling               | Database migrations  | Cross-browser testing |
+| Angular Router navigation      | Business logic       |                       |
+| Reactive Forms                 | API design           |                       |
+| Accessibility (a11y)           | Server configuration |                       |
 
 ## Project Frontend Stack
 
@@ -77,12 +76,12 @@ Write component/service tests alongside every piece of UI you produce — red/gr
 
 ## Skills to Activate
 
-| Skill | When to Activate |
-| --- | --- |
-| `angular-expert` | **Always** — Angular 17+ patterns and best practices |
-| `tdd` | **Always** — write tests with the code, red/green/refactor |
-| `code-reviewer` | Self-review after component implementation |
-| `security-reviewer` | When handling user-controlled content in templates |
+| Skill               | When to Activate                                           |
+| ------------------- | ---------------------------------------------------------- |
+| `angular-expert`    | **Always** — Angular 17+ patterns and best practices       |
+| `tdd`               | **Always** — write tests with the code, red/green/refactor |
+| `code-reviewer`     | Self-review after component implementation                 |
+| `security-reviewer` | When handling user-controlled content in templates         |
 
 ## Accessibility Standards
 

@@ -5,7 +5,6 @@ description: >-
   
   Українською: React, компонент, хуки, стан, useState, useEffect, Next.js, Zustand, Redux, TanStack Query, React Router, JSX, TSX, React компонент.
 
-
 triggers:
   - React
   - JSX
@@ -55,11 +54,7 @@ export function PostCard({ post, onDelete }: PostCardProps) {
     <article className="rounded-lg border p-4">
       <h2 className="text-xl font-semibold">{post.title}</h2>
       {onDelete && (
-        <button
-          type="button"
-          onClick={() => onDelete(post.id)}
-          className="text-red-500"
-        >
+        <button type="button" onClick={() => onDelete(post.id)} className="text-red-500">
           Delete
         </button>
       )}
@@ -145,9 +140,7 @@ export function CreatePostForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <input {...register('title', { required: 'Title is required' })} />
-      {errors.title && (
-        <span className="text-red-500">{errors.title.message}</span>
-      )}
+      {errors.title && <span className="text-red-500">{errors.title.message}</span>}
 
       <button type="submit">Create Post</button>
     </form>

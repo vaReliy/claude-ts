@@ -145,12 +145,7 @@ interface User {
 }
 
 // useFetch - SSR-safe, auto-imports
-const {
-  data: users,
-  pending,
-  error,
-  refresh,
-} = await useFetch<User[]>('/api/users');
+const { data: users, pending, error, refresh } = await useFetch<User[]>('/api/users');
 
 // With options
 const { data } = await useFetch('/api/users', {
@@ -161,8 +156,7 @@ const { data } = await useFetch('/api/users', {
   },
   query: { page: 1, limit: 10 },
   // Transform response
-  transform: (data) =>
-    data.map((u) => ({ ...u, fullName: u.firstName + ' ' + u.lastName })),
+  transform: (data) => data.map((u) => ({ ...u, fullName: u.firstName + ' ' + u.lastName })),
   // Pick specific keys
   pick: ['id', 'name'],
   // Watch for changes
@@ -187,9 +181,7 @@ const { data: user } = await useAsyncData(
 const { data: posts } = await useLazyFetch('/api/posts');
 
 // useLazyAsyncData - Non-blocking with custom fetcher
-const { data: comments } = await useLazyAsyncData('comments', () =>
-  $fetch('/api/comments'),
-);
+const { data: comments } = await useLazyAsyncData('comments', () => $fetch('/api/comments'));
 
 // Manual refresh
 function handleRefresh() {
@@ -574,9 +566,7 @@ export default defineConfig({
 import { defineAsyncComponent } from 'vue';
 
 // Heavy component loaded only on client
-const HeavyChart = defineAsyncComponent(
-  () => import('./components/HeavyChart.vue'),
-);
+const HeavyChart = defineAsyncComponent(() => import('./components/HeavyChart.vue'));
 </script>
 
 <template>

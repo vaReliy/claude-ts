@@ -53,10 +53,7 @@ export const postAnalyticsWorker = new Worker<ProcessPostAnalyticsData>(
   'post-analytics',
   async (job) => {
     // must be idempotent
-    await postAnalyticsRepository.upsert(
-      { postId: job.data.postId },
-      { processedAt: new Date() },
-    );
+    await postAnalyticsRepository.upsert({ postId: job.data.postId }, { processedAt: new Date() });
   },
   {
     connection: redisConnection,
@@ -70,11 +67,7 @@ const postAnalyticsQueue = new Queue('post-analytics', {
   connection: redisConnection,
 });
 await postAnalyticsQueue.add('process', { postId: post.id });
-await postAnalyticsQueue.add(
-  'process',
-  { postId: post.id },
-  { delay: 5 * 60 * 1000 },
-);
+await postAnalyticsQueue.add('process', { postId: post.id }, { delay: 5 * 60 * 1000 });
 ```
 
 ## Idempotency
@@ -82,10 +75,7 @@ await postAnalyticsQueue.add(
 Workers must produce the same result when run multiple times. Use upsert operations:
 
 ```typescript
-await repository.upsert(
-  { postId: job.data.postId },
-  { processedAt: new Date() },
-);
+await repository.upsert({ postId: job.data.postId }, { processedAt: new Date() });
 ```
 
 ## Unique Jobs

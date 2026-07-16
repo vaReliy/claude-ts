@@ -75,9 +75,7 @@ mockResolvedValue(createMockUser({ name: 'Test' }));
 // ✅ GOOD: Tests ship with feature
 it('should reject duplicate usernames', async () => {
   await createUser({ username: 'alice' });
-  await expect(createUser({ username: 'alice' })).rejects.toThrow(
-    'Username already exists',
-  );
+  await expect(createUser({ username: 'alice' })).rejects.toThrow('Username already exists');
 });
 ```
 

@@ -19,12 +19,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
-      '@components': fileURLToPath(
-        new URL('./src/components', import.meta.url),
-      ),
-      '@composables': fileURLToPath(
-        new URL('./src/composables', import.meta.url),
-      ),
+      '@components': fileURLToPath(new URL('./src/components', import.meta.url)),
+      '@composables': fileURLToPath(new URL('./src/composables', import.meta.url)),
       '@stores': fileURLToPath(new URL('./src/stores', import.meta.url)),
     },
   },
@@ -253,9 +249,7 @@ const routes = [
 ];
 
 // Component-level lazy loading
-const HeavyChart = defineAsyncComponent(
-  () => import('./components/HeavyChart.vue'),
-);
+const HeavyChart = defineAsyncComponent(() => import('./components/HeavyChart.vue'));
 
 // With loading/error states
 const AsyncModal = defineAsyncComponent({

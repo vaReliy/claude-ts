@@ -1,7 +1,6 @@
 ---
 name: ddd-architect
-description:
-  "Domain-Driven Design architect for business logic organization. NOT for implementation (backend-developer), test verification/coverage audits (tester), or schema design (dba).\n\nTrigger — EN: domain, bounded context, DDD, business logic, architecture decision, Clean Architecture, where should this go.\nTrigger — UA: домен, DDD, бізнес-логіка, архітектура."
+description: "Domain-Driven Design architect for business logic organization. NOT for implementation (backend-developer), test verification/coverage audits (tester), or schema design (dba).\n\nTrigger — EN: domain, bounded context, DDD, business logic, architecture decision, Clean Architecture, where should this go.\nTrigger — UA: домен, DDD, бізнес-логіка, архітектура."
 model: opus
 color: purple
 tools:
@@ -34,12 +33,12 @@ Before acting, read `docs/KNOWLEDGE_INBOX.md` — it contains accumulated projec
 
 ## Skills to Activate
 
-| Skill | When to Activate |
-| --- | --- |
-| `ddd-strategic-design` | **Always** — context mapping, bounded contexts |
-| `architecture-designer` | **Always** — architectural decisions and patterns |
+| Skill                     | When to Activate                                            |
+| ------------------------- | ----------------------------------------------------------- |
+| `ddd-strategic-design`    | **Always** — context mapping, bounded contexts              |
+| `architecture-designer`   | **Always** — architectural decisions and patterns           |
 | `typescript-architecture` | **Always** — Node.js/TypeScript Clean Architecture patterns |
-| `typescript-pro` | TypeScript strict typing, interfaces, generics |
+| `typescript-pro`          | TypeScript strict typing, interfaces, generics              |
 
 > See `rules/mcp-stack.md` for MCP tool reference.
 
@@ -61,17 +60,17 @@ Before acting, read `docs/KNOWLEDGE_INBOX.md` — it contains accumulated projec
 
 ### Patterns In Use
 
-| Pattern | Location | Purpose |
-| --- | --- | --- |
-| **UseCase** | `src/use-cases/{domain}/` | Single business operation, atomic |
-| **Service** | `src/services/` | Cross-domain / shared business logic |
-| **Repository** | `src/repositories/` | ORM abstraction, data access |
-| **DTO** | `src/dto/` | Input/output transfer objects |
-| **Entity** | `src/entities/` | Domain model with business rules |
-| **Guard** | `src/guards/` | Route-level authorization |
-| **Middleware** | `src/middleware/` | Cross-cutting HTTP concerns |
-| **Enum** | `src/enums/` | Value objects, fixed sets |
-| **Event** | `src/events/` | Cross-cutting domain events |
+| Pattern        | Location                  | Purpose                              |
+| -------------- | ------------------------- | ------------------------------------ |
+| **UseCase**    | `src/use-cases/{domain}/` | Single business operation, atomic    |
+| **Service**    | `src/services/`           | Cross-domain / shared business logic |
+| **Repository** | `src/repositories/`       | ORM abstraction, data access         |
+| **DTO**        | `src/dto/`                | Input/output transfer objects        |
+| **Entity**     | `src/entities/`           | Domain model with business rules     |
+| **Guard**      | `src/guards/`             | Route-level authorization            |
+| **Middleware** | `src/middleware/`         | Cross-cutting HTTP concerns          |
+| **Enum**       | `src/enums/`              | Value objects, fixed sets            |
+| **Event**      | `src/events/`             | Cross-cutting domain events          |
 
 ## Logic Placement Decision
 

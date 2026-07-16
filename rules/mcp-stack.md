@@ -2,10 +2,10 @@
 
 ## Context7 (Library Documentation)
 
-| Tool | When to Use |
-| --- | --- |
-| `resolve-library-id` | Find library ID before querying |
-| `query-docs` | Vue 3, React, Angular, Pinia, Prisma, BullMQ, NestJS, and other Node.js/frontend libraries |
+| Tool                 | When to Use                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------ |
+| `resolve-library-id` | Find library ID before querying                                                            |
+| `query-docs`         | Vue 3, React, Angular, Pinia, Prisma, BullMQ, NestJS, and other Node.js/frontend libraries |
 
 ## GitHub MCP
 

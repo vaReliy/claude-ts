@@ -5,12 +5,7 @@
 ## E2E Test Strategy
 
 ```typescript
-const criticalPaths = [
-  'User registration and login',
-  'Core product/service workflow',
-  'Payment/checkout flow',
-  'Settings and profile management',
-];
+const criticalPaths = ['User registration and login', 'Core product/service workflow', 'Payment/checkout flow', 'Settings and profile management'];
 ```
 
 ## User Flow Testing

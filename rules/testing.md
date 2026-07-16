@@ -89,9 +89,7 @@ describe('CreatePostUseCase', () => {
 
   it('throws ConflictError if slug exists', async () => {
     mockRepository.existsBySlug.mockResolvedValue(true);
-    await expect(
-      useCase.execute({ title: 'Test', body: 'Content' }),
-    ).rejects.toThrow(ConflictError);
+    await expect(useCase.execute({ title: 'Test', body: 'Content' })).rejects.toThrow(ConflictError);
   });
 });
 ```
@@ -102,10 +100,7 @@ describe('CreatePostUseCase', () => {
 import supertest from 'supertest';
 
 it('POST /posts returns 201', async () => {
-  const response = await supertest(app)
-    .post('/posts')
-    .set('Authorization', `Bearer ${testToken}`)
-    .send({ title: 'Test Post', body: 'Content' });
+  const response = await supertest(app).post('/posts').set('Authorization', `Bearer ${testToken}`).send({ title: 'Test Post', body: 'Content' });
 
   expect(response.status).toBe(201);
   expect(response.body.title).toBe('Test Post');
@@ -200,10 +195,7 @@ describe('MyExceptionFilter', () => {
     filter.catch(exception, mockExecutionContext);
 
     // ✓ Assert both pino args: object first, message second
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      expect.objectContaining({ statusCode: expect.any(Number) }),
-      expect.stringContaining('[CODE]'),
-    );
+    expect(mockLogger.warn).toHaveBeenCalledWith(expect.objectContaining({ statusCode: expect.any(Number) }), expect.stringContaining('[CODE]'));
   });
 });
 ```
@@ -218,9 +210,7 @@ Raw `http-server` has no SPA fallback — `page.goto('/some-route')` in a Playwr
 // playwright.config.mts
 export default defineConfig({
   webServer: {
-    command: process.env['CI']
-      ? 'pnpm exec nx run web:serve-static'
-      : 'pnpm exec nx run web:serve',
+    command: process.env['CI'] ? 'pnpm exec nx run web:serve-static' : 'pnpm exec nx run web:serve',
     url: 'http://localhost:4200',
     reuseExistingServer: !process.env['CI'],
   },

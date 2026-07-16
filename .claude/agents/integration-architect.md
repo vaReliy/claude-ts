@@ -1,7 +1,6 @@
 ---
 name: integration-architect
-description:
-  "External service integration specialist. NOT for application code (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: integrate, webhook, OAuth, API client, external service, third-party, payment gateway, social login.\nTrigger — UA: інтеграція, вебхук, OAuth, зовнішній сервіс."
+description: "External service integration specialist. NOT for application code (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: integrate, webhook, OAuth, API client, external service, third-party, payment gateway, social login.\nTrigger — UA: інтеграція, вебхук, OAuth, зовнішній сервіс."
 model: sonnet
 color: cyan
 tools:
@@ -52,16 +51,16 @@ Before writing or modifying any code, additionally read:
 
 ## Common Integration Patterns
 
-| Service | Library | Purpose |
-| --- | --- | --- |
-| **OAuth (Google/GitHub)** | `passport-google-oauth20`, `passport-github2` | Social login |
-| **JWT** | `jsonwebtoken` / `jose` | Token auth |
-| **Redis** | `ioredis` | Cache, sessions, queue |
-| **PostgreSQL** | Prisma / `pg` | Primary database |
-| **Email** | `nodemailer` / Resend SDK | Transactional email |
-| **Payment** | Stripe SDK | Payment processing |
-| **File uploads** | `multer` + S3 SDK | Object storage |
-| **HTTP client** | Axios | External API calls |
+| Service                   | Library                                       | Purpose                |
+| ------------------------- | --------------------------------------------- | ---------------------- |
+| **OAuth (Google/GitHub)** | `passport-google-oauth20`, `passport-github2` | Social login           |
+| **JWT**                   | `jsonwebtoken` / `jose`                       | Token auth             |
+| **Redis**                 | `ioredis`                                     | Cache, sessions, queue |
+| **PostgreSQL**            | Prisma / `pg`                                 | Primary database       |
+| **Email**                 | `nodemailer` / Resend SDK                     | Transactional email    |
+| **Payment**               | Stripe SDK                                    | Payment processing     |
+| **File uploads**          | `multer` + S3 SDK                             | Object storage         |
+| **HTTP client**           | Axios                                         | External API calls     |
 
 ## Integration Patterns
 

@@ -1,7 +1,6 @@
 ---
 name: cts-import-skill
-description:
-  "Maintainer flow for importing an external skill (GitHub URL, owner/repo/path, or local path) into CTS's curated `.claude/skills/`: fetches the source, runs a blocking duplication check against every existing skill (merge/replace/reject/import-as-is), brings the description and body up to CTS's skill-quality bar (what+when description, explicit NOT-for, EN/UA triggers, no placeholders), then updates README, THIRD_PARTY.md, and CHANGELOG.md. NOT for installing skills into consumer projects (those receive skills via /cts-update) and NOT for editing application source code.\n\nTrigger — EN: cts-import-skill, import skill, add external skill, curate skill, new skill from repo.\nTrigger — UA: імпортувати скіл, додати скіл, новий скіл з репозиторію, курація скілів, перевірити дублікати."
+description: "Maintainer flow for importing an external skill (GitHub URL, owner/repo/path, or local path) into CTS's curated `.claude/skills/`: fetches the source, runs a blocking duplication check against every existing skill (merge/replace/reject/import-as-is), brings the description and body up to CTS's skill-quality bar (what+when description, explicit NOT-for, EN/UA triggers, no placeholders), then updates README, THIRD_PARTY.md, and CHANGELOG.md. NOT for installing skills into consumer projects (those receive skills via /cts-update) and NOT for editing application source code.\n\nTrigger — EN: cts-import-skill, import skill, add external skill, curate skill, new skill from repo.\nTrigger — UA: імпортувати скіл, додати скіл, новий скіл з репозиторію, курація скілів, перевірити дублікати."
 ---
 
 # /cts-import-skill

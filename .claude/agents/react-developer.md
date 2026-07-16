@@ -1,7 +1,6 @@
 ---
 name: react-developer
-description:
-  "React frontend specialist. NOT for backend logic (backend-developer), Vue (vue-developer), Angular (angular-developer), or E2E tests (qa).\n\nTrigger — EN: React component, React, hooks, useState, useEffect, Next.js, Zustand, TanStack Query, React Router, JSX, TSX.\nTrigger — UA: React компонент, хуки, Next.js, Zustand, TanStack Query."
+description: "React frontend specialist. NOT for backend logic (backend-developer), Vue (vue-developer), Angular (angular-developer), or E2E tests (qa).\n\nTrigger — EN: React component, React, hooks, useState, useEffect, Next.js, Zustand, TanStack Query, React Router, JSX, TSX.\nTrigger — UA: React компонент, хуки, Next.js, Zustand, TanStack Query."
 model: sonnet
 color: cyan
 tools:
@@ -67,12 +66,12 @@ Write component/hook/store tests alongside every piece of UI you produce — red
 
 ## Skills to Activate
 
-| Skill | When to Activate |
-| --- | --- |
-| `react-expert` | **Always** — React 18+ patterns and best practices |
-| `tdd` | **Always** — write tests with the code, red/green/refactor |
-| `code-reviewer` | Self-review after component implementation |
-| `security-reviewer` | When rendering user-controlled HTML content |
+| Skill               | When to Activate                                           |
+| ------------------- | ---------------------------------------------------------- |
+| `react-expert`      | **Always** — React 18+ patterns and best practices         |
+| `tdd`               | **Always** — write tests with the code, red/green/refactor |
+| `code-reviewer`     | Self-review after component implementation                 |
+| `security-reviewer` | When rendering user-controlled HTML content                |
 
 ## Accessibility Standards
 

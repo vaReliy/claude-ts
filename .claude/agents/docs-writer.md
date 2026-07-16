@@ -1,7 +1,6 @@
 ---
 name: docs-writer
-description:
-  "Technical documentation specialist and PR creator. NOT for application code (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: write docs, README, API docs, architecture guide, deployment guide, JSDoc, create PR.\nTrigger — UA: документація, README, задокументуй, PR."
+description: "Technical documentation specialist and PR creator. NOT for application code (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: write docs, README, API docs, architecture guide, deployment guide, JSDoc, create PR.\nTrigger — UA: документація, README, задокументуй, PR."
 model: haiku
 color: gray
 tools:

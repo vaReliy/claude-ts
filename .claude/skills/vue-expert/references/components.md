@@ -111,10 +111,7 @@ const filters = ref({ category: '', price: 0 });
   <CustomInput v-model="searchQuery" />
 
   <!-- Multiple v-models -->
-  <FilterPanel
-    v-model:category="filters.category"
-    v-model:price="filters.price"
-  />
+  <FilterPanel v-model:category="filters.category" v-model:price="filters.price" />
 </template>
 
 <!-- CustomInput.vue -->
@@ -157,22 +154,11 @@ const emit = defineEmits<Emits>();
 </script>
 
 <template>
-  <select
-    :value="category"
-    @change="
-      emit('update:category', ($event.target as HTMLSelectElement).value)
-    "
-  >
+  <select :value="category" @change="emit('update:category', ($event.target as HTMLSelectElement).value)">
     <option value="books">Books</option>
     <option value="electronics">Electronics</option>
   </select>
-  <input
-    type="number"
-    :value="price"
-    @input="
-      emit('update:price', Number(($event.target as HTMLInputElement).value))
-    "
-  />
+  <input type="number" :value="price" @input="emit('update:price', Number(($event.target as HTMLInputElement).value))" />
 </template>
 ```
 
@@ -414,9 +400,7 @@ function switchView(view: keyof typeof components) {
 import { defineAsyncComponent } from 'vue';
 
 // Lazy load component
-const HeavyComponent = defineAsyncComponent(
-  () => import('./HeavyComponent.vue'),
-);
+const HeavyComponent = defineAsyncComponent(() => import('./HeavyComponent.vue'));
 
 // With loading and error states
 const AdminPanel = defineAsyncComponent({

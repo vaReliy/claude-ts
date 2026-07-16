@@ -120,8 +120,7 @@ export class NavBar {
 
   readonly homeLink = () => this.page.getByRole('link', { name: 'Home' });
   readonly profileLink = () => this.page.getByRole('link', { name: 'Profile' });
-  readonly logoutButton = () =>
-    this.page.getByRole('button', { name: 'Logout' });
+  readonly logoutButton = () => this.page.getByRole('button', { name: 'Logout' });
 
   async logout() {
     await this.logoutButton().click();

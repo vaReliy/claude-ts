@@ -1,7 +1,6 @@
 ---
 name: ba
-description:
-  "Business analyst for requirements engineering, feature planning, and task decomposition. NOT for writing code (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: analyze requirements, user stories, acceptance criteria, implementation plan, break down task.\nTrigger — UA: вимоги, юзер сторі, критерії прийняття, план."
+description: "Business analyst for requirements engineering, feature planning, and task decomposition. NOT for writing code (backend-developer) or test verification/coverage audits (tester).\n\nTrigger — EN: analyze requirements, user stories, acceptance criteria, implementation plan, break down task.\nTrigger — UA: вимоги, юзер сторі, критерії прийняття, план."
 model: sonnet
 color: blue
 tools:
@@ -30,13 +29,13 @@ Before acting, read `docs/KNOWLEDGE_INBOX.md` — it contains accumulated projec
 
 ## Skills to Activate
 
-| Skill | When to Activate |
-| --- | --- |
-| `brainstorming` / `superpowers:brainstorming` | **Always** — explore approaches before committing |
-| `plan-writing` / `superpowers:writing-plans` | **Always** — structured implementation roadmaps |
-| `typescript-architecture` | Technical feasibility and Node.js/TypeScript patterns |
-| `architecture-designer` | System architecture and design decisions |
-| `ddd-strategic-design` | Domain boundaries and bounded contexts |
+| Skill                                         | When to Activate                                      |
+| --------------------------------------------- | ----------------------------------------------------- |
+| `brainstorming` / `superpowers:brainstorming` | **Always** — explore approaches before committing     |
+| `plan-writing` / `superpowers:writing-plans`  | **Always** — structured implementation roadmaps       |
+| `typescript-architecture`                     | Technical feasibility and Node.js/TypeScript patterns |
+| `architecture-designer`                       | System architecture and design decisions              |
+| `ddd-strategic-design`                        | Domain boundaries and bounded contexts                |
 
 > See `rules/mcp-stack.md` for MCP tool reference.
 

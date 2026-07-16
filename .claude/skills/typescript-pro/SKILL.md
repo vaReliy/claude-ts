@@ -5,7 +5,6 @@ description: >-
   
   Українською: TypeScript, Node.js, строга типізація, async/await, NestJS, Prisma, Express, Fastify, декоратори, generic типи, utility types.
 
-
 triggers:
   - TypeScript
   - Node.js
@@ -55,9 +54,7 @@ const config = {
 type EventName = `on${Capitalize<string>}`;
 
 // Discriminated unions — prefer over boolean flags
-type Result<T> =
-  | { success: true; data: T }
-  | { success: false; error: AppError };
+type Result<T> = { success: true; data: T } | { success: false; error: AppError };
 
 // Const assertion
 const STATUS = ['draft', 'published', 'archived'] as const;

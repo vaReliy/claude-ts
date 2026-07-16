@@ -5,7 +5,6 @@ description: >-
   
   Українською: Angular, компонент, сервіс, сигнали, RxJS, NgRx, маршрутизатор, standalone компонент, декоратор, inject, Angular форма, HttpClient.
 
-
 triggers:
   - Angular
   - NgModule
@@ -52,14 +51,7 @@ import { CommonModule } from '@angular/common';
   template: `
     <article class="rounded-lg border p-4">
       <h2 class="text-xl font-semibold">{{ post.title }}</h2>
-      <button
-        *ngIf="showDelete"
-        type="button"
-        (click)="deleted.emit(post.id)"
-        class="text-red-500"
-      >
-        Delete
-      </button>
+      <button *ngIf="showDelete" type="button" (click)="deleted.emit(post.id)" class="text-red-500">Delete</button>
     </article>
   `,
 })
@@ -149,9 +141,7 @@ import { FormBuilder, Validators, ReactiveFormsModule } from '@angular/forms';
   template: `
     <form [formGroup]="form" (ngSubmit)="onSubmit()">
       <input formControlName="title" />
-      <span *ngIf="form.get('title')?.errors?.['required']"
-        >Title is required</span
-      >
+      <span *ngIf="form.get('title')?.errors?.['required']">Title is required</span>
       <button type="submit" [disabled]="form.invalid">Create</button>
     </form>
   `,

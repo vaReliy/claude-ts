@@ -21,9 +21,7 @@ Test Ideas:
 ```typescript
 test('accessibility compliance', async ({ page }) => {
   await page.keyboard.press('Tab');
-  expect(['A', 'BUTTON', 'INPUT']).toContain(
-    await page.evaluate(() => document.activeElement.tagName),
-  );
+  expect(['A', 'BUTTON', 'INPUT']).toContain(await page.evaluate(() => document.activeElement.tagName));
 });
 ```
 

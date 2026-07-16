@@ -2,6 +2,12 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Ship `.editorconfig` to close markdown table-format drift (2026-07-16)
+
+### Fixed
+
+- **`.editorconfig`** (new file) + **`cts-payload.txt`**: every consumer project (`penny`, `home-pulse-watcher`) carries an `.editorconfig` with `[*.md] max_line_length = off`, but claude-ts itself never had one. Prettier reads `.editorconfig` by default (`useEditorconfig: true`) and maps `max_line_length` onto its own `printWidth` — with the setting present, wide markdown tables stay column-aligned regardless of length; without it, claude-ts's default `printWidth: 80` made Prettier collapse any table whose aligned width would exceed 80 chars into compact (unpadded, single-space) form. Two repos with byte-identical `.prettierrc` files produced different table formatting, which surfaced as dozens of spurious "formatting-only" diffs on every `/cts-update` run touching `.claude/agents/*.md` or `.claude/skills/*/SKILL.md` (anything with a wide table) — easy to mistake for real content drift or a `cts-contribute` round-trip bug (it is neither). Added the matching `.editorconfig` to claude-ts, added it to `cts-payload.txt` so it's tracked going forward, and reflowed all 75 affected files with `prettier --write` so the template's own committed state matches what consumers actually have. The earlier `proseWrap: never` prep pass (below, "Contributed from penny" entry) fixed prose reflow but didn't cover this — `.editorconfig` is a separate config surface Prettier consults, invisible if you only diff `.prettierrc`.
+
 ## [Unreleased] — Fix cts-contribute's false round-trip no-op promise (2026-07-16)
 
 ### Fixed
