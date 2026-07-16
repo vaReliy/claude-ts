@@ -13,7 +13,7 @@ IGNORE_FILE=".ctsignore"
 
 usage() {
   cat <<'EOF'
-Usage: cts-sync.sh <init|update> [--source <path-or-url>] [--branch <name>] [--dry-run] [--force] [--no-merge]
+Usage: cts-sync.sh <init|update> [--source <path-or-url>] [--branch <name>] [--dry-run] [--force] [--no-merge] [--no-normalize]
 
   init    Install the CTS payload into the current project (must be a git repo)
   update  Re-sync the CTS payload, skipping paths listed in .ctsignore
@@ -24,12 +24,13 @@ Options:
   --dry-run               Print what would change without copying anything
   --force                 init: overwrite an existing CLAUDE.md/AGENTS.md/.claude/
   --no-merge              update: never 3-way merge — preserve diverged files as-is
+  --no-normalize          update: compare/merge raw content, skip prettier renormalize
 EOF
 }
 
 [ $# -ge 1 ] || { usage; exit 1; }
 CMD="$1"; shift
-SOURCE="$DEFAULT_SOURCE"; BRANCH="$DEFAULT_BRANCH"; DRY_RUN=0; FORCE=0; NO_MERGE=0
+SOURCE="$DEFAULT_SOURCE"; BRANCH="$DEFAULT_BRANCH"; DRY_RUN=0; FORCE=0; NO_MERGE=0; NO_NORMALIZE=0
 EXPLICIT_SOURCE=0; EXPLICIT_BRANCH=0
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -38,6 +39,7 @@ while [ $# -gt 0 ]; do
     --dry-run) DRY_RUN=1; shift ;;
     --force) FORCE=1; shift ;;
     --no-merge) NO_MERGE=1; shift ;;
+    --no-normalize) NO_NORMALIZE=1; shift ;;
     *) echo "Unknown option: $1" >&2; usage; exit 1 ;;
   esac
 done
@@ -214,6 +216,37 @@ flush_self_scripts() {
   rm -rf "$SCRIPTS_STAGE"
 }
 
+# Renormalize (git-merge-file -Xrenormalize equivalent, hand-rolled): each
+# consumer keeps its own formatter config, so a file reformatted locally with
+# the consumer's own prettier diverges from the CTS baseline on formatting
+# alone — false "locally modified" positives and spurious merge conflicts.
+# Auto-detect the receiver's own prettier (never CTS's — this repo ships
+# none) and, when present, compare/merge through it so only semantic diffs
+# survive; absent or non-prettier-handled files fall back to raw comparison
+# unchanged. update-only: init has no prior baseline to normalize against.
+PRETTIER_BIN=""
+if [ "$CMD" = update ] && [ "$NO_NORMALIZE" != 1 ] && [ -x ./node_modules/.bin/prettier ]; then
+  PRETTIER_BIN="./node_modules/.bin/prettier"
+  echo "Normalizing diffs through this project's prettier (--no-normalize to disable)."
+fi
+is_prettier_ext() {
+  case "$1" in
+    *.md|*.json|*.jsonc|*.yaml|*.yml|*.js|*.ts|*.css|*.html) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+# Writes normalized content to stdout. The `|| cat` fallback covers prettier
+# parse errors (e.g. a file mid-conflict-markers); the extension gate avoids
+# spawning prettier for shell scripts and other non-prettier-handled files.
+norm_file() {
+  local rel="$1" src="$2"
+  if [ -n "$PRETTIER_BIN" ] && is_prettier_ext "$rel"; then
+    "$PRETTIER_BIN" --stdin-filepath "$rel" < "$src" 2>/dev/null || cat "$src"
+  else
+    cat "$src"
+  fi
+}
+
 LOCALLY_MODIFIED=()
 
 # During update, a file is only fast-forwarded if the working copy still
@@ -226,7 +259,12 @@ is_locally_modified() {
   [ -n "${OLD_SHA:-}" ] || return 1
   [ -e "./$rel" ] || return 1
   git -C "$SRC_DIR" cat-file -e "$OLD_SHA:$rel" 2>/dev/null || return 1
-  ! git -C "$SRC_DIR" show "$OLD_SHA:$rel" 2>/dev/null | cmp -s - "./$rel"
+  local base_tmp; base_tmp=$(mktemp)
+  git -C "$SRC_DIR" show "$OLD_SHA:$rel" > "$base_tmp" 2>/dev/null
+  local differs=1
+  cmp -s <(norm_file "$rel" "$base_tmp") <(norm_file "$rel" "./$rel") && differs=0
+  rm -f "$base_tmp"
+  [ "$differs" = 1 ]
 }
 
 # True once a diverged file (see is_locally_modified) has also moved
@@ -234,12 +272,74 @@ is_locally_modified() {
 # a plain skip-and-report.
 upstream_changed() {
   local rel="$1"
-  ! git -C "$SRC_DIR" show "$OLD_SHA:$rel" 2>/dev/null | cmp -s - "$SRC_DIR/$rel"
+  local base_tmp; base_tmp=$(mktemp)
+  git -C "$SRC_DIR" show "$OLD_SHA:$rel" > "$base_tmp" 2>/dev/null
+  local differs=1
+  cmp -s <(norm_file "$rel" "$base_tmp") <(norm_file "$rel" "$SRC_DIR/$rel") && differs=0
+  rm -f "$base_tmp"
+  [ "$differs" = 1 ]
 }
 
 MERGED=()
 CONFLICTS=()
 COPIED=()
+NEW_COLLISIONS=()
+APPENDED=()
+
+# Payload files that are additive lists (gitignore-style): a brand-new
+# payload path here gets its missing lines appended to the consumer's
+# existing file instead of being flagged as a collision, so a genuine
+# CTS-required line (e.g. the postgres-best-practices exclusion) still
+# reaches the consumer without destroying project-local entries (penny's
+# own /dist, /coverage, .nx/** ignores). Matched on basename, not full path.
+APPEND_MERGE_PATHS=(.prettierignore)
+is_append_merge_path() {
+  local rel="$1" base="${1##*/}" p
+  for p in "${APPEND_MERGE_PATHS[@]}"; do
+    [ "$base" = "$p" ] && return 0
+  done
+  return 1
+}
+
+# True when rel is new to cts-payload.txt this run (no OLD_SHA baseline —
+# is_locally_modified's git-cat-file-e check already returned false for the
+# same reason, which is why this only runs after that block) but the
+# consumer already has an unrelated local file at that path. Identical
+# content is a no-op, not a collision.
+is_new_payload_collision() {
+  local rel="$1"
+  [ "$CMD" = update ] || return 1
+  [ -n "${OLD_SHA:-}" ] || return 1
+  [ -e "./$rel" ] || return 1
+  git -C "$SRC_DIR" cat-file -e "$OLD_SHA:$rel" 2>/dev/null && return 1
+  cmp -s <(norm_file "$rel" "$SRC_DIR/$rel") <(norm_file "$rel" "./$rel") && return 1
+  return 0
+}
+
+# Appends only source lines not already present locally, verbatim (including
+# comments) — never reorders or deletes the consumer's own lines. Blank
+# lines are never appended on their own so re-runs don't pile up trailing
+# blanks; a source-side blank line separating sections is harmless to drop.
+append_missing_lines() {
+  local rel="$1" changed=0 line
+  # `>>` is a raw byte append — if the consumer's file doesn't already end in
+  # a newline, the first appended line would concatenate onto the file's
+  # last existing line instead of starting its own (real-world .prettierignore
+  # files commonly have no trailing newline). Force one before appending.
+  # `tail -c 1` on a newline-terminated file yields a newline, which command
+  # substitution strips to empty — non-empty here means the last byte was
+  # something else, i.e. no trailing newline.
+  if [ -s "./$rel" ] && [ -n "$(tail -c 1 "./$rel")" ]; then
+    printf '\n' >> "./$rel"
+  fi
+  while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    grep -qxF "$line" "./$rel" 2>/dev/null && continue
+    echo "$line" >> "./$rel"
+    changed=1
+  done < "$SRC_DIR/$rel"
+  [ "$changed" = 1 ] && APPENDED+=("$rel")
+}
 
 # Three-way merge a payload file both the project and upstream CTS have
 # changed since the last sync (base = OLD_SHA content). git merge-file does
@@ -263,9 +363,13 @@ merge_one() {
   local rel="$1" clean=0 dest="./$1"
   is_self_script "$rel" && dest="$SCRIPTS_STAGE/$rel"
   MERGE_BASE=$(mktemp); MERGE_RESULT=$(mktemp)
-  trap 'rm -f "$MERGE_BASE" "$MERGE_RESULT"' EXIT
-  git -C "$SRC_DIR" show "$OLD_SHA:$rel" > "$MERGE_BASE"
-  git merge-file -p "./$rel" "$MERGE_BASE" "$SRC_DIR/$rel" > "$MERGE_RESULT" 2>/dev/null && clean=1
+  MERGE_BASE_RAW=$(mktemp); MERGE_LOCAL_NORM=$(mktemp); MERGE_UPSTREAM_NORM=$(mktemp)
+  trap 'rm -f "$MERGE_BASE" "$MERGE_RESULT" "$MERGE_BASE_RAW" "$MERGE_LOCAL_NORM" "$MERGE_UPSTREAM_NORM"' EXIT
+  git -C "$SRC_DIR" show "$OLD_SHA:$rel" > "$MERGE_BASE_RAW"
+  norm_file "$rel" "$MERGE_BASE_RAW" > "$MERGE_BASE"
+  norm_file "$rel" "./$rel" > "$MERGE_LOCAL_NORM"
+  norm_file "$rel" "$SRC_DIR/$rel" > "$MERGE_UPSTREAM_NORM"
+  git merge-file -p "$MERGE_LOCAL_NORM" "$MERGE_BASE" "$MERGE_UPSTREAM_NORM" > "$MERGE_RESULT" 2>/dev/null && clean=1
   if [ "$DRY_RUN" = 1 ]; then
     if [ "$clean" = 1 ]; then echo "merge (dry-run): $rel"; else echo "conflict (dry-run): $rel"; fi
   else
@@ -279,7 +383,7 @@ merge_one() {
       echo "CONFLICT: $rel"
     fi
   fi
-  rm -f "$MERGE_BASE" "$MERGE_RESULT"
+  rm -f "$MERGE_BASE" "$MERGE_RESULT" "$MERGE_BASE_RAW" "$MERGE_LOCAL_NORM" "$MERGE_UPSTREAM_NORM"
   trap - EXIT
 }
 
@@ -306,6 +410,26 @@ copy_one() {
     if [ "$DRY_RUN" = 1 ]; then echo "skip (locally modified): $rel"; fi
     return
   fi
+  # Bug A guard: a path newly added to cts-payload.txt (no OLD_SHA baseline,
+  # so is_locally_modified above returned 1) can still collide with a local
+  # file the consumer already has for unrelated reasons — e.g. penny's own
+  # build-output .prettierignore entries when .prettierignore first became
+  # payload. init is intentionally out of scope: its greenfield guard already
+  # bails on a pre-existing .claude/CLAUDE.md/AGENTS.md and points existing
+  # projects at cts-setup, so this path never has to run there.
+  if is_new_payload_collision "$rel"; then
+    if is_append_merge_path "$rel"; then
+      if [ "$DRY_RUN" = 1 ]; then
+        echo "append (dry-run, new payload path already exists locally): $rel"
+        return
+      fi
+      append_missing_lines "$rel"
+      return
+    fi
+    NEW_COLLISIONS+=("$rel")
+    if [ "$DRY_RUN" = 1 ]; then echo "skip (new-file collision): $rel"; fi
+    return
+  fi
   if [ "$DRY_RUN" = 1 ]; then
     echo "copy: $rel"
     return
@@ -313,7 +437,11 @@ copy_one() {
   local dest="./$rel"
   is_self_script "$rel" && dest="$SCRIPTS_STAGE/$rel"
   mkdir -p "$(dirname "$dest")"
-  cp -p "$SRC_DIR/$rel" "$dest"
+  if [ -n "$PRETTIER_BIN" ] && is_prettier_ext "$rel"; then
+    norm_file "$rel" "$SRC_DIR/$rel" > "$dest"
+  else
+    cp -p "$SRC_DIR/$rel" "$dest"
+  fi
   COPIED+=("$rel")
 }
 
@@ -362,6 +490,16 @@ else
   done
   for rel in "${CONFLICTS[@]}"; do
     echo "unresolved conflict markers left in: $rel — resolve by hand, then stage it"
+  done
+  for rel in "${APPENDED[@]}"; do
+    echo "appended CTS-required lines (kept your own): $rel"
+  done
+  # Not a LOCALLY_MODIFIED reuse: that bucket's diff-$OLD_SHA..$NEW_SHA hint
+  # is empty for a path absent at $OLD_SHA, which is always true here.
+  for rel in "${NEW_COLLISIONS[@]}"; do
+    echo "new payload file already exists locally, not overwritten — reconcile manually: $rel"
+    echo "  diff <(git -C $SRC_DIR show $NEW_SHA:$rel) ./$rel"
+    NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
   done
   for entry in "${PAYLOAD[@]}"; do
     entry="${entry%/}"

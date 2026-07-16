@@ -65,7 +65,7 @@ If this skill was invoked by a human and stale entries exist, interactively prom
 
 - Behavior depends on which kind of repo this is:
   - **Consumer project** (has `.cts-version` file at repo root): Delete the entry from `docs/KNOWLEDGE_INBOX.md`. Append a properly-formatted entry to `docs/CLAUDE_TS_CHANGELOG.md` (create the file with its standard header if it doesn't exist; format matches how Step 3's existing ledger-obligation logic already writes entries). This closes the loop through `cts-contribute`'s Case C discovery — no new reading logic needed.
-  - **Claude-ts template repo itself** (detect via: `cts-payload.txt` present at repo root AND `.cts-version` does NOT exist): There is no upstream past this repo. This option is functionally identical to "Promote to a concrete target" — the user still supplies the target file name, and the entry gets logged in this repo's own `CHANGELOG.md` (not `docs/CLAUDE_TS_CHANGELOG.md`). Per the `project_host_repo_distill_direct` convention, skip the `docs/CLAUDE_TS_CHANGELOG.md` staging (that file is consumer-only); instead, follow Step 3's template-inherited ledger obligation by appending the entry to this repo's root `CHANGELOG.md`.
+  - **Claude-ts template repo itself** (detect via: `cts-payload.txt` present at repo root AND `.cts-version` does NOT exist): There is no upstream past this repo. This option is functionally identical to "Promote to a concrete target" — the user still supplies the target file name, and the entry gets logged in this repo's own `CHANGELOG.md` (not `docs/CLAUDE_TS_CHANGELOG.md`). Skip the `docs/CLAUDE_TS_CHANGELOG.md` staging (that file is consumer-only); instead, follow Step 3's template-inherited ledger obligation by appending the entry to this repo's root `CHANGELOG.md`.
 
 **Option 3: Discard**
 
@@ -102,7 +102,7 @@ If a label says `rules/architecture.md` but the content is clearly NestJS-specif
 For each Category B target file about to be edited, check whether it is a template-inherited file: under `rules/**`, `.claude/agents/**`, `.claude/skills/**`, or is `CLAUDE.md` or `AGENTS.md`. If the target is template-inherited, the docs-writer dispatch in Step 4 MUST also append a ledger entry in the same pass — distilling content into a template-inherited file without ledgering it makes the change invisible to `/cts-contribute`. Which ledger depends on which kind of repo this is (same detection as Step 1.5 Option 2):
 
 - **Consumer project** (has `.cts-version` file at repo root): append to `docs/CLAUDE_TS_CHANGELOG.md` (format per that file's own header).
-- **Claude-ts template repo itself** (detect via: `cts-payload.txt` present at repo root AND `.cts-version` does NOT exist): there is no upstream past this repo — append to this repo's own root `CHANGELOG.md` instead (per the `project_host_repo_distill_direct` convention, skip the `docs/CLAUDE_TS_CHANGELOG.md` staging, as that file is consumer-only).
+- **Claude-ts template repo itself** (detect via: `cts-payload.txt` present at repo root AND `.cts-version` does NOT exist): there is no upstream past this repo — append to this repo's own root `CHANGELOG.md` instead (not `docs/CLAUDE_TS_CHANGELOG.md`, as that file is consumer-only).
 
 Files outside these paths (project-local docs, infrastructure) need no ledger entry.
 
