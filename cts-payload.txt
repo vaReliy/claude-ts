@@ -18,4 +18,7 @@ docs/METRICS.md
 
 # Explicitly NOT payload: README.md, CHANGELOG.md, THIRD_PARTY.md, LICENSE,
 # images, tasks/, tmp/, cts-payload.txt itself, .claude/settings.local.json,
-# docs/KNOWLEDGE_INBOX.md (project-local, never synced to consumers).
+# docs/KNOWLEDGE_INBOX.md (project-local, never synced to consumers),
+# .claude/skills/cts-review-contribution/ (present in this repo, excluded
+# from the .claude/skills/ payload entry by OWNER_ONLY_SKILLS in
+# cts-sync.sh — CTS-owner tool, never synced to consumers).

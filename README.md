@@ -66,7 +66,7 @@ Portable rule files in root `rules/`, referenced from `AGENTS.md`'s on-demand in
 
 `CLAUDE.md` carries a single `@AGENTS.md` import (the portable core, needed every turn). `rules/` files are referenced by plain path and loaded by agents on demand only when relevant, instead of being force-loaded into every conversation's context.
 
-### Skills (31)
+### Skills (32)
 
 Reusable knowledge modules organized by category:
 
@@ -88,7 +88,7 @@ Reusable knowledge modules organized by category:
 
 **CTS Tooling:** `cts-setup`, `cts-update` — install, configure, and update the CTS template itself (see [Quick Start](#quick-start) and [Updating](#updating)); `cts-import-skill` — maintainer-only flow for curating new skills into CTS itself (see [Add a New Skill](#add-a-new-skill)); `cts-contribute` — consumer-side flow for contributing improvements (skills, rules, orchestrator changes) back to a local CTS checkout
 
-**Maintenance:** `cts-rule-auditor` — audits `.claude/agents/`, `rules/`, `AGENTS.md`, and `docs/KNOWLEDGE_INBOX.md` for structural drift (broken pre-flight paths, stale references, missing index entries); run after any change to `.claude/**` or `rules/**`. `distill-inbox` — categorizes `docs/KNOWLEDGE_INBOX.md` entries into Done/Clear-target/Uncertain and dispatches a docs-writer agent to move each into its permanent home, keeping the inbox trending toward empty.
+**Maintenance:** `cts-rule-auditor` — audits `.claude/agents/`, `rules/`, `AGENTS.md`, and `docs/KNOWLEDGE_INBOX.md` for structural drift (broken pre-flight paths, stale references, missing index entries); run after any change to `.claude/**` or `rules/**`. `distill-inbox` — categorizes `docs/KNOWLEDGE_INBOX.md` entries into Done/Clear-target/Uncertain and dispatches a docs-writer agent to move each into its permanent home, keeping the inbox trending toward empty. `cts-review-contribution` — owner-side deep-tier judgment gate that reviews whatever is currently uncommitted in the CTS working tree for philosophy/scope fit, safety, and quality-bar consistency, delegating structural checks to `cts-rule-auditor` and always dispatching the judgment pass on opus; report-only, runs only inside the CTS repo itself.
 
 ### Workflow Pipeline
 

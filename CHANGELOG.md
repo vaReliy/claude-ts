@@ -2,6 +2,14 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — CTS-owner review-contribution skill (2026-07-16)
+
+### Added
+
+- **`.claude/skills/cts-review-contribution/SKILL.md`** (new): owner-side deep-tier judgment gate for CTS itself — reviews whatever is currently uncommitted in the working tree (from `/cts-contribute`, a manual edit, or anything else) for philosophy/scope fit, safety (secrets, dangerous commands, prompt-injection-shaped content), and quality-bar consistency. Delegates structural checks to `cts-rule-auditor` instead of reimplementing them; always dispatches the judgment pass via an explicit `Agent` call with `model: "opus"`, regardless of the owner's active session model. Report-only — never commits/pushes, uses `AskUserQuestion` for findings it isn't confident resolving alone.
+- **`.claude/scripts/cts-sync.sh`**: new `OWNER_ONLY_SKILLS` array (mirrors the existing `NEVER_PAYLOAD` pattern) plus an `is_owner_only_skill()` check in `copy_one()`, so `.claude/skills/cts-review-contribution/` is excluded from the `.claude/skills/` payload directory on both `init` and `update` sync paths even though the payload entry itself stays a whole-directory line. A hard-error guard catches the failure mode of someone later re-listing that path as its own explicit `cts-payload.txt` entry (mirrors the `NEVER_PAYLOAD` guard's style, adapted because the forbidden path here is a subpath *within* a directory entry rather than a whole entry).
+- **`cts-payload.txt`**: documented the exclusion in the existing "Explicitly NOT payload" comment block.
+
 ## [Unreleased] — Guess-note resolution lifecycle (2026-07-16)
 
 ### Added

@@ -466,6 +466,19 @@ Agent({
 
 Give each spawned agent a distinct `name` within the team's naming convention (see Team Conventions above) so other agents can address it directly.
 
+**Per-call model override.** `Agent` also accepts an optional `model` parameter (`sonnet` / `opus` / `haiku` / `fable`) that overrides whatever model tier the target agent's own frontmatter specifies, for that one dispatch only:
+
+```
+Agent({
+  subagent_type: "reviewer",
+  name: "qg-deep-tier-reviewer",
+  model: "opus",
+  prompt: "..."
+})
+```
+
+Use this when a specific dispatch needs to force `deep` tier regardless of the dispatching session's own model or the target agent's default frontmatter tier — e.g. a judgment-layer review step that must always run on opus. Prefer pinning `model:` in the target agent/skill's own frontmatter when the tier requirement is permanent; reserve the per-call override for cases where the same agent type is dispatched at different tiers depending on context.
+
 ### SendMessage (challenge / respond)
 
 ```

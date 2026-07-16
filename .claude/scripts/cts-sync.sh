@@ -129,6 +129,37 @@ for entry in "${PAYLOAD[@]}"; do
   done
 done
 
+# Owner-only skills: live in this repo's .claude/skills/ (which IS a payload
+# entry as a whole directory), but must never reach a consumer's tree. Unlike
+# NEVER_PAYLOAD this can't be enforced by refusing a payload *entry* (the
+# entry is the whole "/.claude/skills/" directory, and it must stay a
+# payload entry so every other skill still syncs) — so the exclusion is
+# enforced per-file in copy_one() below instead. The guard here only catches
+# the failure mode of someone later adding one of these paths as its own
+# explicit cts-payload.txt line, which would bypass the per-file skip. Unlike
+# covers_forbidden() above, this match is exact-only (no directory-covers-file
+# case) — a payload line naming a single file *inside* an owner-only skill dir
+# would slip past this guard, though is_owner_only_skill() in copy_one() still
+# catches it as a second layer, so no actual leak results.
+OWNER_ONLY_SKILLS=(.claude/skills/cts-review-contribution/)
+for entry in "${PAYLOAD[@]}"; do
+  entry="${entry%/}"
+  for owner_only in "${OWNER_ONLY_SKILLS[@]}"; do
+    if [ "$entry" = "${owner_only%/}" ]; then
+      echo "Error: $owner_only must never be listed as its own payload entry (owner-only, never synced to consumers)." >&2
+      exit 1
+    fi
+  done
+done
+
+is_owner_only_skill() {
+  local rel="$1" owner_only
+  for owner_only in "${OWNER_ONLY_SKILLS[@]}"; do
+    case "$rel" in "${owner_only%/}"/*) return 0 ;; esac
+  done
+  return 1
+}
+
 # Gitignore-style check: a bare pattern matches exact paths and "dir/" prefixes
 # anywhere in the tree; a leading "/" anchors it to the project root only
 # (so "/AGENTS.md" protects the root file without shadowing nested ones).
@@ -256,6 +287,10 @@ copy_one() {
   local rel="$1"
   if ! is_safe_rel "$rel"; then
     echo "refusing unsafe path from source: $rel" >&2
+    return
+  fi
+  if is_owner_only_skill "$rel"; then
+    if [ "$DRY_RUN" = 1 ]; then echo "skip (owner-only skill): $rel"; fi
     return
   fi
   if [ "$CMD" = update ] && is_ignored "$rel"; then
