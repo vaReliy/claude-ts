@@ -1,5 +1,5 @@
 ---
-name: GitHub Actions Expert
+name: github-actions
 description: >-
   This skill should be used when the user asks to "create a GitHub Actions workflow", "set up CI/CD pipeline", "add GitHub Actions", "configure CI", "create reusable workflow", "add composite action", "fix failing workflow", "optimize GitHub Actions", "add caching to CI", "set up deployment pipeline", "add tests to CI", "create Docker build workflow", or mentions GitHub Actions, CI/CD, workflow YAML, or .github/workflows. Covers JavaScript, TypeScript, Node.js, SQL, and Docker-based pipelines. Українською: GitHub Actions, CI/CD пайплайн, налаштувати CI, створити workflow, оптимізувати пайплайн, додати тести в CI, створити деплой, кешування в CI, виправити workflow, композитна дія.
 ---
