@@ -35,6 +35,7 @@ For each Category C entry, parse its `YYYY-MM-DD` heading date and compute:
 - `commits_since` = `git log --since=<that date> --oneline | wc -l` (count of all commits in the repo since the date).
 
 An entry is **stale** (gate fires) when **both** conditions hold:
+
 - `age_days >= 14` (at least 14 days old)
 - **AND** `commits_since >= 5` (at least 5 commits in the repo since the note was written)
 
@@ -47,6 +48,7 @@ Entries that pass the gate (stale) will be prompted for interactive resolution i
 This step runs **only when stale entries exist** (gate fired from Step 1a) **and only on explicit `/distill-inbox` invocation by a human** — skip entirely during automatic Phase-6 distillation.
 
 **How to detect which invocation mode you are in**:
+
 - **Automatic Phase-6 dispatch**: You were spawned as a subagent by the orchestrator carrying a written task description for this specific distill-inbox run. In this case, skip Step 1.5 entirely; proceed to Step 4 and then Step 5 (noting the stale count in the report, but do not prompt).
 - **Human invocation**: A human typed `/distill-inbox` (or a variant trigger) directly in the current conversation thread. In this case, stale entries exist; proceed with Step 1.5 below.
 - **Ambiguous**: If you cannot determine which applies, default to skip (treat as automatic Phase-6 dispatch) — never call AskUserQuestion when the invocation context is ambiguous.
@@ -54,20 +56,24 @@ This step runs **only when stale entries exist** (gate fired from Step 1a) **and
 If this skill was invoked by a human and stale entries exist, interactively prompt the user for each stale entry using `AskUserQuestion`, showing the entry's heading and full body. Offer exactly these four options:
 
 **Option 1: Promote to a concrete target**
+
 - User supplies the real `Belongs in: <exact-file>` value (e.g., `Belongs in: rules/code-style.md`).
 - Re-classify the entry internally as Category B.
 - Let it flow through the existing Step 2/3/4 distillation pipeline in the same run (the entry will be inlined into the target file and deleted from inbox).
 
 **Option 2: Promote to claude-ts-upstream**
+
 - Behavior depends on which kind of repo this is:
   - **Consumer project** (has `.cts-version` file at repo root): Delete the entry from `docs/KNOWLEDGE_INBOX.md`. Append a properly-formatted entry to `docs/CLAUDE_TS_CHANGELOG.md` (create the file with its standard header if it doesn't exist; format matches how Step 3's existing ledger-obligation logic already writes entries). This closes the loop through `cts-contribute`'s Case C discovery — no new reading logic needed.
   - **Claude-ts template repo itself** (detect via: `cts-payload.txt` present at repo root AND `.cts-version` does NOT exist): There is no upstream past this repo. This option is functionally identical to "Promote to a concrete target" — the user still supplies the target file name, and the entry gets logged in this repo's own `CHANGELOG.md` (not `docs/CLAUDE_TS_CHANGELOG.md`). Per the `project_host_repo_distill_direct` convention, skip the `docs/CLAUDE_TS_CHANGELOG.md` staging (that file is consumer-only); instead, follow Step 3's template-inherited ledger obligation by appending the entry to this repo's root `CHANGELOG.md`.
 
 **Option 3: Discard**
+
 - Delete the entry from `docs/KNOWLEDGE_INBOX.md`.
 - No migration to any file.
 
 **Option 4: Still uncertain**
+
 - Leave the entry exactly as-is in the inbox — no modification, no snooze marker, no new field added.
 - The entry will re-prompt on every future `/distill-inbox` run until one of the other three options is chosen.
 - This is deliberate: guarantees a stale entry can never go silently stale again.
