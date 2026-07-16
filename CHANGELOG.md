@@ -2,6 +2,12 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Fix cts-contribute's false round-trip no-op promise (2026-07-16)
+
+### Fixed
+
+- **`.claude/skills/cts-contribute/SKILL.md`**: Step 7's summary claimed `Run /cts-update here — should be a no-op (you are already the source)`, which is false whenever any hunk went through the Step 4 "edit before export" path (stripping project-specific wording before it lands in CTS) — that path only writes the cleaned text into CTS, never back into the consumer's own copy. Replaced the false promise with case-specific guidance, verified against `.claude/scripts/cts-sync.sh`'s actual `copy_one()` logic (which checks `.ctsignore` before the merge path, so an ignored file can never produce a `CONFLICT:` marker): on **Case B** (CTS-managed, non-ignored) files the next `/cts-update` reports a real `CONFLICT:`; on **Case C** (`.ctsignore`'d) files it instead reports `ignored, but changed upstream — review manually`, triaged through Step 4, not Step 5. Added a matching case-split warning at the "edit before export" option in Step 4, and merged the pre-existing "locally modified, not overwritten" triage note in `.claude/skills/cts-update/SKILL.md` Step 3 with a new one covering both the Case B (`CONFLICT:`) and Case C (`ignored, but changed upstream`) round-trip signals, so both skills describe the same round-trip behavior consistently. An initial pass of this fix asserted `CONFLICT:` universally for both cases — caught and corrected via `reviewer` agent verification against the sync script before landing. Chose the messaging-only fix (Option A) over closing the loop by writing back to the consumer's own files (Option B) — the latter gives a "push" skill new write scope into tracked consumer files and needs its own review; left as a possible follow-up.
+
 ## [Unreleased] — CTS-owner review-contribution skill (2026-07-16)
 
 ### Added

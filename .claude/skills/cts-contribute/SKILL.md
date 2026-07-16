@@ -84,7 +84,7 @@ Your decision? [export / skip / edit before export]
 
 - **export**: accept as-is, queue for write.
 - **skip**: drop from export.
-- **edit before export**: show the hunk, let the user dictate the cleaned version (strip project-specific parts), then queue the edited version.
+- **edit before export**: show the hunk, let the user dictate the cleaned version (strip project-specific parts), then queue the edited version. Note: this path only writes the edited text into CTS (Step 5) — it does **not** update the consumer's own copy of the file, which keeps its original wording. The next `/cts-update` here will therefore not be a no-op on that hunk, though the signal differs by case: for **Case B** (CTS-managed, not `.ctsignore`'d) it produces a real `CONFLICT:` (base/local/upstream are three genuinely different texts); for **Case C** (`.ctsignore`'d) the file is never eligible for merge or `CONFLICT:` at all — the engine checks `.ctsignore` before the merge path — so it instead surfaces as `ignored, but changed upstream — review manually`. That's expected — see Step 7.
 
 For Case A (net-new skills), show the skill's `name` and `description` frontmatter and ask if it should be contributed as-is or stripped of project-specific content first.
 
@@ -142,7 +142,14 @@ Next steps:
   1. cd <cts-path> && git diff   ← review before committing
   2. Commit and push CTS when satisfied
   3. Run /cts-update in other consumer projects (e.g. HPW) to receive changes
-  4. Run /cts-update here — should be a no-op (you are already the source)
+  4. Run /cts-update here — not a no-op for any hunk you edited-before-
+     export: on CTS-managed (Case B) files it shows CONFLICT:, on
+     .ctsignore'd (Case C) files it shows "ignored, but changed
+     upstream" instead (that path never produces CONFLICT:). Either
+     way the correct resolution is almost always "take upstream" /
+     "remove from .ctsignore," since upstream now holds your own
+     contribution in its generalized form (see cts-update's round-trip
+     triage note)
 ────────────────────────────────────────────────────────
 ```
 
