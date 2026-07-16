@@ -72,13 +72,37 @@ NEW_SHA=$(git -C "$SRC_DIR" rev-parse HEAD 2>/dev/null || echo "local")
 # an implicit (no flags passed) run's resolution disagrees with the last one.
 CURRENT_SOURCE_DESC="$SOURCE $BRANCH"
 if [ -f "$SOURCE_FILE" ] && [ "$EXPLICIT_SOURCE" != 1 ] && [ "$EXPLICIT_BRANCH" != 1 ]; then
-  PREV_SOURCE_DESC=$(cat "$SOURCE_FILE" 2>/dev/null || echo "")
-  if [ -n "$PREV_SOURCE_DESC" ] && [ "$PREV_SOURCE_DESC" != "$CURRENT_SOURCE_DESC" ]; then
+  # .cts-source is a multi-line record (source:/branch:/synced:/outcome:) as of
+  # this script's current version, but a project synced by an older cts-sync.sh
+  # left a bare "SOURCE BRANCH" line — handle both so the mismatch check keeps
+  # working through the format transition.
+  if grep -q '^source:' "$SOURCE_FILE" 2>/dev/null; then
+    PREV_SOURCE=$(grep '^source:' "$SOURCE_FILE" | head -1 | sed 's/^source:[[:space:]]*//' || true)
+    PREV_BRANCH=$(grep '^branch:' "$SOURCE_FILE" | head -1 | sed 's/^branch:[[:space:]]*//' || true)
+    PREV_SOURCE_DESC="$PREV_SOURCE $PREV_BRANCH"
+  else
+    PREV_SOURCE_DESC=$(cat "$SOURCE_FILE" 2>/dev/null || echo "")
+  fi
+  if [ -n "${PREV_SOURCE_DESC:-}" ] && [ "$PREV_SOURCE_DESC" != "$CURRENT_SOURCE_DESC" ]; then
     echo "Warning: last sync used source \"$PREV_SOURCE_DESC\"; this run resolved \"$CURRENT_SOURCE_DESC\" — these differ." >&2
     echo "         A large or unexpected diff below may reflect the source change, not upstream data loss." >&2
     echo "         Pass --source/--branch to match the prior run, or continue to switch sources." >&2
   fi
 fi
+
+# Written by write_source_file (see below) at both init/update completion.
+# .cts-source is intentionally NOT a format cts-contribute parses — only
+# .cts-version (a bare SHA) is read by cts-contribute step 1c, and this
+# function never touches it.
+write_source_file() {
+  local copied="$1" merged="$2" conflicts="$3" needs_attention="$4"
+  {
+    echo "source: $SOURCE"
+    echo "branch: $BRANCH"
+    echo "synced: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    echo "outcome: $copied files updated, $merged merged, $conflicts conflicts, $needs_attention needs-attention"
+  } > "$SOURCE_FILE"
+}
 
 mapfile -t PAYLOAD < <(grep -vE '^[[:space:]]*(#|$)' "$SRC_DIR/$PAYLOAD_FILE")
 
@@ -184,6 +208,7 @@ upstream_changed() {
 
 MERGED=()
 CONFLICTS=()
+COPIED=()
 
 # Three-way merge a payload file both the project and upstream CTS have
 # changed since the last sync (base = OLD_SHA content). git merge-file does
@@ -254,6 +279,7 @@ copy_one() {
   is_self_script "$rel" && dest="$SCRIPTS_STAGE/$rel"
   mkdir -p "$(dirname "$dest")"
   cp -p "$SRC_DIR/$rel" "$dest"
+  COPIED+=("$rel")
 }
 
 # Walk a payload entry (file or directory) and copy every file under it.
@@ -280,7 +306,7 @@ if [ "$CMD" = init ]; then
   for entry in "${PAYLOAD[@]}"; do sync_path "$entry"; done
   if [ "$DRY_RUN" != 1 ]; then
     echo "$NEW_SHA" > "$VERSION_FILE"
-    echo "$CURRENT_SOURCE_DESC" > "$SOURCE_FILE"
+    write_source_file "${#COPIED[@]}" 0 0 0
     [ -f "$IGNORE_FILE" ] || cat > "$IGNORE_FILE" <<'EOF'
 # .ctsignore — gitignore-syntax paths that `cts-sync.sh update` will never touch.
 # Use for: customized CTS files, pruned CTS files (prevents re-adding them),
@@ -292,10 +318,12 @@ EOF
   echo "Done. CTS payload installed at $NEW_SHA."
 else
   OLD_SHA=$(cat "$VERSION_FILE" 2>/dev/null || echo "")
+  NEEDS_ATTENTION=0
   for entry in "${PAYLOAD[@]}"; do sync_path "$entry"; done
   for rel in "${LOCALLY_MODIFIED[@]}"; do
     echo "locally modified, not overwritten — diff manually: $rel"
     echo "  git -C $SRC_DIR diff $OLD_SHA..$NEW_SHA -- $rel"
+    NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
   done
   for rel in "${CONFLICTS[@]}"; do
     echo "unresolved conflict markers left in: $rel — resolve by hand, then stage it"
@@ -305,7 +333,9 @@ else
     [ -d "$SRC_DIR/$entry" ] && [ -d "./$entry" ] || continue
     while IFS= read -r -d '' f; do
       rel="${f#./}"
-      [ -e "$SRC_DIR/$rel" ] || is_ignored "$rel" || echo "removed upstream — delete manually if unwanted: $rel"
+      if [ -e "$SRC_DIR/$rel" ] || is_ignored "$rel"; then continue; fi
+      echo "removed upstream — delete manually if unwanted: $rel"
+      NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
     done < <(find "./$entry" -type f -print0)
   done
   # Ignored files are never touched, but silence must not hide upstream drift:
@@ -315,6 +345,7 @@ else
       if is_ignored "$f"; then
         echo "ignored, but changed upstream — review manually: $f"
         echo "  git -C $SRC_DIR diff $OLD_SHA..$NEW_SHA -- $f"
+        NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
       fi
     done < <(git -C "$SRC_DIR" diff --name-only "$OLD_SHA" "$NEW_SHA")
     if [ "$DRY_RUN" != 1 ]; then
@@ -324,7 +355,7 @@ else
   fi
   if [ "$DRY_RUN" != 1 ]; then
     echo "$NEW_SHA" > "$VERSION_FILE"
-    echo "$CURRENT_SOURCE_DESC" > "$SOURCE_FILE"
+    write_source_file "${#COPIED[@]}" "${#MERGED[@]}" "${#CONFLICTS[@]}" "$NEEDS_ATTENTION"
   fi
   echo "Done. Review with: git diff"
 fi

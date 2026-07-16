@@ -11,23 +11,25 @@ Wraps `.claude/scripts/cts-sync.sh update` ("engine call") and narrates the resu
 ## 1. Preflight
 
 - If `.cts-version` is missing, this project was never installed via `cts-sync.sh` — tell the user to run `/cts-setup` instead and stop.
+- Print one non-blocking FYI line before the engine call — this is discoverability, not a question, so don't wait for a reply. Default: `Using default source (claude-ts main). Options: --source/--branch to track a fork, --no-merge to skip auto-merge.` If `.cts-source` exists and its `source:`/`branch:` lines show a non-default value was used last time, name that source/branch instead of "default" (e.g. `Using last-used source (<source> @ <branch>). Options: ...`).
 
 ## 2. Engine call
 
-Run `bash .claude/scripts/cts-sync.sh update`, passing through `--source <path-or-url>` and/or `--branch <name>` if the user specified them (e.g. to track a fork or a feature branch). Also pass `--no-merge` if the user says they'd rather skip merge attempts entirely this run (e.g. testing, or they want to keep reviewing every diverged file by hand as before) — otherwise the engine attempts a 3-way merge on any file that changed on both sides.
+Run `bash .claude/scripts/cts-sync.sh update`, capturing stderr, and passing through `--source <path-or-url>` and/or `--branch <name>` if the user specified them (e.g. to track a fork or a feature branch). Also pass `--no-merge` if the user says they'd rather skip merge attempts entirely this run (e.g. testing, or they want to keep reviewing every diverged file by hand as before) — otherwise the engine attempts a 3-way merge on any file that changed on both sides.
 
 - Check the call's exit code. A non-zero exit (git clone/fetch failure, missing repo, bad `--source`/`--branch`, etc.) means the sync **did not run** — this is not "already up to date." Stop, show the captured stderr verbatim, and tell the user to retry (most often a transient network issue reaching the source repo). Do not proceed to step 3 in this case, and do not touch `.cts-version` or any files yourself.
 - If the exit code is 0, also sanity-check that something actually happened: the script always prints `Done. Review with: git diff` on success. If that line is missing even though the exit code was 0, treat it the same as a failure — surface the raw output and stop.
+- **Unconditionally** check the captured stderr for a line starting `Warning: last sync used source ... this run resolved ...` — do this for every successful run, before any narration, not only when the diff already looks alarming. If present, stop here (before step 3) and tell the user plainly: "Last sync used `<prev source/branch>`; this run resolved `<current source/branch>` — these differ. Continue with the current source, or re-run with `--source`/`--branch` matching the prior sync?" Wait for their choice before proceeding to step 3.
 
 ## 3. Narrate
 
-Only reached after a confirmed successful engine call (see step 2).
+Only reached after a confirmed successful engine call and, if the mismatch warning fired, after the user has chosen to continue (see step 2).
 
 - Capture the script's stdout: the "Changes:" section (commit log between old and new `.cts-version`), any `ignored, but changed upstream — review manually: <path>` lines, any `merged: <path>` lines, any `CONFLICT: <path>` lines, any `locally modified, not overwritten — diff manually: <path>` lines, and any `removed upstream — delete manually if unwanted: <path>` lines.
 - Run `git diff --stat` to see which local files actually changed.
 - Summarize for the user in five short groups: **Upstream changes** (from the changelog), **Updated locally** (from `git diff --stat`), **Merged cleanly** (`merged:` lines — both sides touched the file, non-overlapping hunks combined automatically), **Conflicts** (`CONFLICT:` lines — both sides touched the same hunk, standard `<<<<<<<`/`=======`/`>>>>>>>` markers left in the file), **Needs attention** (changed-upstream-while-ignored + locally-modified-with-no-upstream-change + removed-upstream notices).
   - **Triage note**: if there's a mass of "locally modified, not overwritten" notices, check the upstream commit message for "from <this-project>" — if this project previously ran `/cts-contribute`, it means this project's customizations were merged into claude-ts and are now being synced back down. This is not drift — it's expected after a contribution round-trip. Local and upstream may agree even though the baseline changed, producing a diverged-file list that looks concerning but just needs a quick confirm-and-skip.
-  - **Triage note (source mismatch)**: if the diff instead looks like a mass _regression_ — large deletions, several files reported `removed upstream` — right after a run with no `--source`/`--branch` flags, check whether the previous sync was run with an explicit `--source` (e.g. a local checkout on a different branch) that this run didn't repeat. The engine now records the resolved source in `.cts-source` and prints a warning itself when an implicit run disagrees with it, but if you're triaging output from an older `cts-sync.sh` (or the warning was missed), verify manually: re-run with the `--source`/`--branch` you suspect was used previously and check whether the resulting `.cts-version` matches the old one exactly — a no-op confirms it was a source mismatch, not real data loss.
+  - **Fallback note (source mismatch, pre-upgrade engine only)**: step 2 now checks stderr for the source-mismatch warning unconditionally and stops before this step ever runs, so this triage path shouldn't normally trigger. It exists only for output from an older `cts-sync.sh` that predates the warning: if the diff looks like a mass _regression_ — large deletions, several files reported `removed upstream` — right after a run with no `--source`/`--branch` flags, check whether the previous sync used an explicit `--source` (e.g. a local checkout on a different branch) that this run didn't repeat. Verify manually: re-run with the `--source`/`--branch` you suspect was used previously and check whether the resulting `.cts-version` matches the old one exactly — a no-op confirms it was a source mismatch, not real data loss.
 
 The engine only overwrites a payload file outright if the working copy still matches what was synced last time. If it diverged and upstream also changed the same file, it runs a 3-way merge (base = content at the old `.cts-version`) instead of skipping — clean hunks apply silently (`merged:`), overlapping hunks get conflict markers (`CONFLICT:`). If it diverged but upstream did **not** touch that file, or `--no-merge` was passed, it's skipped and reported as `locally modified, not overwritten` rather than silently clobbered.
 
@@ -54,6 +56,14 @@ Because the engine only merges or skips — it never overwrites a diverged file 
 
 ## 6. Suggest & hand off
 
-- Propose `.ctsignore` additions for files from step 5 that the user wants silenced going forward (root-level entries should be `/`-anchored, e.g. `/AGENTS.md` — a bare filename also matches nested payload files).
-- Propose `.ctsignore` removals identified in step 4 — the ignore list should shrink over time, not grow.
-- Remind the user: `git diff` is the merge tool — review and commit themselves. This skill never commits or pushes.
+If nothing was flagged this run — no `CONFLICT:` lines, no `.ctsignore` addition/removal candidates from steps 4-5, no push-upstream candidate — skip the menu entirely: state plainly that the sync was clean and there's nothing to act on. Don't ask a question with only one option.
+
+Otherwise, call `AskUserQuestion` with `multiSelect: true`, built from what steps 3-5 actually found this run. Always include the baseline option; include the others only when their trigger condition is met:
+
+- "Resolve conflicts now" — only if any `CONFLICT:` lines existed (step 5).
+- "Review `.ctsignore` additions" — only if step 5 flagged a locally-modified file worth silencing going forward (root-level entries should be `/`-anchored, e.g. `/AGENTS.md` — a bare filename also matches nested payload files).
+- "Review `.ctsignore` removals" — only if step 4 flagged a local-file-now-matches-upstream case.
+- "Run cts-contribute" — only if step 5 flagged a push-upstream candidate.
+- "Stop here, I'll review `git diff` myself" — always include, as the baseline option.
+
+Whatever the user picks, remind them: `git diff` is the merge tool — review and commit themselves. This skill never commits or pushes.
