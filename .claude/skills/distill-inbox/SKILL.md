@@ -5,6 +5,7 @@ description: >-
   
   Українською: очистити inbox, дистилювати знання, перенести записи до rules, прибрати KNOWLEDGE_INBOX, розкласти по місцях.
 
+
 triggers:
   - distill-inbox
   - distill inbox

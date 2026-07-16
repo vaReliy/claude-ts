@@ -5,6 +5,7 @@ description: >-
   
   Українською: React, компонент, хуки, стан, useState, useEffect, Next.js, Zustand, Redux, TanStack Query, React Router, JSX, TSX, React компонент.
 
+
 triggers:
   - React
   - JSX

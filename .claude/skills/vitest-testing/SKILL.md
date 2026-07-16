@@ -5,6 +5,7 @@ description: >-
   
   Українською: тестування Vitest, Jest, написати тест, юніт тест, інтеграційний тест, мок, покриття, мутаційне тестування, TDD, vi.fn, vi.mock, describe, it.
 
+
 triggers:
   - Vitest
   - Jest

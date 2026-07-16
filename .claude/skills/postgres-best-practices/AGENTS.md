@@ -1,6 +1,8 @@
 # Postgres Best Practices
 
-**Version 1.0.0** Supabase January 2026
+**Version 1.0.0**
+Supabase
+January 2026
 
 > This document is optimized for AI agents and LLMs. Rules are prioritized by performance impact.
 
@@ -567,7 +569,8 @@ create policy team_orders_policy on orders
 create index orders_user_id_idx on orders (user_id);
 ```
 
-Use security definer functions for complex checks: Always add indexes on columns used in RLS policies:
+Use security definer functions for complex checks:
+Always add indexes on columns used in RLS policies:
 
 Reference: https://supabase.com/docs/guides/database/postgres/row-level-security#rls-performance-recommendations
 
@@ -731,7 +734,8 @@ Reference: https://www.postgresql.org/docs/current/ddl-partitioning.html
 
 **Impact: HIGH (Better index locality, reduced fragmentation)**
 
-Primary key choice affects insert performance, index size, and replication efficiency.
+Primary key choice affects insert performance, index size, and replication
+efficiency.
 
 **Incorrect (problematic PK choices):**
 
@@ -773,9 +777,13 @@ create table events (
 Guidelines:
 
 - Single database: `bigint identity` (sequential, 8 bytes, SQL-standard)
-- Distributed/exposed IDs: UUIDv7 (requires pg_uuidv7) or ULID (time-ordered, no fragmentation)
-- `serial` works but `identity` is SQL-standard and preferred for new applications
-- Avoid random UUIDs (v4) as primary keys on large tables (causes index fragmentation) [Identity Columns](https://www.postgresql.org/docs/current/sql-createtable.html#SQL-CREATETABLE-PARMS-GENERATED-IDENTITY)
+- Distributed/exposed IDs: UUIDv7 (requires pg_uuidv7) or ULID (time-ordered, no
+  fragmentation)
+- `serial` works but `identity` is SQL-standard and preferred for new
+  applications
+- Avoid random UUIDs (v4) as primary keys on large tables (causes index
+  fragmentation)
+  [Identity Columns](https://www.postgresql.org/docs/current/sql-createtable.html#SQL-CREATETABLE-PARMS-GENERATED-IDENTITY)
 
 ---
 
@@ -884,7 +892,8 @@ Reference: https://www.postgresql.org/docs/current/tutorial-transactions.html
 
 **Impact: MEDIUM-HIGH (Eliminate deadlock errors, improve reliability)**
 
-Deadlocks occur when transactions lock resources in different orders. Always acquire locks in a consistent order.
+Deadlocks occur when transactions lock resources in different orders. Always
+acquire locks in a consistent order.
 
 **Incorrect (inconsistent lock ordering):**
 
@@ -930,7 +939,9 @@ set log_lock_waits = on;
 set deadlock_timeout = '1s';
 ```
 
-Alternative: use a single statement to update atomically: Detect deadlocks in logs: [Deadlocks](https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-DEADLOCKS)
+Alternative: use a single statement to update atomically:
+Detect deadlocks in logs:
+[Deadlocks](https://www.postgresql.org/docs/current/explicit-locking.html#LOCKING-DEADLOCKS)
 
 ---
 

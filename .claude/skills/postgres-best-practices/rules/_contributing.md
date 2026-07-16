@@ -1,6 +1,7 @@
 # Writing Guidelines for Postgres Rules
 
-This document provides guidelines for creating effective Postgres best practice rules that work well with AI agents and LLMs.
+This document provides guidelines for creating effective Postgres best
+practice rules that work well with AI agents and LLMs.
 
 ## Key Principles
 
@@ -8,11 +9,13 @@ This document provides guidelines for creating effective Postgres best practice 
 
 Show exact SQL rewrites. Avoid philosophical advice.
 
-**Good:** "Use `WHERE id = ANY(ARRAY[...])` instead of `WHERE id IN (SELECT ...)`" **Bad:** "Design good schemas"
+**Good:** "Use `WHERE id = ANY(ARRAY[...])` instead of
+`WHERE id IN (SELECT ...)`" **Bad:** "Design good schemas"
 
 ### 2. Error-First Structure
 
-Always show the problematic pattern first, then the solution. This trains agents to recognize anti-patterns.
+Always show the problematic pattern first, then the solution. This trains agents
+to recognize anti-patterns.
 
 ```markdown
 **Incorrect (sequential queries):** [bad example]
@@ -24,11 +27,13 @@ Always show the problematic pattern first, then the solution. This trains agents
 
 Include specific metrics. Helps agents prioritize fixes.
 
-**Good:** "10x faster queries", "50% smaller index", "Eliminates N+1" **Bad:** "Faster", "Better", "More efficient"
+**Good:** "10x faster queries", "50% smaller index", "Eliminates N+1"
+**Bad:** "Faster", "Better", "More efficient"
 
 ### 4. Self-Contained Examples
 
-Examples should be complete and runnable (or close to it). Include `CREATE TABLE` if context is needed.
+Examples should be complete and runnable (or close to it). Include `CREATE TABLE`
+if context is needed.
 
 ```sql
 -- Include table definition when needed for clarity
@@ -46,7 +51,8 @@ CREATE INDEX users_active_email_idx ON users(email) WHERE deleted_at IS NULL;
 
 Use meaningful table/column names. Names carry intent for LLMs.
 
-**Good:** `users`, `email`, `created_at`, `is_active` **Bad:** `table1`, `col1`, `field`, `flag`
+**Good:** `users`, `email`, `created_at`, `is_active`
+**Bad:** `table1`, `col1`, `field`, `flag`
 
 ---
 
@@ -137,7 +143,8 @@ const posts = await db.query('SELECT * FROM posts WHERE user_id = ANY($1)', [use
 **Format:**
 
 ```markdown
-Reference: [Postgres Indexes](https://www.postgresql.org/docs/current/indexes.html)
+Reference:
+[Postgres Indexes](https://www.postgresql.org/docs/current/indexes.html)
 ```
 
 ---
