@@ -2,6 +2,17 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Guess-note resolution lifecycle (2026-07-16)
+
+### Added
+
+- **`.claude/skills/distill-inbox/SKILL.md`**: Category C ("guess") inbox entries previously had no exit path — they accumulated permanently with no resolution mechanism. Added a staleness gate (`age_days >= 14 AND commits_since >= 5`, computed via `git log --since=<entry-date>`) and a new interactive Step 1.5 that resolves gate-fired entries on explicit human `/distill-inbox` invocation only (never during automatic Phase-6 dispatch — an explicit invocation-mode detection rule with an ambiguous→skip default was added to keep this safe for unattended cheap-tier dispatch). Four resolution options: promote to a concrete target, promote to claude-ts-upstream (branches on consumer-project vs. template-repo-itself via `cts-payload.txt` + `.cts-version` detection), discard, or still-uncertain (re-prompts every future run — deliberately no snooze state). Step 5's report gained resolved/still-uncertain counts.
+- **`.claude/skills/cts-contribute/SKILL.md`** §1d: replaced a dead check referencing a `status: keep`/`status: undecided` field that was never implemented anywhere, with a check against the real stale-gate state `distill-inbox` now computes.
+
+### Fixed
+
+- **`.claude/skills/distill-inbox/SKILL.md`** Step 3's ledger obligation unconditionally required appending to `docs/CLAUDE_TS_CHANGELOG.md` for template-inherited targets, but that file doesn't exist/apply when this skill runs in the claude-ts host repo itself. Step 3 now branches on repo kind using the same `cts-payload.txt` + `.cts-version` detection Step 1.5 Option 2 already established: consumer projects still append to `docs/CLAUDE_TS_CHANGELOG.md`; the template repo itself appends to its own root `CHANGELOG.md` instead.
+
 ## [Unreleased] — Contributed from penny (2026-07-16 round)
 
 ### Added

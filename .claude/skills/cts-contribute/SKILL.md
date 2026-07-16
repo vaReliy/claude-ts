@@ -18,7 +18,7 @@ Run all four checks before doing anything else:
 
 **c. Sync alignment** (skip if patch-folder mode from b) Read `.cts-version` (the consumer's pinned CTS commit). Run `git -C <cts-path> rev-parse HEAD`. If they differ: "Your project is N commits behind CTS HEAD. Run `/cts-update` first, then re-run `/cts-contribute`." Hard stop.
 
-**d. Knowledge inbox** Read `docs/KNOWLEDGE_INBOX.md`. If it contains entries in the standard 3-line format (lines starting with `**`) that are not explicitly marked `status: keep` or `status: undecided`, prompt: "Inbox has unplaced entries — run `/distill-inbox` first, or confirm they are all undecided/keep to proceed." Wait for confirmation before continuing.
+**d. Knowledge inbox** Read `docs/KNOWLEDGE_INBOX.md`. Scan all Category C entries (containing `Belongs in (guess):`) and check if any have crossed the stale gate from `distill-inbox` Step 1a (entry `age_days >= 14` AND `commits_since >= 5` — compute these values as described there). If stale unresolved entries exist, prompt: "Inbox has unresolved guess notes older than 14 days / 5+ commits — run `/distill-inbox` first to resolve them, or confirm you want to proceed with them still open." Wait for confirmation before continuing. Entries younger than the gate are fine to leave alone; do not block on them.
 
 ---
 
