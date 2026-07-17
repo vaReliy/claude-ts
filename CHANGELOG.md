@@ -2,6 +2,22 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Harden cts-sync append-merge edge cases, close norm_file stdout hazard, etalon-verify against penny (2026-07-17)
+
+### Fixed
+
+- **`.claude/scripts/cts-sync.sh` `append_missing_lines()`**: three residual one-line bugs found by an independent post-commit review of the 2026-07-16 fixes. Source-side trailing-newline drop — `while IFS= read -r line` silently skipped the CTS-required line when the **source's** list file lacked a trailing newline (mirror image of the consumer-side `>>` bug already fixed); fixed with `|| [ -n "$line" ]`. Leading-dash lines — `grep -qxF "$line"` parsed a line starting with `-` as grep options; fixed with `grep -qxF -e "$line"`. `echo` option-eating on lines like `-n`/`-e`; replaced with `printf '%s\n' "$line"`. Regression-tested (cases 1c, 1d, 1e in `tests/cts-sync.test.sh`).
+- **`.claude/scripts/cts-sync.sh` `norm_file()`**: closed a shared-stdout hazard where `"$PRETTIER_BIN" ... || cat "$src"` could interleave partial prettier output with the fallback `cat` if prettier ever emitted before failing — that garbage would flow into `merge_one`'s merge input and land in a consumer's tree. Now stages prettier's stdout to a `mktemp` file and only emits it on exit 0, else emits `cat "$src"`. Cleanup uses a **self-disarming `RETURN` trap** (`trap 'rm -f "$out"; trap - RETURN' RETURN`) rather than an `EXIT` trap — an `EXIT` trap here would clobber `merge_one()`'s own outer `EXIT` trap, since `norm_file` is called up to 3x from within `merge_one`. See the new "RETURN Trap Is a Global Slot, Not Call-Frame-Scoped" section in `rules/shell-scripting.md`. Regression-tested end-to-end through `merge_one`'s live-trap 3x-call context with a real prettier subprocess and a genuine 3-way conflict (case "4"), asserting via a dedicated isolated `TMPDIR` that no temp file from any of the 8 `mktemp` call sites in the script leaks.
+- **`rules/shell-scripting.md`**: corrected a factual error in the `objectWrap` section — Prettier 3.5 introduced `objectWrap` as a **new** option (default `preserve`); no prior `always` default ever existed.
+
+### Verified
+
+- Etalon verification against `../penny` (never previously performed for this task): re-resolved anchor (`3460671`, still the most recent penny-attributed contribution commit as of 2026-07-17), fresh `git diff` computed against both that anchor and penny's actual recorded `.cts-version` baseline (`6cbf33b1`, wider superset), then ran `cts-sync.sh update --source <claude-ts>` from a scratch copy of `../penny` (`cp -a`, live directory never touched). Every changed file in the scratch run was explainable by either the reference diff or penny's own known local modifications — 10 genuine conflicts, 12 clean merges, 6 locally-modified-preserved, 1 append-merge (`.prettierignore`, exercising the exact no-trailing-newline fix above), 13 correctly `.ctsignore`-skipped, 1 new payload file copied clean. Nothing unexplained.
+
+### Emit as Task
+
+- **`.claude/scripts/cts-sync.sh:171` `is_ignored()`**: same trailing-newline bug class as `append_missing_lines()` above (`while IFS= read -r pat` without `|| [ -n "$pat" ]`) — a `.ctsignore` file lacking a trailing newline silently drops its last pattern. Pre-existing, not touched by this changeset.
+
 ## [Unreleased] — Fix cts-sync new-payload-path overwrite, add format renormalize, distill stale inbox (2026-07-16)
 
 ### Fixed

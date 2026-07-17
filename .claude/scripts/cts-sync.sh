@@ -235,13 +235,37 @@ is_prettier_ext() {
     *) return 1 ;;
   esac
 }
-# Writes normalized content to stdout. The `|| cat` fallback covers prettier
-# parse errors (e.g. a file mid-conflict-markers); the extension gate avoids
-# spawning prettier for shell scripts and other non-prettier-handled files.
+# Writes normalized content to stdout. The extension gate avoids spawning
+# prettier for shell scripts and other non-prettier-handled files.
 norm_file() {
   local rel="$1" src="$2"
   if [ -n "$PRETTIER_BIN" ] && is_prettier_ext "$rel"; then
-    "$PRETTIER_BIN" --stdin-filepath "$rel" < "$src" 2>/dev/null || cat "$src"
+    # Both branches used to write directly to stdout (`prettier ... || cat
+    # "$src"`), sharing one fd. If prettier ever emitted partial output
+    # before failing (it doesn't today — it buffers until a successful
+    # parse — but that's an implementation detail, not a guarantee), the
+    # `cat` fallback would concatenate raw content after it, and callers
+    # that feed norm_file's output into a 3-way merge (merge_one) would
+    # write that garbage into the consumer's tree. Route prettier's output
+    # through a temp file so only one branch's bytes ever reach stdout.
+    # RETURN (not EXIT) so this doesn't clobber the caller's EXIT trap.
+    # merge_one() calls norm_file() up to 3x while it has its own EXIT trap
+    # live for its whole body; an EXIT trap here would overwrite that trap on
+    # entry and clear it on exit, silently disabling merge_one's cleanup for
+    # the rest of its body. RETURN fires once when *this* function returns
+    # and is set fresh on every call, but bash's RETURN trap is a single
+    # global slot, not a call-stack-scoped one: left as-is it would remain
+    # armed after norm_file returns and misfire (with $out out of scope,
+    # crashing under `set -u`) the next time *any* function returns anywhere
+    # later in the script. `trap - RETURN` inside the trap body disarms it
+    # immediately after it fires, so it only ever acts on this exact call.
+    local out; out=$(mktemp)
+    trap 'rm -f "$out"; trap - RETURN' RETURN
+    if "$PRETTIER_BIN" --stdin-filepath "$rel" < "$src" > "$out" 2>/dev/null; then
+      cat "$out"
+    else
+      cat "$src"
+    fi
   else
     cat "$src"
   fi
@@ -332,10 +356,10 @@ append_missing_lines() {
   if [ -s "./$rel" ] && [ -n "$(tail -c 1 "./$rel")" ]; then
     printf '\n' >> "./$rel"
   fi
-  while IFS= read -r line; do
+  while IFS= read -r line || [ -n "$line" ]; do
     [ -z "$line" ] && continue
-    grep -qxF "$line" "./$rel" 2>/dev/null && continue
-    echo "$line" >> "./$rel"
+    grep -qxF -e "$line" "./$rel" 2>/dev/null && continue
+    printf '%s\n' "$line" >> "./$rel"
     changed=1
   done < "$SRC_DIR/$rel"
   [ "$changed" = 1 ] && APPENDED+=("$rel")
@@ -347,13 +371,15 @@ append_missing_lines() {
 # ones get standard conflict markers left in the file for the operator to
 # resolve by hand — `-p` keeps it from touching "./$rel" until we've seen
 # whether the merge was clean.
-# Cleanup uses an EXIT trap, not `trap ... RETURN` — RETURN is shell-global
-# in bash (not scoped to this function), so it would re-fire (with the temp
-# paths out of scope) on the next function return anywhere later in the
-# script and crash under `set -u`. The EXIT trap is always cleared with
-# `trap - EXIT` before the function returns normally; it only ever fires for
-# real if `git show`/`cp` fail and `set -e` is unwinding the whole script
-# anyway, which is exactly when the leaked temp files need to be caught.
+# Cleanup uses an EXIT trap, not `trap ... RETURN` — RETURN is a single
+# global slot in bash, not scoped per call frame: unless the trap body
+# disarms itself (as norm_file's now does with `trap - RETURN`), it stays
+# armed and misfires on the next unrelated function return anywhere later in
+# the script, crashing under `set -u` once its own locals are out of scope.
+# This function's EXIT trap is always cleared with `trap - EXIT` before it
+# returns normally; it only ever fires for real if `git show`/`cp` fail and
+# `set -e` is unwinding the whole script anyway, which is exactly when the
+# leaked temp files need to be caught.
 # MERGE_BASE/MERGE_RESULT are deliberately globals, not `local` — when
 # errexit unwinds out of this function to run the EXIT trap, bash has
 # already torn down the function's local scope, so a trap referencing
