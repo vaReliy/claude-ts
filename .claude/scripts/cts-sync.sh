@@ -168,7 +168,7 @@ is_owner_only_skill() {
 is_ignored() {
   local p="$1" pat
   [ -f "$IGNORE_FILE" ] || return 1
-  while IFS= read -r pat; do
+  while IFS= read -r pat || [ -n "$pat" ]; do
     case "$pat" in ''|'#'*) continue ;; esac
     pat="${pat%/}"
     case "$pat" in

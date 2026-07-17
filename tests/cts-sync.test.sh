@@ -597,6 +597,47 @@ else
   echo "skip: no prettier binary resolvable in this test env — case 4 (merge_one 3x norm_file, real prettier) skipped"
 fi
 
+# ---------------------------------------------------------------------------
+# Case 5: is_ignored() trailing-newline drop — `while IFS= read -r pat`
+# without `|| [ -n "$pat" ]` silently skips the final line of a .ctsignore
+# file that lacks a trailing newline, so that last pattern is never matched
+# and the path it should ignore is synced anyway (a silent data overwrite).
+# This mirrors the append_missing_lines bug fixed in case 1c; the consumer's
+# .ctsignore is built via `printf` with no trailing `\n` to exercise the
+# failure mode.
+# ---------------------------------------------------------------------------
+src5="$WORK/src5"; consumer5="$WORK/consumer5"
+git_repo "$src5"
+echo "AGENTS.md" > "$src5/cts-payload.txt"
+echo "root agents file from source" > "$src5/AGENTS.md"
+git -C "$src5" add -A && git -C "$src5" commit -q -m "commit1: baseline AGENTS.md"
+OLD_SHA5=$(git -C "$src5" rev-parse HEAD)
+
+echo "root agents file, version 2" > "$src5/AGENTS.md"
+git -C "$src5" add -A && git -C "$src5" commit -q -m "commit2: update AGENTS.md"
+
+git_repo "$consumer5"
+echo "$OLD_SHA5" > "$consumer5/.cts-version"
+echo "consumer-local AGENTS.md content" > "$consumer5/AGENTS.md"
+# No trailing newline after the last pattern — the fixture under test.
+printf 'AGENTS.md' > "$consumer5/.ctsignore"
+git -C "$consumer5" add -A && git -C "$consumer5" commit -q -m "consumer baseline, .ctsignore no trailing newline"
+
+out5=$(cd "$consumer5" && bash "$SCRIPT" update --source "$src5" 2>&1)
+exit5=$?
+if [ "$exit5" -ne 0 ]; then
+  fail "case 5: engine exited non-zero ($exit5): $out5"
+else
+  agents_content=$(cat "$consumer5/AGENTS.md" 2>/dev/null || echo "MISSING")
+  if [ "$agents_content" = "consumer-local AGENTS.md content" ]; then
+    pass "case 5: .ctsignore's last (unterminated) pattern 'AGENTS.md' is respected, file not overwritten"
+  else
+    fail "case 5: .ctsignore's last (unterminated) pattern 'AGENTS.md' is respected, file not overwritten (got: $agents_content)"
+  fi
+  assert_not_contains "$out5" "copy: AGENTS.md" \
+    "case 5: engine did not copy AGENTS.md (is_ignored correctly matched the pattern)"
+fi
+
 echo
 if [ "$FAILURES" -eq 0 ]; then
   echo "All assertions passed."

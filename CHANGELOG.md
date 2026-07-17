@@ -14,9 +14,7 @@ All notable changes to this Claude Code configuration template are documented he
 
 - Etalon verification against `../penny` (never previously performed for this task): re-resolved anchor (`3460671`, still the most recent penny-attributed contribution commit as of 2026-07-17), fresh `git diff` computed against both that anchor and penny's actual recorded `.cts-version` baseline (`6cbf33b1`, wider superset), then ran `cts-sync.sh update --source <claude-ts>` from a scratch copy of `../penny` (`cp -a`, live directory never touched). Every changed file in the scratch run was explainable by either the reference diff or penny's own known local modifications — 10 genuine conflicts, 12 clean merges, 6 locally-modified-preserved, 1 append-merge (`.prettierignore`, exercising the exact no-trailing-newline fix above), 13 correctly `.ctsignore`-skipped, 1 new payload file copied clean. Nothing unexplained.
 
-### Emit as Task
-
-- **`.claude/scripts/cts-sync.sh:171` `is_ignored()`**: same trailing-newline bug class as `append_missing_lines()` above (`while IFS= read -r pat` without `|| [ -n "$pat" ]`) — a `.ctsignore` file lacking a trailing newline silently drops its last pattern. Pre-existing, not touched by this changeset.
+- **`.claude/scripts/cts-sync.sh:171` `is_ignored()`**: closed, same changeset — same trailing-newline bug class as `append_missing_lines()` above (`while IFS= read -r pat` without `|| [ -n "$pat" ]`); a `.ctsignore` file lacking a trailing newline silently dropped its last pattern. Fixed with the same `|| [ -n "$pat" ]` guard, regression-tested (case 5 in `tests/cts-sync.test.sh`). Gotcha also documented in `rules/shell-scripting.md`.
 
 ## [Unreleased] — Fix cts-sync new-payload-path overwrite, add format renormalize, distill stale inbox (2026-07-16)
 

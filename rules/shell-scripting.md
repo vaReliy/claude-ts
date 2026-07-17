@@ -34,3 +34,9 @@ When symlinking prettier into a fixture or temporary directory for testing, syml
 Prettier 3.5 introduced a new `objectWrap` option, defaulting to `preserve` (there was no prior `always` default — object-wrap behavior was previously implicit, not configurable). In test fixtures that compare normalized content before/after formatting, object-wrap style will not converge to a common form under the `preserve` default. Tests relying on JSON or object-literal normalization must account for this.
 
 **Solution**: Use a formatting axis that prettier *will* unconditionally normalize (e.g., indent width changes), not object-wrap style. Alternatively, explicitly pin `objectWrap: always` in the prettier config used by tests.
+
+## `while IFS= read -r` Silently Drops Final Line Without Newline
+
+When reading a file line-by-line with `while IFS= read -r var; do ... done < file`, if the file has no trailing newline, the last line is silently skipped. This is because `read` returns non-zero when encountering EOF on an unterminated line, causing the loop condition to fail before the body runs.
+
+**Solution**: Use the `|| [ -n "$var" ]` guard: `while IFS= read -r var || [ -n "$var" ]; do`. This ensures the loop body executes for the final line even when `read` returns non-zero. Apply this pattern to all read-loops over consumer-editable files (e.g., `.ctsignore`-style files). See `.claude/scripts/cts-sync.sh` (`append_missing_lines()` and `is_ignored()`) for working examples.
