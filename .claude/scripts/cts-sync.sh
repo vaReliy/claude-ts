@@ -369,6 +369,33 @@ APPENDED=()
 CROSSCHECK_WARNINGS=()
 BASELINE_WARNINGS=()
 
+# Cross-check hints (see CROSSCHECK_WARNINGS below) print a runnable
+# git-merge-file command whose "local" side must be the pre-sync working-tree
+# content — the file as it stood before merge_one() overwrote it. By the time
+# the warnings are printed (end of script, after every payload path has been
+# synced), "./$rel" already holds the *merged* result, so pointing the hint
+# at it would raw-merge an already-merged file against base/upstream — that
+# comes back clean and prints no conflicts, falsely telling the operator
+# "nothing to see here" exactly when a silent auto-resolution most needs
+# review. Stash a copy of each flagged file's pre-merge content here, under
+# its own relative path, before merge_one()'s overwrite happens; the stashed
+# path is threaded through CROSSCHECK_WARNINGS and substituted into the
+# printed hint instead of "./$rel".
+#
+# Deliberately NOT rm -rf'd at the end of this script (unlike SCRIPTS_STAGE):
+# the printed hint is meant to be copy-pasted and run by a human *after* this
+# script has already exited, so the stash must still exist then. It's left
+# for the OS's normal tmp-directory cleanup, same as any other one-off
+# mktemp/mktemp -d file this script doesn't explicitly rm.
+#
+# Created lazily (first use in merge_one, not here) rather than eagerly: most
+# runs never hit a cross-check discrepancy, and an eager `mktemp -d` here
+# would leave a permanently-empty directory behind on every single run —
+# indistinguishable from a real leak to anything auditing this script's temp
+# footprint (e.g. tests/cts-sync.test.sh case 4, which asserts nothing
+# survives under its dedicated TMPDIR).
+CROSSCHECK_STASH_DIR=""
+
 # Payload files that are additive lists (gitignore-style): a brand-new
 # payload path here gets its missing lines appended to the consumer's
 # existing file instead of being flagged as a collision, so a genuine
@@ -474,7 +501,16 @@ merge_one() {
   raw_conflicts=$(grep -c '^<<<<<<<' "$raw_result" 2>/dev/null || true)
   rm -f "$raw_result"
   if [ "${raw_conflicts:-0}" -gt "${norm_conflicts:-0}" ]; then
-    CROSSCHECK_WARNINGS+=("$rel|$norm_conflicts|$raw_conflicts")
+    # "./$rel" is still the untouched pre-merge working-tree file at this
+    # point — the overwrite (cp "$MERGE_RESULT" "$dest") happens further
+    # below — so this is the last moment its pre-sync content is available
+    # under its real path. Stash it now for the hint printed at the end of
+    # the script (see CROSSCHECK_STASH_DIR above).
+    [ -n "$CROSSCHECK_STASH_DIR" ] || CROSSCHECK_STASH_DIR=$(mktemp -d)
+    local stash_path="$CROSSCHECK_STASH_DIR/$rel"
+    mkdir -p "$(dirname "$stash_path")"
+    cp "./$rel" "$stash_path"
+    CROSSCHECK_WARNINGS+=("$rel|$norm_conflicts|$raw_conflicts|$stash_path")
   fi
   if [ "$DRY_RUN" = 1 ]; then
     if [ "$clean" = 1 ]; then echo "merge (dry-run): $rel"; else echo "conflict (dry-run): $rel"; fi
@@ -592,22 +628,27 @@ else
   for entry in "${PAYLOAD[@]}"; do sync_path "$entry"; done
   for rel in "${LOCALLY_MODIFIED[@]}"; do
     echo "locally modified, not overwritten — diff manually: $rel"
-    echo "  git -C $SRC_DIR diff $OLD_SHA..$NEW_SHA -- $rel"
+    echo "  git -C \"$SRC_DIR\" diff $OLD_SHA..$NEW_SHA -- \"$rel\""
     NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
   done
   for rel in "${CONFLICTS[@]}"; do
     echo "unresolved conflict markers left in: $rel — resolve by hand, then stage it"
   done
   for w in "${CROSSCHECK_WARNINGS[@]}"; do
-    IFS='|' read -r rel nc rc <<< "$w"
+    IFS='|' read -r rel nc rc stash <<< "$w"
     echo "MERGE CROSS-CHECK: $rel — raw 3-way merge finds $rc conflict region(s) but the normalized merge surfaced only $nc; the difference was auto-resolved silently (usually toward your local side). Verify before trusting the merged file:"
-    echo "  git -C $SRC_DIR show $OLD_SHA:$rel > /tmp/cts-base && git merge-file -p ./$rel /tmp/cts-base $SRC_DIR/$rel | grep -n '^<<<<<<<'"
+    # $stash is a pre-merge copy of $rel captured by merge_one() before the
+    # merge overwrote it — NOT "./$rel", which by now holds the already-merged
+    # result. Raw-merging the post-merge file against base/upstream comes back
+    # clean and prints nothing, which would falsely read as "no conflicts"
+    # exactly when a silent auto-resolution most needs review.
+    echo "  git -C \"$SRC_DIR\" show $OLD_SHA:\"$rel\" > /tmp/cts-base && git merge-file -p \"$stash\" /tmp/cts-base \"$SRC_DIR/$rel\" | grep -n '^<<<<<<<'"
     NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
   done
   for w in "${BASELINE_WARNINGS[@]}"; do
     IFS='|' read -r rel n <<< "$w"
     echo "BASELINE INTEGRITY: $rel — $n line(s) recorded at your baseline and still shipped upstream are missing locally. If this is not a deliberate customization, your .cts-version is ahead of the content you actually received (phantom baseline) — restore the missing content from upstream, or add the file to .ctsignore if the divergence is intentional. Review:"
-    echo "  git -C $SRC_DIR show $OLD_SHA:$rel | diff - ./$rel"
+    echo "  git -C \"$SRC_DIR\" show $OLD_SHA:\"$rel\" | diff - \"./$rel\""
     NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
   done
   for rel in "${APPENDED[@]}"; do
@@ -617,7 +658,7 @@ else
   # is empty for a path absent at $OLD_SHA, which is always true here.
   for rel in "${NEW_COLLISIONS[@]}"; do
     echo "new payload file already exists locally, not overwritten — reconcile manually: $rel"
-    echo "  diff <(git -C $SRC_DIR show $NEW_SHA:$rel) ./$rel"
+    echo "  diff <(git -C \"$SRC_DIR\" show $NEW_SHA:\"$rel\") \"./$rel\""
     NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
   done
   for entry in "${PAYLOAD[@]}"; do
@@ -636,7 +677,7 @@ else
     while IFS= read -r f; do
       if is_ignored "$f"; then
         echo "ignored, but changed upstream — review manually: $f"
-        echo "  git -C $SRC_DIR diff $OLD_SHA..$NEW_SHA -- $f"
+        echo "  git -C \"$SRC_DIR\" diff $OLD_SHA..$NEW_SHA -- \"$f\""
         NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
       fi
     done < <(git -C "$SRC_DIR" diff --name-only "$OLD_SHA" "$NEW_SHA")

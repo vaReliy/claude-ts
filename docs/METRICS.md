@@ -32,3 +32,5 @@ Each completed task is one row in the table below.
 | 2026-07-17 | claude-ts | cts-sync-is-ignored-trailing-newline          | T1   | 1      | 0/0/0/0           | 0       | no       | standard |
 | 2026-07-17 | claude-ts | cts-sync-round2-review-residuals              | T1   | 0      | 0/0/0/0           | 0       | no       | standard |
 | 2026-07-17 | claude-ts | phantom-baseline-repair-and-sync-guards       | T2   | 0      | 0/0/0/0           | 2       | no       | deep     |
+| 2026-07-18 | claude-ts | cts-sync-crosscheck-hint-presync-local        | T1   | 0      | 0/1/0/0           | 1       | no       | standard |
+| 2026-07-18 | claude-ts | cts-sync-quote-hint-paths                     | T0   | 0      | 0/0/0/0           | 0       | no       | standard |

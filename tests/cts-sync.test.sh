@@ -162,6 +162,8 @@ else
   assert_contains "$out1b" \
     "new payload file already exists locally, not overwritten — reconcile manually: .editorconfig" \
     "case 1b: reports new-file collision for .editorconfig"
+  assert_contains "$out1b" ':".editorconfig") "./.editorconfig"' \
+    "case 1b: collision hint quotes its interpolated paths (space-safe copy-paste)"
   assert_file_equals "$consumer1b/.editorconfig" "consumer-local editorconfig, unrelated" \
     "case 1b: consumer's .editorconfig is never overwritten"
 fi
@@ -455,6 +457,8 @@ if PRETTIER_PATH=$(resolve_prettier); then
   else
     assert_contains "$out2b" "locally modified, not overwritten — diff manually: data.json" \
       "case 2b: --no-normalize falls back to raw comparison, flags the diff"
+    assert_contains "$out2b" '-- "data.json"' \
+      "case 2b: locally-modified hint quotes its interpolated paths (space-safe copy-paste)"
   fi
 
   # Case 2c: renormalize must also apply to the Bug A new-payload-path
@@ -693,6 +697,8 @@ else
     "case 6: phantom baseline (3 baseline lines missing locally, still shipped upstream) is reported"
   assert_contains "$out6" "3 line(s)" \
     "case 6: report names the number of missing baseline lines"
+  assert_contains "$out6" '| diff - "./rules/feature.md"' \
+    "case 6: baseline-integrity hint quotes its interpolated paths (space-safe copy-paste)"
 fi
 
 git_repo "$consumer6b"
@@ -773,6 +779,129 @@ else
     "case 7: normalized merge did silently drop the beta region (the hazard the warning exists for)"
   assert_contains "$merged7" "delta reworded upstream" \
     "case 7: upstream's real content change still applied"
+
+  # The printed hint's local side must be a stash of the *pre-sync* file, not
+  # "./rules/doc.md" — by now that path holds the already-merged result, and
+  # raw-merging it against base/upstream would come back clean (0 conflicts),
+  # falsely reading as "no conflicts" on exactly the file the warning exists
+  # to flag. Extract the hint verbatim from the engine's own output and run
+  # it for real: it must reproduce the same raw conflict count the engine
+  # itself reported above.
+  rc7=$(printf '%s\n' "$out7" | sed -n 's/.*raw 3-way merge finds \([0-9]*\) conflict.*/\1/p')
+  hint7=$(printf '%s\n' "$out7" | awk '/^MERGE CROSS-CHECK: rules\/doc\.md/{getline; print; exit}' | sed 's/^  //')
+  case "$hint7" in
+    *"-p ./rules/doc.md"*)
+      fail "case 7: printed hint uses the post-merge working-tree file (./rules/doc.md) as its local side, not a pre-sync stash" ;;
+    "") fail "case 7: could not extract the printed cross-check hint from engine output" ;;
+    *)
+      hint_out7=$(cd "$consumer7" && eval "$hint7" 2>&1)
+      hint_conflicts7=$(printf '%s\n' "$hint_out7" | grep -c '^[0-9]*:<<<<<<<')
+      if [ "$hint_conflicts7" -ge 1 ] && [ "$hint_conflicts7" = "$rc7" ]; then
+        pass "case 7: printed hint, run for real, reproduces the engine's reported raw conflict count ($rc7)"
+      else
+        fail "case 7: printed hint, run for real, reproduces the engine's reported raw conflict count (got $hint_conflicts7, expected $rc7; hint output: $hint_out7)"
+      fi
+      ;;
+  esac
+fi
+
+# ---------------------------------------------------------------------------
+# Case 7b: multiple cross-check discrepancies in the same run — the stash
+# dir (CROSSCHECK_STASH_DIR) is a single lazily-created dir shared across
+# every merge_one() call in the run, guarded by `[ -n "$CROSSCHECK_STASH_DIR" ]
+# || CROSSCHECK_STASH_DIR=$(mktemp -d)`. A second discrepancy in the same run
+# must reuse that dir (not re-mktemp over it, losing the first file's stash)
+# and land at a distinct nested path so neither file's stash clobbers the
+# other's. Two files in different subdirectories, each with the same
+# formatting-only-upstream-change-plus-local-deletion hazard as case 7.
+# ---------------------------------------------------------------------------
+src7b="$WORK/src7b"; consumer7b="$WORK/consumer7b"
+git_repo "$src7b"
+{
+  echo "rules/doc.md"
+  echo "other/nested/doc2.md"
+} > "$src7b/cts-payload.txt"
+mkdir -p "$src7b/rules" "$src7b/other/nested"
+{
+  echo "alpha stable line"
+  printf 'beta feature line   \n'
+  echo "gamma stable line"
+  echo "delta original wording"
+} > "$src7b/rules/doc.md"
+{
+  echo "one stable line"
+  printf 'two feature line   \n'
+  echo "three stable line"
+  echo "four original wording"
+} > "$src7b/other/nested/doc2.md"
+git -C "$src7b" add -A && git -C "$src7b" commit -q -m "commit1: both files have trailing-space beta/two lines"
+OLD_SHA7b=$(git -C "$src7b" rev-parse HEAD)
+{
+  echo "alpha stable line"
+  echo "beta feature line"
+  echo "gamma stable line"
+  echo "delta reworded upstream"
+} > "$src7b/rules/doc.md"
+{
+  echo "one stable line"
+  echo "two feature line"
+  echo "three stable line"
+  echo "four reworded upstream"
+} > "$src7b/other/nested/doc2.md"
+git -C "$src7b" add -A && git -C "$src7b" commit -q -m "commit2: both formatting-only cleanups + real content changes"
+
+git_repo "$consumer7b"
+echo "$OLD_SHA7b" > "$consumer7b/.cts-version"
+mkdir -p "$consumer7b/rules" "$consumer7b/other/nested"
+{
+  echo "alpha stable line"
+  echo "gamma stable line"
+  echo "delta original wording"
+} > "$consumer7b/rules/doc.md"
+{
+  echo "one stable line"
+  echo "three stable line"
+  echo "four original wording"
+} > "$consumer7b/other/nested/doc2.md"
+mkdir -p "$consumer7b/node_modules/.bin"
+cat > "$consumer7b/node_modules/.bin/prettier" <<'FAKE'
+#!/bin/sh
+sed 's/[[:space:]]*$//'
+FAKE
+chmod +x "$consumer7b/node_modules/.bin/prettier"
+git -C "$consumer7b" add -A && git -C "$consumer7b" commit -q -m "consumer deleted beta/two lines in both files"
+
+out7b=$(cd "$consumer7b" && bash "$SCRIPT" update --source "$src7b" 2>&1)
+exit7b=$?
+if [ "$exit7b" -ne 0 ]; then
+  fail "case 7b: engine exited non-zero ($exit7b): $out7b"
+else
+  assert_contains "$out7b" "MERGE CROSS-CHECK: rules/doc.md" \
+    "case 7b: first file's discrepancy is reported"
+  assert_contains "$out7b" "MERGE CROSS-CHECK: other/nested/doc2.md" \
+    "case 7b: second file's discrepancy is reported"
+
+  hint_doc7b=$(printf '%s\n' "$out7b" | awk '/^MERGE CROSS-CHECK: rules\/doc\.md/{getline; print; exit}' | sed 's/^  //')
+  hint_doc27b=$(printf '%s\n' "$out7b" | awk '/^MERGE CROSS-CHECK: other\/nested\/doc2\.md/{getline; print; exit}' | sed 's/^  //')
+  stash_doc7b=$(printf '%s\n' "$hint_doc7b" | sed -n 's/.*git merge-file -p "\{0,1\}\([^" ]*\)"\{0,1\} .*/\1/p')
+  stash_doc27b=$(printf '%s\n' "$hint_doc27b" | sed -n 's/.*git merge-file -p "\{0,1\}\([^" ]*\)"\{0,1\} .*/\1/p')
+
+  if [ -n "$stash_doc7b" ] && [ -n "$stash_doc27b" ] && [ "$(dirname "$stash_doc7b")" != "$(dirname "$stash_doc27b")" ] \
+    && [ "${stash_doc7b%/rules/doc.md}" = "${stash_doc27b%/other/nested/doc2.md}" ]; then
+    pass "case 7b: both stashes share one lazily-created CROSSCHECK_STASH_DIR, at distinct nested paths"
+  else
+    fail "case 7b: both stashes share one lazily-created CROSSCHECK_STASH_DIR, at distinct nested paths (doc: $stash_doc7b, doc2: $stash_doc27b)"
+  fi
+
+  hint_out_doc7b=$(cd "$consumer7b" && eval "$hint_doc7b" 2>&1)
+  hint_out_doc27b=$(cd "$consumer7b" && eval "$hint_doc27b" 2>&1)
+  rc_doc7b=$(printf '%s\n' "$hint_out_doc7b" | grep -c '^[0-9]*:<<<<<<<')
+  rc_doc27b=$(printf '%s\n' "$hint_out_doc27b" | grep -c '^[0-9]*:<<<<<<<')
+  if [ "$rc_doc7b" -ge 1 ] && [ "$rc_doc27b" -ge 1 ]; then
+    pass "case 7b: both hints independently reproduce a conflict when run for real (no cross-file clobbering)"
+  else
+    fail "case 7b: both hints independently reproduce a conflict when run for real (doc: $hint_out_doc7b, doc2: $hint_out_doc27b)"
+  fi
 fi
 
 echo

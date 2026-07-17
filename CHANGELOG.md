@@ -2,6 +2,16 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Fix MERGE CROSS-CHECK hint to verify against pre-sync local content (2026-07-18)
+
+### Fixed
+
+- **`.claude/scripts/cts-sync.sh` `merge_one()`**: the printed `MERGE CROSS-CHECK` verification hint pointed its "local" side at `./<path>` — the post-merge working-tree file, already overwritten by the merge result — so re-running the hint raw-merged the merged file against base/upstream and reported "no conflicts" precisely when a silent auto-resolution had occurred (both cross-check flags in a real HPW `/cts-update` run gave false-clean grep output this way). Fixed by stashing a copy of the pre-merge local file to a lazily-created `CROSSCHECK_STASH_DIR` (only `mktemp -d` on first actual cross-check discrepancy, never `rm -rf`'d since the hint must remain valid after the script exits) and pointing the printed hint at that stashed path instead.
+- **`.claude/skills/cts-update/SKILL.md`**: `MERGE CROSS-CHECK` triage bullet updated to match the new hint and warn that an empty grep from the old `./<path>`-style hint is not evidence of a clean merge.
+- **`tests/cts-sync.test.sh`**: case 7 extended to assert the printed hint no longer references `./<path>` and reproduces the engine's reported raw conflict count when eval'd; new case 7b covers two simultaneous cross-check discrepancies in one run (shared `CROSSCHECK_STASH_DIR`, distinct nested stash paths, no clobbering).
+- **`rules/shell-scripting.md`**: new "Lazy `mktemp` for Artifacts That Must Outlive the Script" section, generalizing the `CROSSCHECK_STASH_DIR` pattern — an eagerly-created-but-empty temp dir looks identical to a real leak under a "no leaked temp files" test pinning `TMPDIR`.
+- Known non-blocking residual, now fixed (task `2026-07-18-01-cts-sync-quote-hint-paths`): the printed hint interpolated `$SRC_DIR`, `$rel`, `$stash`, and `$SRC_DIR/$rel` unquoted, breaking on paths containing spaces. All four are now double-quoted; `tests/cts-sync.test.sh` case 7b's stash-path extraction regex updated to strip the new quotes. A follow-up review pass extended the same quoting to the four sibling hint lines (locally-modified `diff`, `BASELINE INTEGRITY` `diff`, new-payload-collision `diff <(...)`, ignored-but-changed-upstream `diff`), with quoted-form assertions added to existing cases 1b/2b/6 (SHA variables stay unquoted everywhere — always hex). A dedicated space-containing-path fixture was deliberately not added — no part of the test harness (payload lists, `.ctsignore` matching, etc.) currently supports space-containing paths, so an end-to-end fixture was judged out of scope for a one-line quoting fix; verified in isolation instead.
+
 ## [Unreleased] — Distill live-data-probe review pattern into cts-review-contribution (2026-07-17)
 
 ### Added
