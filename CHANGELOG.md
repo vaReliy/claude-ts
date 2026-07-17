@@ -2,6 +2,12 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Distill live-data-probe review pattern into cts-review-contribution (2026-07-17)
+
+### Added
+
+- **`.claude/skills/cts-review-contribution/SKILL.md`**: new "Live-data probe" checklist item in the Step 3 judgment pass — changes touching `cts-sync.sh` (or anything that writes to consumer working trees) require a run of the changed engine against a scratch copy (`cp -a`) of a real consumer before the gate closes; synthetic fixtures and diff review do not satisfy this. Distilled per task `2026-07-07-08` step 4 after three confirmations: the `>>` no-leading-newline append and `read` dropped-final-line bugs (both invisible to fixtures, caught only on real data) and the penny phantom-baseline investigation, whose guards were validated positively against pre-repair penny and negatively against HPW's clean baseline during the round-3 consumer-validation runs.
+
 ## [Unreleased] — Silent-loss guards: baseline-integrity audit + raw-merge cross-check (2026-07-17)
 
 ### Added
