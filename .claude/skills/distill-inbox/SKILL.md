@@ -164,4 +164,4 @@ After docs-writer completes (or if skipping Step 1.5 during automatic Phase-6 di
 
 ## Routing map updates
 
-When new rules files are added to the project, update the routing map table in this SKILL.md to include them. The map is the only Penny-specific content here — everything else is generic claude-ts distillation logic.
+When new rules files are added to the project, update the routing map table in this SKILL.md to include them. The map is the only project-specific content here — everything else is generic claude-ts distillation logic.

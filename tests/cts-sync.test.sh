@@ -264,6 +264,17 @@ else
     fail "case 1d: leading-dash line already present is not duplicated (count: $count1d, got: $(cat "$consumer1d/.prettierignore"))"
   fi
 
+  # Discriminates the stdin-swallow failure mode: an unguarded `grep -qxF
+  # "-n"` (no `-e`) consumes the read loop's redirected stdin on the
+  # leading-dash line, silently dropping every source line that follows it —
+  # so this line, listed right after "-n" in src1d's .prettierignore, never
+  # arrives if the old bug is present.
+  if grep -qxF -e ".claude/skills/postgres-best-practices/" "$consumer1d/.prettierignore"; then
+    pass "case 1d: source line following the leading-dash line still arrives"
+  else
+    fail "case 1d: source line following the leading-dash line still arrives (got: $(cat "$consumer1d/.prettierignore"))"
+  fi
+
   # Second run: append_missing_lines fires again since it's still a
   # NEW_COLLISIONS-eligible append-merge path each time cts-payload.txt lists
   # it fresh relative to a stale-baseline .cts-version; re-run against the

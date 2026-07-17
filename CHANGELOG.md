@@ -2,6 +2,15 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Round-2 review residuals: RETURN-trap wording, payload phrase, fixture strengthening (2026-07-17)
+
+### Fixed
+
+- **`rules/shell-scripting.md` / `.claude/scripts/cts-sync.sh` (`norm_file()`, `merge_one()` comments)**: corrected an overstated claim about `RETURN` trap misfire behavior — a leftover `RETURN` trap persists in bash's single global slot, but without `set -o functrace`/`extdebug` it does **not** fire on other functions' returns; it re-arms only on a `source`/`.`-ed script's return (or on every function return once functrace is enabled). The self-disarming trap pattern remains correct practice regardless. Comment/doc-only — no engine behavior changed.
+- **`.claude/skills/distill-inbox/SKILL.md`**: reworded a host-assuming "Penny-specific" phrase to "project-specific".
+- **`tests/cts-sync.test.sh` case 1d**: added an assertion that the source line following the leading-dash line still arrives in the consumer's `.prettierignore` — the existing assertions passed even against the pre-fix (`138b3f3`) engine, because the old `grep -qxF "-n"` bug consumed the read loop's redirected stdin, silently dropping all subsequent source lines without ever producing a detectable duplicate. Mutation-verified against `138b3f3`: the new assertion fails there as expected.
+- Restored prettier-clean formatting on `CHANGELOG.md`, `docs/METRICS.md`, `rules/shell-scripting.md` (unformatted since `b164b1c`/`51d1001`).
+
 ## [Unreleased] — Harden cts-sync append-merge edge cases, close norm_file stdout hazard, etalon-verify against penny (2026-07-17)
 
 ### Fixed
@@ -20,7 +29,7 @@ All notable changes to this Claude Code configuration template are documented he
 
 ### Fixed
 
-- **`.claude/scripts/cts-sync.sh`**: `copy_one()` blind-overwrote a consumer's pre-existing local file the first time its path was newly added to `cts-payload.txt` (e.g. `.prettierignore`) — `is_locally_modified()` diffs against the *old* `.cts-version` SHA's copy, which doesn't exist for a path new to the payload, so the check fell through to unconditional `cp -p`. Caught live in `penny` (clobbered its build-output ignores: `/dist`, `/coverage`, `.nx/**`). Fixed with `is_new_payload_collision()`, split by file kind: list-format files (`.prettierignore`, via a small `APPEND_MERGE_PATHS` allow-list) get missing CTS-required lines appended without touching the consumer's own entries; everything else is flagged (`NEW_COLLISIONS`) and left untouched, reported alongside the existing `locally modified`/`CONFLICT:` notices. Regression-tested in `tests/cts-sync.test.sh`.
+- **`.claude/scripts/cts-sync.sh`**: `copy_one()` blind-overwrote a consumer's pre-existing local file the first time its path was newly added to `cts-payload.txt` (e.g. `.prettierignore`) — `is_locally_modified()` diffs against the _old_ `.cts-version` SHA's copy, which doesn't exist for a path new to the payload, so the check fell through to unconditional `cp -p`. Caught live in `penny` (clobbered its build-output ignores: `/dist`, `/coverage`, `.nx/**`). Fixed with `is_new_payload_collision()`, split by file kind: list-format files (`.prettierignore`, via a small `APPEND_MERGE_PATHS` allow-list) get missing CTS-required lines appended without touching the consumer's own entries; everything else is flagged (`NEW_COLLISIONS`) and left untouched, reported alongside the existing `locally modified`/`CONFLICT:` notices. Regression-tested in `tests/cts-sync.test.sh`.
 - **`.claude/scripts/cts-sync.sh` / `.claude/skills/cts-update/SKILL.md`**: consumers with their own formatter config produced false `locally modified` positives and spurious merge conflicts on files that only differed by formatting. Added receiver-side renormalize (the `git -Xrenormalize` pattern applied to the engine's hand-rolled 3-way merge): when the consumer has a `node_modules/.bin/prettier`, `is_locally_modified`, `upstream_changed`, `merge_one`, and the plain-copy path all compare/write through the consumer's own prettier first, so only semantically-real diffs surface; opt out with `--no-normalize`. `cts-update/SKILL.md`'s free-text decision points (source-mismatch, ignored-but-changed, conflicts, locally-modified) converted to batched `AskUserQuestion` arrow-key menus instead of chat-style free text.
 
 ### Fix Now cycle (reviewer round 1 findings, both resolved and independently re-verified)

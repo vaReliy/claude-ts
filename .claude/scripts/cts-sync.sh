@@ -255,9 +255,10 @@ norm_file() {
     # the rest of its body. RETURN fires once when *this* function returns
     # and is set fresh on every call, but bash's RETURN trap is a single
     # global slot, not a call-stack-scoped one: left as-is it would remain
-    # armed after norm_file returns and misfire (with $out out of scope,
-    # crashing under `set -u`) the next time *any* function returns anywhere
-    # later in the script. `trap - RETURN` inside the trap body disarms it
+    # armed after norm_file returns. Without functrace it wouldn't misfire
+    # on other functions' returns, but it would re-arm on the next
+    # source-d script's return (with $out out of scope, crashing under
+    # `set -u`). `trap - RETURN` inside the trap body disarms it
     # immediately after it fires, so it only ever acts on this exact call.
     local out; out=$(mktemp)
     trap 'rm -f "$out"; trap - RETURN' RETURN
@@ -374,8 +375,10 @@ append_missing_lines() {
 # Cleanup uses an EXIT trap, not `trap ... RETURN` — RETURN is a single
 # global slot in bash, not scoped per call frame: unless the trap body
 # disarms itself (as norm_file's now does with `trap - RETURN`), it stays
-# armed and misfires on the next unrelated function return anywhere later in
-# the script, crashing under `set -u` once its own locals are out of scope.
+# armed after this function returns. It wouldn't misfire on an unrelated
+# function's return (functions don't inherit a leftover RETURN trap without
+# functrace), but it would re-arm on the next source-d script's return,
+# crashing under `set -u` once its own locals are out of scope.
 # This function's EXIT trap is always cleared with `trap - EXIT` before it
 # returns normally; it only ever fires for real if `git show`/`cp` fail and
 # `set -e` is unwinding the whole script anyway, which is exactly when the
