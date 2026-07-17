@@ -31,3 +31,4 @@ Each completed task is one row in the table below.
 | 2026-07-17 | claude-ts | cts-sync-append-merge-hardening-etalon-verify | T2   | 2      | 0/3/0/0           | 1       | no       | standard |
 | 2026-07-17 | claude-ts | cts-sync-is-ignored-trailing-newline          | T1   | 1      | 0/0/0/0           | 0       | no       | standard |
 | 2026-07-17 | claude-ts | cts-sync-round2-review-residuals              | T1   | 0      | 0/0/0/0           | 0       | no       | standard |
+| 2026-07-17 | claude-ts | phantom-baseline-repair-and-sync-guards       | T2   | 0      | 0/0/0/0           | 2       | no       | deep     |

@@ -59,7 +59,7 @@ Repo standard: all style files must use SCSS (not CSS). The `@nx/angular:app` an
 
 Also audit the generated stub spec file — it may import the class name without the "Component" suffix (e.g., `GreetingPage` instead of `GreetingPageComponent`). Correct the import before writing test logic.
 
-## 5. Wire process bootstrap (LIVR)
+## 4. Wire process bootstrap (LIVR)
 
 A new process entrypoint (`main.ts`, CLI, queue worker) must call `registerLivrRules()` from `shared-kernel` **exactly once** at startup, before any `BaseService` or `LIVR.Validator` runs. `BaseService` does not self-register rules.
 
@@ -67,14 +67,14 @@ A new process entrypoint (`main.ts`, CLI, queue worker) must call `registerLivrR
 
 See `rules/validation-authorization.md` → _LIVR bootstrap_ section for the call site.
 
-## 6. Audit companion projects
+## 5. Audit companion projects
 
 Generators scaffold sibling projects (e.g. `apps/<name>-e2e`). Audit them too:
 
 - Remove or narrow any blanket `/* eslint-disable */` the generator added — fix the underlying lint issue (e.g. `no-var → const/let`) instead of suppressing the whole file.
 - Delete a companion project you don't intend to use rather than leaving it lint-disabled.
 
-## 7. Generator-Hygiene Gotchas
+## 6. Generator-Hygiene Gotchas
 
 ### Skipping the generator: silently dropped out of `lint` forever
 
@@ -93,6 +93,6 @@ Two gotchas when wiring this by hand:
 
 Any per-project Nx option must validate against `project-schema.json` — if it doesn't, grep for it in `node_modules/nx/dist` before assuming it works rather than being silently ignored. A top-level `"includedScripts": []` in `project.json` silently does nothing if that key doesn't exist in `project-schema.json`; Nx core's actual reader (`readTargetsFromPackageJson`) only checks `packageJson.nx?.includedScripts`, falling back to all `Object.keys(scripts)` when absent. Fix: move the key into `package.json`'s own `"nx"` block. `nx.json` is workspace-global (target defaults, input globs, inference-plugin registration) and never carries per-project data like which scripts to expose.
 
-## 8. A green build does not close the task
+## 7. A green build does not close the task
 
 `nx build` exiting 0 proves compilation, not correctness. The quality gate (`tester` + `reviewer`, see `rules/workflow.md`) still runs. Advance to Phase 4 — do not declare the task done.

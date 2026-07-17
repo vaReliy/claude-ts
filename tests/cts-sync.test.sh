@@ -649,6 +649,132 @@ else
     "case 5: engine did not copy AGENTS.md (is_ignored correctly matched the pattern)"
 fi
 
+# ---------------------------------------------------------------------------
+# Case 6: baseline-integrity audit — a "phantom baseline": the consumer's
+# .cts-version records a commit whose content the working copy never actually
+# received (e.g. a mis-resolved conflict in an earlier sync dropped a whole
+# feature). A 3-way merge can never repair this (the gap looks like a
+# deliberate local deletion), so the engine must detect and report it.
+# Negative control: a consumer that only APPENDED its own lines (no baseline
+# content missing) must NOT be flagged.
+# ---------------------------------------------------------------------------
+src6="$WORK/src6"; consumer6="$WORK/consumer6"; consumer6b="$WORK/consumer6b"
+git_repo "$src6"
+echo "rules/feature.md" > "$src6/cts-payload.txt"
+mkdir -p "$src6/rules"
+{
+  echo "# Feature rules"
+  echo "intro line kept everywhere"
+  echo "ladder line one: tiered planning"
+  echo "ladder line two: foresight gate"
+  echo "ladder line three: quality gate rewrite"
+} > "$src6/rules/feature.md"
+git -C "$src6" add -A && git -C "$src6" commit -q -m "commit1: full feature shipped"
+OLD_SHA6=$(git -C "$src6" rev-parse HEAD)
+# upstream moves on but still ships the ladder lines
+echo "trailing upstream addition" >> "$src6/rules/feature.md"
+git -C "$src6" add -A && git -C "$src6" commit -q -m "commit2: unrelated addition"
+
+git_repo "$consumer6"
+echo "$OLD_SHA6" > "$consumer6/.cts-version"
+mkdir -p "$consumer6/rules"
+{
+  echo "# Feature rules"
+  echo "intro line kept everywhere"
+} > "$consumer6/rules/feature.md"
+git -C "$consumer6" add -A && git -C "$consumer6" commit -q -m "consumer with phantom baseline (never received ladder lines)"
+
+out6=$(cd "$consumer6" && bash "$SCRIPT" update --source "$src6" 2>&1)
+exit6=$?
+if [ "$exit6" -ne 0 ]; then
+  fail "case 6: engine exited non-zero ($exit6): $out6"
+else
+  assert_contains "$out6" "BASELINE INTEGRITY: rules/feature.md" \
+    "case 6: phantom baseline (3 baseline lines missing locally, still shipped upstream) is reported"
+  assert_contains "$out6" "3 line(s)" \
+    "case 6: report names the number of missing baseline lines"
+fi
+
+git_repo "$consumer6b"
+echo "$OLD_SHA6" > "$consumer6b/.cts-version"
+mkdir -p "$consumer6b/rules"
+{
+  cat "$src6/rules/feature.md"
+  echo "consumer-local extra line one"
+  echo "consumer-local extra line two"
+  echo "consumer-local extra line three"
+} > "$consumer6b/rules/feature.md"
+# strip upstream's post-baseline addition so this consumer is exactly baseline + own lines
+grep -v "trailing upstream addition" "$consumer6b/rules/feature.md" > "$consumer6b/rules/feature.md.tmp" \
+  && mv "$consumer6b/rules/feature.md.tmp" "$consumer6b/rules/feature.md"
+git -C "$consumer6b" add -A && git -C "$consumer6b" commit -q -m "consumer with append-only divergence"
+
+out6b=$(cd "$consumer6b" && bash "$SCRIPT" update --source "$src6" 2>&1)
+assert_not_contains "$out6b" "BASELINE INTEGRITY" \
+  "case 6 negative: append-only local divergence is not flagged as phantom baseline"
+
+# ---------------------------------------------------------------------------
+# Case 7: merge cross-check — when upstream's change to a region is
+# formatting-only, normalization makes base == upstream there, so a local
+# deletion of that region silently wins in the normalized merge instead of
+# conflicting (the raw merge would have flagged it). The engine must rerun
+# the merge on raw blobs and report the discrepancy. Uses a fake prettier
+# that strips trailing whitespace, so the base's trailing-space line equals
+# upstream's clean line after normalization.
+# ---------------------------------------------------------------------------
+src7="$WORK/src7"; consumer7="$WORK/consumer7"
+git_repo "$src7"
+echo "rules/doc.md" > "$src7/cts-payload.txt"
+mkdir -p "$src7/rules"
+{
+  echo "alpha stable line"
+  printf 'beta feature line   \n'
+  echo "gamma stable line"
+  echo "delta original wording"
+} > "$src7/rules/doc.md"
+git -C "$src7" add -A && git -C "$src7" commit -q -m "commit1: beta has trailing spaces"
+OLD_SHA7=$(git -C "$src7" rev-parse HEAD)
+{
+  echo "alpha stable line"
+  echo "beta feature line"
+  echo "gamma stable line"
+  echo "delta reworded upstream"
+} > "$src7/rules/doc.md"
+git -C "$src7" add -A && git -C "$src7" commit -q -m "commit2: beta formatting-only cleanup + real delta change"
+
+git_repo "$consumer7"
+echo "$OLD_SHA7" > "$consumer7/.cts-version"
+mkdir -p "$consumer7/rules"
+{
+  echo "alpha stable line"
+  echo "gamma stable line"
+  echo "delta original wording"
+} > "$consumer7/rules/doc.md"
+# fake prettier: strips trailing whitespace (a deterministic "normalizer")
+mkdir -p "$consumer7/node_modules/.bin"
+cat > "$consumer7/node_modules/.bin/prettier" <<'FAKE'
+#!/bin/sh
+sed 's/[[:space:]]*$//'
+FAKE
+chmod +x "$consumer7/node_modules/.bin/prettier"
+git -C "$consumer7" add -A && git -C "$consumer7" commit -q -m "consumer deleted beta line (phantom or deliberate)"
+
+out7=$(cd "$consumer7" && bash "$SCRIPT" update --source "$src7" 2>&1)
+exit7=$?
+if [ "$exit7" -ne 0 ]; then
+  fail "case 7: engine exited non-zero ($exit7): $out7"
+else
+  assert_contains "$out7" "MERGE CROSS-CHECK: rules/doc.md" \
+    "case 7: normalized-vs-raw merge discrepancy is reported"
+  assert_contains "$out7" "raw 3-way merge finds" \
+    "case 7: report explains the raw merge found more conflict regions"
+  merged7=$(cat "$consumer7/rules/doc.md")
+  assert_not_contains "$merged7" "beta feature line" \
+    "case 7: normalized merge did silently drop the beta region (the hazard the warning exists for)"
+  assert_contains "$merged7" "delta reworded upstream" \
+    "case 7: upstream's real content change still applied"
+fi
+
 echo
 if [ "$FAILURES" -eq 0 ]; then
   echo "All assertions passed."

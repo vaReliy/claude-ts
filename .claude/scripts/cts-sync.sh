@@ -305,11 +305,69 @@ upstream_changed() {
   [ "$differs" = 1 ]
 }
 
+# Baseline-integrity audit (update only, runs before any file is mutated):
+# detect content that the recorded baseline (.cts-version) says this project
+# received, which upstream still ships, but which is absent from the working
+# copy — the signature of a "phantom baseline": a stamp advanced past content
+# that never actually landed (e.g. a mis-resolved conflict in an earlier
+# sync). A 3-way merge can never repair this — the gap is indistinguishable
+# from a deliberate local deletion, so merges silently preserve it forever —
+# which makes loud detection here the only defense before the gap compounds.
+# Line-set comparison on normalized content: small counts are usually
+# deliberate rewording (a consumer replacing generic text with its own),
+# large counts are entire missing features; the count is reported so the
+# operator can judge, and deliberate divergence is silenced by .ctsignore,
+# not by lowering the threshold.
+BASELINE_AUDIT_MIN_LINES=3
+baseline_audit_one() {
+  local rel="$1"
+  git -C "$SRC_DIR" cat-file -e "$OLD_SHA:$rel" 2>/dev/null || return 0
+  [ -e "./$rel" ] || return 0
+  [ -e "$SRC_DIR/$rel" ] || return 0
+  local base_tmp base_n local_n up_n phantom=0
+  base_tmp=$(mktemp); base_n=$(mktemp); local_n=$(mktemp); up_n=$(mktemp)
+  git -C "$SRC_DIR" show "$OLD_SHA:$rel" > "$base_tmp" 2>/dev/null
+  norm_file "$rel" "$base_tmp" | grep -v '^[[:space:]]*$' | sort -u > "$base_n"
+  norm_file "$rel" "./$rel" | grep -v '^[[:space:]]*$' | sort -u > "$local_n"
+  if ! cmp -s "$base_n" "$local_n"; then
+    norm_file "$rel" "$SRC_DIR/$rel" | grep -v '^[[:space:]]*$' | sort -u > "$up_n"
+    phantom=$(comm -23 "$base_n" "$local_n" | comm -12 - "$up_n" | wc -l)
+  fi
+  rm -f "$base_tmp" "$base_n" "$local_n" "$up_n"
+  if [ "$phantom" -ge "$BASELINE_AUDIT_MIN_LINES" ]; then
+    BASELINE_WARNINGS+=("$rel|$phantom")
+  fi
+}
+
+baseline_audit() {
+  [ "$CMD" = update ] || return 0
+  [ -n "${OLD_SHA:-}" ] || return 0
+  git -C "$SRC_DIR" cat-file -e "$OLD_SHA" 2>/dev/null || return 0
+  local entry rel f
+  for entry in "${PAYLOAD[@]}"; do
+    entry="${entry%/}"
+    if [ -d "$SRC_DIR/$entry" ]; then
+      while IFS= read -r -d '' f; do
+        rel="${f#"$SRC_DIR"/}"
+        is_safe_rel "$rel" || continue
+        is_owner_only_skill "$rel" && continue
+        is_ignored "$rel" && continue
+        baseline_audit_one "$rel"
+      done < <(find "$SRC_DIR/$entry" -type f -print0)
+    else
+      is_ignored "$entry" && continue
+      baseline_audit_one "$entry"
+    fi
+  done
+}
+
 MERGED=()
 CONFLICTS=()
 COPIED=()
 NEW_COLLISIONS=()
 APPENDED=()
+CROSSCHECK_WARNINGS=()
+BASELINE_WARNINGS=()
 
 # Payload files that are additive lists (gitignore-style): a brand-new
 # payload path here gets its missing lines appended to the consumer's
@@ -399,6 +457,25 @@ merge_one() {
   norm_file "$rel" "./$rel" > "$MERGE_LOCAL_NORM"
   norm_file "$rel" "$SRC_DIR/$rel" > "$MERGE_UPSTREAM_NORM"
   git merge-file -p "$MERGE_LOCAL_NORM" "$MERGE_BASE" "$MERGE_UPSTREAM_NORM" > "$MERGE_RESULT" 2>/dev/null && clean=1
+  # Cross-check: rerun the same 3-way merge on RAW blobs. Normalizing all
+  # three inputs is usually benign (formatting-only drift stops producing
+  # false conflicts), but when upstream's change to a region is itself
+  # formatting-only, normalization makes base == upstream there and a local
+  # deletion of that region silently wins instead of conflicting — exactly
+  # how a consumer with a phantom baseline (stamped SHA ahead of actually
+  # received content) loses whole features with no warning. The raw merge
+  # over-reports (it also conflicts on pure formatting), so a raw count
+  # exceeding the normalized count doesn't prove data loss — it proves the
+  # normalized merge decided something silently, which the operator must see.
+  local norm_conflicts raw_conflicts raw_result
+  norm_conflicts=$(grep -c '^<<<<<<<' "$MERGE_RESULT" 2>/dev/null || true)
+  raw_result=$(mktemp)
+  git merge-file -p "./$rel" "$MERGE_BASE_RAW" "$SRC_DIR/$rel" > "$raw_result" 2>/dev/null || true
+  raw_conflicts=$(grep -c '^<<<<<<<' "$raw_result" 2>/dev/null || true)
+  rm -f "$raw_result"
+  if [ "${raw_conflicts:-0}" -gt "${norm_conflicts:-0}" ]; then
+    CROSSCHECK_WARNINGS+=("$rel|$norm_conflicts|$raw_conflicts")
+  fi
   if [ "$DRY_RUN" = 1 ]; then
     if [ "$clean" = 1 ]; then echo "merge (dry-run): $rel"; else echo "conflict (dry-run): $rel"; fi
   else
@@ -511,6 +588,7 @@ EOF
 else
   OLD_SHA=$(cat "$VERSION_FILE" 2>/dev/null || echo "")
   NEEDS_ATTENTION=0
+  baseline_audit
   for entry in "${PAYLOAD[@]}"; do sync_path "$entry"; done
   for rel in "${LOCALLY_MODIFIED[@]}"; do
     echo "locally modified, not overwritten — diff manually: $rel"
@@ -519,6 +597,18 @@ else
   done
   for rel in "${CONFLICTS[@]}"; do
     echo "unresolved conflict markers left in: $rel — resolve by hand, then stage it"
+  done
+  for w in "${CROSSCHECK_WARNINGS[@]}"; do
+    IFS='|' read -r rel nc rc <<< "$w"
+    echo "MERGE CROSS-CHECK: $rel — raw 3-way merge finds $rc conflict region(s) but the normalized merge surfaced only $nc; the difference was auto-resolved silently (usually toward your local side). Verify before trusting the merged file:"
+    echo "  git -C $SRC_DIR show $OLD_SHA:$rel > /tmp/cts-base && git merge-file -p ./$rel /tmp/cts-base $SRC_DIR/$rel | grep -n '^<<<<<<<'"
+    NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
+  done
+  for w in "${BASELINE_WARNINGS[@]}"; do
+    IFS='|' read -r rel n <<< "$w"
+    echo "BASELINE INTEGRITY: $rel — $n line(s) recorded at your baseline and still shipped upstream are missing locally. If this is not a deliberate customization, your .cts-version is ahead of the content you actually received (phantom baseline) — restore the missing content from upstream, or add the file to .ctsignore if the divergence is intentional. Review:"
+    echo "  git -C $SRC_DIR show $OLD_SHA:$rel | diff - ./$rel"
+    NEEDS_ATTENTION=$((NEEDS_ATTENTION + 1))
   done
   for rel in "${APPENDED[@]}"; do
     echo "appended CTS-required lines (kept your own): $rel"
