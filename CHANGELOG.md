@@ -2,6 +2,12 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Mandate explicit model tier on built-in agent dispatches (2026-07-23)
+
+### Added
+
+- **`rules/workflow.md`** (Tool API, after the per-call model override): built-in agents (`Explore`, `Plan`, `general-purpose`) have no frontmatter `model:` pin and silently inherit the session model — so a deep-tier (opus/fable) session runs even mechanical file-location sweeps at deep-tier cost. New rule: every built-in-agent dispatch must pass an explicit `model` (`haiku` for mechanical sweeps, `sonnet` otherwise; exploration reads and concludes, it doesn't design). CTS's own agents are unaffected — all carry frontmatter pins per the Model Tiers table. Origin: 2026-07-23 penny session cost review with the owner.
+
 ## [Unreleased] — Fix MERGE CROSS-CHECK hint to verify against pre-sync local content (2026-07-18)
 
 ### Fixed

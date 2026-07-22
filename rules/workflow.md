@@ -479,6 +479,8 @@ Agent({
 
 Use this when a specific dispatch needs to force `deep` tier regardless of the dispatching session's own model or the target agent's default frontmatter tier — e.g. a judgment-layer review step that must always run on opus. Prefer pinning `model:` in the target agent/skill's own frontmatter when the tier requirement is permanent; reserve the per-call override for cases where the same agent type is dispatched at different tiers depending on context.
 
+**Built-in agents inherit the session model — always pass `model` explicitly.** `Explore`, `Plan`, and `general-purpose` have no frontmatter pin, so a deep-tier (opus/fable) session silently runs them at that tier too. Every dispatch of a built-in agent must pass an explicit `model`: `haiku` for mechanical file-location sweeps, `sonnet` otherwise — exploration reads and concludes, it doesn't design, so `standard` tier suffices even for wide sweeps.
+
 ### SendMessage (challenge / respond)
 
 ```
