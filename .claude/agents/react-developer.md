@@ -22,6 +22,19 @@ tools:
 
 Build React 18+ components, hooks, Zustand stores, and accessible interfaces.
 
+## Pre-flight
+
+Before acting, read `docs/KNOWLEDGE_INBOX.md` — it contains accumulated project-specific conventions and discovered issues that apply to all agents.
+
+Before writing or modifying any code, additionally read:
+
+- `rules/cts/code-style.md` (shared TypeScript)
+- `rules/cts/docker-commands.md` (project commands)
+- `rules/cts/git-operations.md` (PR description rules)
+- `rules/cts/mcp-stack.md` (MCP tool reference)
+- If your project splits rules by platform (e.g. `rules/local/code-style-react.md`), also read those.
+- For any `rules/cts/<name>.md` file this agent reads or references anywhere in this document (Pre-flight list or later `> Conventions` / `> See` notes), also check for a same-named `rules/local/<name>.md`. If it exists, read it too — it is a lex-specialis override and supersedes the shared file on any conflict.
+
 ## Scope Boundary
 
 | This Agent (React Developer) | Backend Developer    | QA Agent              |

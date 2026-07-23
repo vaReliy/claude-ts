@@ -41,3 +41,4 @@ Each completed task is one row in the table below.
 | 2026-07-23 | claude-ts | fix-cts-sync-stale-engine-update-corruption   | T2   | 2      | 0/1/0/0           | 0       | no       | standard |
 | 2026-07-23 | claude-ts | harden-cts-sync-no-baseline-first-migration   | T2   | 0      | 0/2/0/0           | 0       | no       | standard |
 | 2026-07-24 | claude-ts | generic-rules-local-discovery                 | T2   | 1      | 0/1/0/0           | 1       | no       | standard |
+| 2026-07-24 | claude-ts | rules-local-discovery-docs-writer-frontend-gap | T1   | 0      | 0/0/0/0           | 0       | no       | standard |

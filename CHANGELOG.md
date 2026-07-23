@@ -7,6 +7,7 @@ All notable changes to this Claude Code configuration template are documented he
 ### Changed
 
 - **12 agent Pre-flight sections** (`angular-developer.md`, `backend-developer.md`, `debugger.md`, `devops.md`, `dba.md`, `queue-specialist.md`, `refactoring-expert.md`, `integration-architect.md`, `reviewer.md`, `security-scanner.md`, `qa.md`, `tester.md`) — each now includes a generic override-discovery bullet directing agents to check for same-named `rules/local/<name>.md` files for any `rules/cts/<name>.md` they read or reference anywhere in their agent file (Pre-flight list or later `> Conventions`/`> See` notes, e.g. `docker-commands.md`, `mcp-stack.md`). Previously, only hand-picked platform-split files (e.g., `rules/local/architecture-backend.md`) were pointed out via prose, and only for the Pre-flight read-list; now the discovery is systematic and document-wide.
+- **Follow-on: 4 more agents closed the same gap** — `docs-writer.md` and `ddd-architect.md` gained the override-discovery bullet in their existing `## Pre-flight` sections. `vue-developer.md` and `react-developer.md` had no `## Pre-flight` section at all (a pre-existing, unrelated gap vs. every sibling agent); both now have one, modeled on `angular-developer.md`, with the `docs/KNOWLEDGE_INBOX.md` read step and the override-discovery bullet. All 16 agent files with `rules/cts/*` references now have consistent discovery coverage.
 
 ### Rationale
 
