@@ -61,6 +61,12 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 
 - **`rules/workflow.md`** (Tool API, after the per-call model override): built-in agents (`Explore`, `Plan`, `general-purpose`) have no frontmatter `model:` pin and silently inherit the session model — so a deep-tier (opus/fable) session runs even mechanical file-location sweeps at deep-tier cost. New rule: every built-in-agent dispatch must pass an explicit `model` (`haiku` for mechanical sweeps, `sonnet` otherwise; exploration reads and concludes, it doesn't design). CTS's own agents are unaffected — all carry frontmatter pins per the Model Tiers table. Origin: 2026-07-23 penny session cost review with the owner.
 
+## [Unreleased] — Fix AGENTS.md on-demand rules index gap for docs-style.md (2026-07-23)
+
+### Fixed
+
+- **`AGENTS.md`**: `rules/cts/docs-style.md` (added in commit `6ce4728`, pre-dating the two-layer distribution refactor) was never referenced in the "On-Demand Rules Index" section. Added the missing entry, following the same format as the other `rules/cts/**` entries. Found during code review of the two-layer distribution refactor (G0), emitted as standalone task `2026-07-23-06-fix-agents-md-docs-style-index-gap`.
+
 ## [Unreleased] — Fix MERGE CROSS-CHECK hint to verify against pre-sync local content (2026-07-18)
 
 ### Fixed

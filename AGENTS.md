@@ -56,6 +56,7 @@ Read when relevant (never preloaded):
 - `rules/cts/task-authoring.md` — emitting backlog task files from plan/grill/grooming sessions
 - `rules/cts/nx-generators.md` — after running ANY `nx g …` generator (apps, libs, configs) — Nx workspaces only
 - `rules/cts/dependencies.md` — adding/updating/removing npm deps; auditing generator-injected ranges
+- `rules/cts/docs-style.md` — writing/editing any `.md` file (no manual prose wrapping; Prettier handles it)
 - `rules/local/**` — consumer-owned rule overrides and project-specific split files (e.g. `rules/local/architecture-backend.md`); never synced by `cts-sync.sh`. Local wins on conflict with any `rules/cts/**` file it cites.
 - `README.md` — setup, install profile, common commands
 - `docs/KNOWLEDGE_INBOX.md` — append-only inbox for durable-but-unplaced learnings; any AI tool working in the repo may append entries in the 3-line format from `rules/cts/workflow.md`'s Knowledge Inbox section, which also defines the distillation policy
