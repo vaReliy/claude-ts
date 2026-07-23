@@ -651,6 +651,159 @@ else
     "case 15: init --force payload copy ran under the NEW engine (proves re-exec happened before the payload loop)"
 fi
 
+# ---------------------------------------------------------------------------
+# Case 16: genuinely pre-refactor (pre-two-layer) engine on disk — not just
+# "one version behind" (cases 5/12/13/15 all still have the self-update-first
+# block, just different content), but a real pre-two-layer commit
+# (a2204c8, the last commit before f449ee9's refactor) that has NO
+# self-update-first mechanism at all and still contains the old 3-way-merge
+# logic. Invoking `update` against it directly would run that old logic
+# against the new payload and can leave `<<<<<<<` conflict markers in payload
+# files instead of ever reaching self-update (this is the bug this task
+# fixes: 2026-07-23-09). Since an already-running OLD script cannot execute
+# code it doesn't contain, the fix cannot live inside cts-sync.sh itself — it
+# is a preflight step documented in the cts-update/cts-setup skills (grep for
+# the CTS_SYNC_REEXEC marker; if absent, replace the script from the
+# resolved source BEFORE ever invoking it). This case proves that documented
+# recipe: apply it, then run `update`, and assert a clean sync with zero
+# conflict markers anywhere in the payload.
+# ---------------------------------------------------------------------------
+src16="$WORK/src16"; consumer16="$WORK/consumer16"
+git_repo "$src16"
+mkdir -p "$src16/rules/cts"
+{ echo "AGENTS.md"; echo "rules/cts/"; echo ".claude/scripts/"; } > "$src16/cts-payload.txt"
+echo "agents v1" > "$src16/AGENTS.md"
+echo "workflow v1" > "$src16/rules/cts/workflow.md"
+seed_engine "$src16"
+git -C "$src16" add -A && git -C "$src16" commit -q -m "v1, current two-layer engine"
+
+git_repo "$consumer16"
+mkdir -p "$consumer16/.claude/scripts" "$consumer16/rules/cts"
+git -C "$REPO_ROOT" show a2204c8:.claude/scripts/cts-sync.sh > "$consumer16/.claude/scripts/cts-sync.sh"
+chmod +x "$consumer16/.claude/scripts/cts-sync.sh"
+echo "agents v0, pre-refactor consumer state" > "$consumer16/AGENTS.md"
+echo "workflow v0, pre-refactor consumer state" > "$consumer16/rules/cts/workflow.md"
+git -C "$consumer16" add -A && git -C "$consumer16" commit -q -m "existing project, genuinely pre-refactor engine"
+
+if grep -q 'CTS_SYNC_REEXEC' "$consumer16/.claude/scripts/cts-sync.sh"; then
+  fail "case 16: fixture sanity check — pre-refactor engine unexpectedly has the self-update-first marker"
+else
+  pass "case 16: fixture sanity check — pre-refactor engine genuinely lacks the self-update-first marker"
+fi
+
+# Apply the documented preflight recipe (SKILL.md's stale-engine guard) before
+# ever invoking the stale script.
+if grep -q CTS_SYNC_REEXEC "$consumer16/.claude/scripts/cts-sync.sh"; then
+  stale16=0
+else
+  stale16=1
+fi
+if [ "$stale16" -eq 1 ]; then
+  cp "$src16/.claude/scripts/cts-sync.sh" "$consumer16/.claude/scripts/cts-sync.sh"
+  chmod +x "$consumer16/.claude/scripts/cts-sync.sh"
+fi
+
+out16=$(cd "$consumer16" && bash .claude/scripts/cts-sync.sh update --source "$src16" 2>&1)
+exit16=$?
+if [ "$exit16" -ne 0 ]; then
+  fail "case 16: update exited non-zero ($exit16) after applying the stale-engine preflight: $out16"
+else
+  assert_not_contains "$out16" "CONFLICT:" \
+    "case 16: no old-model CONFLICT output after the preflight replaces the stale engine first"
+  assert_file_equals "$consumer16/AGENTS.md" "agents v1" \
+    "case 16: AGENTS.md cleanly overwritten with upstream content, no merge markers"
+  assert_file_equals "$consumer16/rules/cts/workflow.md" "workflow v1" \
+    "case 16: workflow.md cleanly overwritten with upstream content, no merge markers"
+  if grep -rl '<<<<<<<' "$consumer16" >/dev/null 2>&1; then
+    fail "case 16: no conflict markers left anywhere in the consumer tree"
+  else
+    pass "case 16: no conflict markers left anywhere in the consumer tree"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# Case 17: case 16's fixture is a *never-before-synced* consumer (no
+# .cts-version/.cts-source on disk) — is_locally_modified()/merge_one() in
+# the OLD pre-refactor engine both require an OLD_SHA baseline
+# (`[ -n "${OLD_SHA:-}" ] || return 1`) before they touch the 3-way-merge
+# path at all; with no baseline, the old engine's `update` degrades to a
+# plain copy_one() regardless of whether the stale-engine preflight ran —
+# so case 16 alone cannot prove the preflight recipe is *necessary*: it
+# would pass identically even if the preflight step were deleted. The real
+# penny incident hit a consumer with a genuine pre-existing baseline (an
+# established .cts-version from an earlier sync) and a locally hand-edited
+# payload file that upstream had also since changed on the same line — the
+# exact precondition merge_one() needs to run and emit `<<<<<<<` markers.
+# This case reproduces that precondition directly (hand-writes .cts-version
+# to a real ancestor commit, hand-edits AGENTS.md so it diverges from that
+# baseline, then advances upstream's AGENTS.md on the same line) and proves
+# both halves: (17a) without the preflight, the stale engine really does
+# leave conflict markers — the negative control that makes 17b meaningful;
+# (17b) with the documented preflight recipe applied first, the same
+# precondition produces a clean overwrite instead.
+# ---------------------------------------------------------------------------
+mk_case17_src() {
+  local dir="$1" line1="$2" extra="$3"
+  git_repo "$dir"
+  { echo "AGENTS.md"; echo ".claude/scripts/"; } > "$dir/cts-payload.txt"
+  printf 'line-one %s\nline-two BASE\n%s' "$line1" "$extra" > "$dir/AGENTS.md"
+  seed_engine "$dir"
+  git -C "$dir" add -A && git -C "$dir" commit -q -m "$line1" >/dev/null
+}
+
+mk_case17_consumer() {
+  local dir="$1" base_sha="$2"
+  git_repo "$dir"
+  mkdir -p "$dir/.claude/scripts"
+  git -C "$REPO_ROOT" show a2204c8:.claude/scripts/cts-sync.sh > "$dir/.claude/scripts/cts-sync.sh"
+  chmod +x "$dir/.claude/scripts/cts-sync.sh"
+  echo "$base_sha" > "$dir/.cts-version"
+  printf 'line-one LOCAL-EDIT\nline-two BASE\n' > "$dir/AGENTS.md"
+  git -C "$dir" add -A && git -C "$dir" commit -q -m "long-ago baseline + local hand-edit, stale engine never replaced" >/dev/null
+}
+
+# 17a — negative control: same precondition, preflight skipped.
+src17a="$WORK/src17a"; consumer17a="$WORK/consumer17a"
+mk_case17_src "$src17a" "BASE" ""
+base17a=$(git -C "$src17a" rev-parse HEAD)
+mk_case17_consumer "$consumer17a" "$base17a"
+printf 'line-one UPSTREAM-EDIT\nline-two BASE\nline-three NEW\n' > "$src17a/AGENTS.md"
+git -C "$src17a" add -A && git -C "$src17a" commit -q -m v1 >/dev/null
+
+out17a=$(cd "$consumer17a" && bash .claude/scripts/cts-sync.sh update --source "$src17a" 2>&1)
+if grep -rq '<<<<<<<' "$consumer17a" 2>/dev/null; then
+  pass "case 17a: negative control — genuinely stale engine + real baseline + colliding edit DOES leave conflict markers without the preflight (proves 17b's fix is load-bearing, not vacuous)"
+else
+  fail "case 17a: negative control — expected conflict markers WITHOUT the preflight (fixture no longer reproduces the bug; re-check precondition): $out17a"
+fi
+
+# 17b — same precondition, preflight applied first.
+src17b="$WORK/src17b"; consumer17b="$WORK/consumer17b"
+mk_case17_src "$src17b" "BASE" ""
+base17b=$(git -C "$src17b" rev-parse HEAD)
+mk_case17_consumer "$consumer17b" "$base17b"
+printf 'line-one UPSTREAM-EDIT\nline-two BASE\nline-three NEW\n' > "$src17b/AGENTS.md"
+git -C "$src17b" add -A && git -C "$src17b" commit -q -m v1 >/dev/null
+
+if ! grep -q CTS_SYNC_REEXEC "$consumer17b/.claude/scripts/cts-sync.sh"; then
+  cp "$src17b/.claude/scripts/cts-sync.sh" "$consumer17b/.claude/scripts/cts-sync.sh"
+  chmod +x "$consumer17b/.claude/scripts/cts-sync.sh"
+fi
+
+out17b=$(cd "$consumer17b" && bash .claude/scripts/cts-sync.sh update --source "$src17b" 2>&1)
+exit17b=$?
+if [ "$exit17b" -ne 0 ]; then
+  fail "case 17b: update exited non-zero ($exit17b) after applying the stale-engine preflight against a real-baseline fixture: $out17b"
+else
+  assert_not_contains "$out17b" "CONFLICT:" \
+    "case 17b: no old-model CONFLICT output when the preflight replaces a genuinely stale engine ahead of a real baseline + colliding edit"
+  if grep -rl '<<<<<<<' "$consumer17b" >/dev/null 2>&1; then
+    fail "case 17b: no conflict markers left anywhere in the consumer tree (real-baseline fixture)"
+  else
+    pass "case 17b: no conflict markers left anywhere in the consumer tree (real-baseline fixture)"
+  fi
+fi
+
 echo
 if [ "$FAILURES" -eq 0 ]; then
   echo "All assertions passed."

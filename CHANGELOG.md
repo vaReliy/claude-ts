@@ -31,6 +31,10 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 
 - **3-way merge, baseline-integrity audit, and merge cross-check machinery** in `cts-sync.sh` — the entire class of phantom-baseline and normalization-hidden-conflict bugs is eliminated by removing merging itself, not by patching it further.
 
+### Fixed
+
+- **Stale pre-refactor engine can corrupt payload on first sync** — a consumer's on-disk `.claude/scripts/cts-sync.sh` that predates the self-update-first mechanism entirely has no way to reach that mechanism (an already-running old script cannot execute detection code it doesn't contain), so invoking `update` directly ran the old 3-way-merge logic against the new payload and left `<<<<<<<` conflict markers in files like `AGENTS.md`/`CLAUDE.md`/`docs/METRICS.md`. The guard can't live inside `cts-sync.sh` for the same reason the bug exists, so it moved one layer up: `cts-update` and `cts-setup` skills now check the on-disk script for the `CTS_SYNC_REEXEC` marker as their first preflight step, and replace a stale script from the resolved source before ever invoking the engine. `tests/cts-sync.test.sh` case 16 proves this using the actual pre-refactor commit (`a2204c8`) as a fixture.
+
 ## [Unreleased] — Drop superpowers plugin dependency (2026-07-23)
 
 ### Removed

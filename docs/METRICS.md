@@ -38,3 +38,4 @@ Each completed task is one row in the table below.
 | 2026-07-23 | claude-ts | two-layer-cts-distribution-refactor           | T3   | 3      | 1/4/2/0           | 2       | yes      | standard |
 | 2026-07-23 | claude-ts | fix-cts-setup-existing-project-stale-engine-gap | T1 | 0      | 0/0/0/0           | 0       | no       | standard |
 | 2026-07-23 | claude-ts | fix-agents-md-docs-style-index-gap            | T0   | 0      | 0/0/0/0           | 0       | no       | standard |
+| 2026-07-23 | claude-ts | fix-cts-sync-stale-engine-update-corruption   | T2   | 2      | 0/1/0/0           | 0       | no       | standard |
