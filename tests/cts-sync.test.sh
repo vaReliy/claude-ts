@@ -603,6 +603,54 @@ else
   echo "skip: jq not available — case 14 (settings type-mismatch guard) skipped"
 fi
 
+# ---------------------------------------------------------------------------
+# Case 15: self-update-first also fires on `init --force`, not just `update`
+# — regression for the cts-setup "existing project" gap. A consumer that
+# never ran the engine before (no .cts-version, no manifest — so this is
+# NOT the ownership-violation case) but already has a stale copy of
+# .claude/scripts/cts-sync.sh on disk (e.g. from a pre-two-layer bootstrap)
+# follows the existing-project path and runs `init --force` directly,
+# never `update`. Before the fix, the CMD=update guard meant `init --force`
+# ran the payload copy under the OLD engine in-process; the self-update
+# block never fired. Assert the engine replaces itself and re-execs BEFORE
+# init's payload copy runs, so the copy that actually installs AGENTS.md
+# etc. is the new engine, not the stale one.
+# ---------------------------------------------------------------------------
+src15="$WORK/src15"; consumer15="$WORK/consumer15"
+git_repo "$src15"
+{ echo "AGENTS.md"; echo ".claude/scripts/"; } > "$src15/cts-payload.txt"
+echo "agents v2 (from new engine)" > "$src15/AGENTS.md"
+seed_engine "$src15"
+printf '\n# ENGINE-MARKER-V2-CASE15\n' >> "$src15/.claude/scripts/cts-sync.sh"
+git -C "$src15" add -A && git -C "$src15" commit -q -m "v2, new engine"
+
+git_repo "$consumer15"
+seed_consumer_engine "$consumer15"
+# Simulate the stale, never-before-synced state: an old engine binary is
+# present (hand-placed / long-ago bootstrap), but no .cts-version or
+# manifest exist yet, so this must NOT be treated as an ownership violation.
+printf '\n# OLD-STALE-ENGINE-NO-MANIFEST\n' >> "$consumer15/.claude/scripts/cts-sync.sh"
+echo "existing project's own agents notes" > "$consumer15/AGENTS.md"
+git -C "$consumer15" add -A && git -C "$consumer15" commit -q -m "existing project, stale engine, never synced"
+
+out15=$(cd "$consumer15" && bash .claude/scripts/cts-sync.sh init --source "$src15" --force 2>&1)
+exit15=$?
+if [ "$exit15" -ne 0 ]; then
+  fail "case 15: init --force exited non-zero ($exit15): $out15"
+else
+  assert_not_contains "$out15" "OWNERSHIP WARNING" \
+    "case 15: never-before-synced stale engine does not fire ownership warning"
+  assert_contains "$out15" "cts-sync engine updated; re-running with the new version" \
+    "case 15: self-update-first fires on init --force, not just update"
+  if grep -qxF "# ENGINE-MARKER-V2-CASE15" "$consumer15/.claude/scripts/cts-sync.sh"; then
+    pass "case 15: consumer's stale engine replaced with the new version"
+  else
+    fail "case 15: consumer's stale engine replaced with the new version"
+  fi
+  assert_file_equals "$consumer15/AGENTS.md" "agents v2 (from new engine)" \
+    "case 15: init --force payload copy ran under the NEW engine (proves re-exec happened before the payload loop)"
+fi
+
 echo
 if [ "$FAILURES" -eq 0 ]; then
   echo "All assertions passed."

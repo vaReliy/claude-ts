@@ -235,12 +235,23 @@ COPIED=()
 CHANGED_PATHS=()
 IGNORED_CHANGED_UPSTREAM=()
 
-# Self-update-first (update only): if the source's copy of this very engine
-# script differs from the one running, replace it and re-exec immediately —
-# before touching anything else — so the rest of this run (and every run
-# after it) executes the current engine, not a stale one. No self-update
-# paradox: overwrite semantics make this trivial, unlike the old 3-way-merge
-# engine which needed a staging trick to avoid corrupting its own mid-read.
+# Self-update-first (init AND update): if the source's copy of this very
+# engine script differs from the one running, replace it and re-exec
+# immediately — before touching anything else — so the rest of this run (and
+# every run after it) executes the current engine, not a stale one. No
+# self-update paradox: overwrite semantics make this trivial, unlike the old
+# 3-way-merge engine which needed a staging trick to avoid corrupting its own
+# mid-read.
+#
+# Covers init too (not just update): a consumer on the pre-two-layer engine
+# who already has .claude/scripts/cts-sync.sh on disk and follows the
+# "existing project" cts-setup path runs `init --force` directly — never
+# `update` — so gating this on CMD=update left that path running `init
+# --force` under the stale merge-based engine. Guarding on "does a local
+# self-script already exist" instead of on CMD covers both entry points; a
+# brand-new project has no local self-script yet (cts-setup curls one fresh
+# immediately before calling init, so it already matches upstream and this
+# block is a no-op).
 #
 # The self-script gets the same ownership-violation detection as every other
 # CTS-owned payload file (copy_one() skips it — see the `[ "$rel" = "$SELF_REL"
@@ -251,7 +262,7 @@ IGNORED_CHANGED_UPSTREAM=()
 # from a normal upstream release — warn loudly, exactly like OWNERSHIP
 # WARNING elsewhere, before overwriting anyway (updates never skip wholesale
 # applies here too).
-if [ "$CMD" = update ] && [ -z "${CTS_SYNC_REEXEC:-}" ] && [ -f "$SRC_DIR/$SELF_REL" ] && [ -f "./$SELF_REL" ]; then
+if [ -z "${CTS_SYNC_REEXEC:-}" ] && [ -f "$SRC_DIR/$SELF_REL" ] && [ -f "./$SELF_REL" ]; then
   if ! cmp -s "$SRC_DIR/$SELF_REL" "./$SELF_REL"; then
     self_old_hash=$(manifest_old_hash "$SELF_REL")
     if [ -n "$self_old_hash" ]; then
