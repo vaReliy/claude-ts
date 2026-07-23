@@ -31,8 +31,8 @@ Before acting, read `docs/KNOWLEDGE_INBOX.md` — it contains accumulated projec
 
 | Skill                                         | When to Activate                                      |
 | --------------------------------------------- | ----------------------------------------------------- |
-| `brainstorming` / `superpowers:brainstorming` | **Always** — explore approaches before committing     |
-| `plan-writing` / `superpowers:writing-plans`  | **Always** — structured implementation roadmaps       |
+| `brainstorming`                               | **Always** — explore approaches before committing     |
+| `rules/task-authoring.md`                     | **Always** — structured implementation roadmaps       |
 | `typescript-architecture`                     | Technical feasibility and Node.js/TypeScript patterns |
 | `architecture-designer`                       | System architecture and design decisions              |
 | `ddd-strategic-design`                        | Domain boundaries and bounded contexts                |

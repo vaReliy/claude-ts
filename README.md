@@ -84,7 +84,7 @@ Reusable knowledge modules organized by category:
 
 **Frontend:** `vue-expert`, `react-expert`, `angular-expert`
 
-**Planning:** `plan-writing`, `brainstorming`, `grill-me` — one-question-at-a-time interrogation that pressure-tests a plan already on the table, distinct from `brainstorming`'s open-ended idea generation and `plan-writing`'s task breakdown, `handoff` — compacts a conversation into a handoff document so a fresh session can pick up mid-task (also the format cited by the orchestrator's quality-gate continuation-task hard stop)
+**Planning:** `brainstorming`, `grill-me` — one-question-at-a-time interrogation that pressure-tests a plan already on the table, distinct from `brainstorming`'s open-ended idea generation, `handoff` — compacts a conversation into a handoff document so a fresh session can pick up mid-task (also the format cited by the orchestrator's quality-gate continuation-task hard stop). Task breakdown is covered by `rules/task-authoring.md`
 
 **CTS Tooling:** `cts-setup`, `cts-update` — install, configure, and update the CTS template itself (see [Quick Start](#quick-start) and [Updating](#updating)); `cts-import-skill` — maintainer-only flow for curating new skills into CTS itself (see [Add a New Skill](#add-a-new-skill)); `cts-contribute` — consumer-side flow for contributing improvements (skills, rules, orchestrator changes) back to a local CTS checkout
 
@@ -145,18 +145,7 @@ This template ships with all 3 frontend frameworks and their skills so it works 
 - **Single-framework project:** keep only the matching agent (e.g. `vue-developer.md`) and its skill (e.g. `vue-expert/`); remove the other two frontend agents/skills and narrow the `## Frontend` routing row to the one you kept.
 - Re-run `grep -L 'Report Format' .claude/agents/*.md` after pruning — it should return nothing for the agents you keep.
 
-### Step 2: Install Superpowers Plugin
-
-[Superpowers](https://github.com/obra/superpowers) provides structured development workflows.
-
-Run inside Claude Code:
-
-```
-/plugin marketplace add obra/superpowers-marketplace
-/plugin install superpowers@superpowers-marketplace
-```
-
-### Step 3 (Optional): Install Extra Community Skills
+### Step 2 (Optional): Install Extra Community Skills
 
 The bundled skills already cover TypeScript, testing, frontend, DevOps, architecture, and debugging. To pull **additional** skills from external GitHub repos, use the [`skills` CLI](https://www.npmjs.com/package/skills):
 

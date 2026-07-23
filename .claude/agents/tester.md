@@ -52,7 +52,7 @@ If your project splits rules by platform, also read the applicable platform-spec
 | `vitest-testing`                      | **Always** — mandatory for all testing tasks                   |
 | `test-master`                         | When planning test strategy or reviewing coverage              |
 | `debugging-wizard`                    | When tests fail or debugging complex issues                    |
-| `superpowers:test-driven-development` | TDD workflow — red/green/refactor                              |
+| `tdd`                                 | TDD workflow — red/green/refactor                              |
 | `typescript-pro`                      | Strict TypeScript 5+ in test code                              |
 | `vue-expert`                          | When writing Vue component tests (Vue Test Utils)              |
 | `react-expert`                        | When writing React component tests (React Testing Library)     |

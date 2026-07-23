@@ -66,6 +66,28 @@ New skill entries are added by `/cts-import-skill` (see README's [Add a New Skil
 
 ---
 
+### superpowers
+
+- Source: https://github.com/obra/superpowers
+- Author: Jesse Vincent (@obra)
+- License: [MIT](https://github.com/obra/superpowers/blob/main/LICENSE)
+
+### Adapted Content
+
+- **`test-master/references/testing-anti-patterns.md`** — adapted from obra/superpowers; test quality issues, common mock anti-patterns.
+- **`debugging-wizard/references/systematic-debugging.md`** — adapted from obra/superpowers; systematic debugging methodology and worksheets.
+
+### Changes
+
+- Both files extracted and re-licensed under CTS's standard attribution (THIRD_PARTY.md) instead of inline obra plugin references.
+- Reformatted code examples and worksheets to align with Node.js/TypeScript stack conventions.
+
+### Historical Note
+
+The skills `plan-writing` (task breakdown, dependencies, verification) and the `tdd` skill's "Iron Laws" reference file have since been replaced. `plan-writing` is now covered by `rules/task-authoring.md` (CTS-native task file conventions); `tdd` skill's red-green-refactor discipline is the definitive version per the CLAUDE.md quality-gate pipeline.
+
+---
+
 ## Notes
 
 - All third-party content used according to respective licenses

@@ -83,7 +83,6 @@ Guided by the dependency maps in ARCHITECTURE.md and DECISIONS.md. The goal: det
 | Skill                                | When to Activate                                        |
 | ------------------------------------ | ------------------------------------------------------- |
 | `code-reviewer`                      | **Always** — structured review process                  |
-| `superpowers:requesting-code-review` | **Always** — review checklist                           |
 | `architect-review`                   | Architecture and design review                          |
 | `security-reviewer`                  | Security-focused review                                 |
 | `typescript-architecture`            | Clean Architecture convention compliance (backend)      |

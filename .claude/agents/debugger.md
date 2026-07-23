@@ -45,7 +45,6 @@ Before writing or modifying any code, additionally read:
 | `debugging-wizard`                 | **Always** — systematic debugging methodology |
 | `vitest-testing`                   | When writing reproducing tests                |
 | `typescript-pro`                   | TypeScript error analysis, type issues        |
-| `superpowers:systematic-debugging` | For complex multi-step debugging              |
 
 > See `rules/mcp-stack.md` for MCP tool reference.
 

@@ -27,6 +27,7 @@ Each completed task is one row in the table below.
 | Date       | Repo      | Task                                          | Tier | Cycles | Fix Now (t/r/s/q) | Emitted | Hardstop | Model    |
 | ---------- | --------- | --------------------------------------------- | ---- | ------ | ----------------- | ------- | -------- | -------- |
 | 2026-07-16 | claude-ts | distill-inbox-guess-resolution                | T1   | 2      | 0/5/0/0           | 1       | no       | standard |
+| 2026-07-23 | claude-ts | drop-superpowers-plugin-dependency            | T1   | 0      | 0/0/0/0           | 0       | no       | standard |
 | 2026-07-16 | claude-ts | distill-inbox-step3-host-repo-ledger          | T1   | 0      | 0/0/0/0           | 0       | no       | standard |
 | 2026-07-17 | claude-ts | cts-sync-append-merge-hardening-etalon-verify | T2   | 2      | 0/3/0/0           | 1       | no       | standard |
 | 2026-07-17 | claude-ts | cts-sync-is-ignored-trailing-newline          | T1   | 1      | 0/0/0/0           | 0       | no       | standard |

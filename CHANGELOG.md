@@ -2,6 +2,30 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Drop superpowers plugin dependency (2026-07-23)
+
+### Removed
+
+- **`.claude/settings.json`** `enabledPlugins["superpowers@superpowers-marketplace"]` — the marketplace registration is not part of the CTS payload and fresh consumer clones get unresolvable plugin errors; CTS already vendors the useful superpowers content into native skills with no `superpowers:*` references actually active.
+- **`.claude/skills/plan-writing/`** — wholly obra-derived; actively contradicts `rules/task-authoring.md` (flexible-not-fixed structure vs. canonical 8-row header and `tasks/todo/` naming convention).
+- **`.claude/skills/test-master/references/tdd-iron-laws.md`** — red-green-refactor discipline is now owned by the standalone `tdd` skill, mandated by CLAUDE.md's quality-gate pipeline for all implementation agents; keeping both is a drift risk.
+
+### Changed
+
+- **README.md** § "Step 2: Install Superpowers Plugin" — removed; renumbered "Step 3 (Optional)" to "Step 2 (Optional)".
+- **6 agent files** (`ba.md`, `tester.md`, `debugger.md`, `reviewer.md`, `security-scanner.md`) — removed `superpowers:*` skill references; mapped to native CTS equivalents (`tdd`, `debugging-wizard`, `code-reviewer`) or external guidance (`rules/task-authoring.md`). Added verification-before-reporting prose to `security-scanner.md`.
+- **`.claude/skills/test-master/SKILL.md`** — removed TDD Iron Laws reference row; added comment clarifying that TDD discipline is now provided by the `tdd` skill.
+- **README.md** § "Planning" skills — removed `plan-writing`; added note that task breakdown is covered by `rules/task-authoring.md`.
+- **`.claude/skills/grill-me/SKILL.md`** — updated description to point at `rules/task-authoring.md` instead of (now-deleted) `plan-writing` skill.
+- **`THIRD_PARTY.md`** — added superpowers attribution section covering the two retained adapted reference files (`test-master/references/testing-anti-patterns.md`, `debugging-wizard/references/systematic-debugging.md`) and a historical note on `plan-writing` / TDD iron-laws.
+- **`.claude/skills/cts-import-skill/SKILL.md`** — Integrate step now checks an agent's `## Skills to Activate` table for an existing row before adding a skill reference to it, instead of adding blindly. Prompted by this cleanup: a literal find/replace remap of 6 `superpowers:*` references produced duplicate rows in 3 of 6 agent files because the target skill was already listed under a different name in the same table.
+
+### Verification
+
+- `grep -ri superpowers` hits only `THIRD_PARTY.md`, `CHANGELOG.md`, task files, and inline attribution in retained reference files.
+- `grep -rn "plan-writing\|tdd-iron-laws"` hits only `THIRD_PARTY.md`/`CHANGELOG.md` historical notes and `ba.md`'s `rules/task-authoring.md` pointer — no dangling skill/file references.
+- All agent skills tables resolve to existing `.claude/skills/*/` directories or external rule files.
+
 ## [Unreleased] — Mandate explicit model tier on built-in agent dispatches (2026-07-23)
 
 ### Added

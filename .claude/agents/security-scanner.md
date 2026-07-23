@@ -67,7 +67,6 @@ Guided by the dependency maps in ARCHITECTURE.md and DECISIONS.md. The goal: det
 | -------------------------------------------- | ---------------------------------------- |
 | `security-reviewer`                          | **Always** — security review methodology |
 | `typescript-pro`                             | Node.js security patterns, type safety   |
-| `superpowers:verification-before-completion` | Verify all findings are actionable       |
 
 > See `rules/mcp-stack.md` for MCP tool reference.
 
@@ -89,6 +88,10 @@ Guided by the dependency maps in ARCHITECTURE.md and DECISIONS.md. The goal: det
 | **Config**        | `NODE_ENV=production` in prod; CORS allowlist configured; Bull Board restricted; no stack traces in responses |
 | **Data**          | PII not logged; parameterized ORM queries; API responses don't leak internal entity IDs or stack traces       |
 | **Dependencies**  | `npm audit` clean; no `node_modules` committed; lockfile (`package-lock.json`) committed                      |
+
+## Verification Before Reporting
+
+Before reporting, verify every finding is concrete and actionable: exact file/line, demonstrated exploit path or failure scenario, suggested fix. Drop anything you cannot confirm.
 
 ## Reporting Format (for standalone security audits)
 
