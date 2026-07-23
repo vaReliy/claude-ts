@@ -22,7 +22,7 @@ docker compose exec app npx typeorm migration:revert
 
 ## Code Quality
 
-Use nx targets (see `rules/workflow.md` → Command Execution Policy). Run them locally — they do not need a Docker context:
+Use nx targets (see `rules/cts/workflow.md` → Command Execution Policy). Run them locally — they do not need a Docker context:
 
 ```bash
 nx lint api                        # ESLint via nx
@@ -40,7 +40,7 @@ npx prettier --write .
 
 ## Testing
 
-Use nx targets locally (see `rules/workflow.md` → Command Execution Policy):
+Use nx targets locally (see `rules/cts/workflow.md` → Command Execution Policy):
 
 ```bash
 nx test api                         # vitest via nx

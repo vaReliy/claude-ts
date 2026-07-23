@@ -31,18 +31,18 @@ Before acting, read `docs/KNOWLEDGE_INBOX.md` — it contains accumulated projec
 
 Before reviewing code, always read:
 
-- `rules/code-style.md` (shared TypeScript)
-- `rules/architecture.md` (shared onion patterns, NX boundaries)
+- `rules/cts/code-style.md` (shared TypeScript)
+- `rules/cts/architecture.md` (shared onion patterns, NX boundaries)
 
-Then, **if your project splits rules by platform** (e.g. `rules/code-style-angular.md`, `rules/architecture-backend.md`) — **based on file paths in the changeset** — read the applicable platform-specific rules:
+Then, **if your project splits rules by platform** (e.g. `rules/local/code-style-angular.md`, `rules/local/architecture-backend.md`) — **based on file paths in the changeset** — read the applicable platform-specific rules:
 
 - **If changeset contains Angular/frontend files** (e.g., `.ts` in `libs/*/feature*/`, `libs/*/ui*/`, `libs/*/data-access*/`, `apps/web/`):
-  - Add `rules/code-style-angular.md` (Angular signals, templates, SCSS)
-  - Add `rules/architecture-angular.md` (Angular injection tokens, lazy-load boundaries)
+  - Add `rules/local/code-style-angular.md` (Angular signals, templates, SCSS)
+  - Add `rules/local/architecture-angular.md` (Angular injection tokens, lazy-load boundaries)
 
 - **If changeset contains backend files** (e.g., `.ts` in `libs/*/infrastructure*/`, `libs/*/application*/`, `libs/*/core*/`, `apps/api/`, `apps/cli/`):
-  - Add `rules/code-style-backend.md` (backend logging, validation, auth)
-  - Add `rules/architecture-backend.md` (NestJS DI, DB access patterns)
+  - Add `rules/local/code-style-backend.md` (backend logging, validation, auth)
+  - Add `rules/local/architecture-backend.md` (NestJS DI, DB access patterns)
 
 - **If changeset touches both**: read all applicable platform-specific rules files.
 
@@ -91,7 +91,7 @@ Guided by the dependency maps in ARCHITECTURE.md and DECISIONS.md. The goal: det
 | `react-expert`                       | When reviewing `.tsx` files, hooks, or Zustand stores   |
 | `angular-expert`                     | When reviewing Angular components, services, or signals |
 
-> See `rules/mcp-stack.md` for MCP tool reference.
+> See `rules/cts/mcp-stack.md` for MCP tool reference.
 
 ## Review Dimensions
 
@@ -124,7 +124,7 @@ Each finding: **File** (`path/to/file.ts:42`) · **Issue** · **Suggestion**. En
 
 Always leave **inline (line-level) comments** on the diff — never general PR comments. `start_line` + `line` for multi-line issues. Summary `body` should be minimal.
 
-> Conventions: see @rules/code-style.md, @rules/docker-commands.md, @rules/git-operations.md.
+> Conventions: see @rules/cts/code-style.md, @rules/cts/docker-commands.md, @rules/cts/git-operations.md.
 
 ## Report Format (mandatory)
 
@@ -157,8 +157,12 @@ Rules:
 
 ### Severity floor
 
-Before emitting a task for a pre-existing finding, apply the severity floor (defined in rules/workflow.md). Polish/preference findings below the floor are NOT emitted as tasks. Record them as one line in docs/KNOWLEDGE_INBOX.md under `## Deferred / sub-floor`.
+Before emitting a task for a pre-existing finding, apply the severity floor (defined in rules/cts/workflow.md). Polish/preference findings below the floor are NOT emitted as tasks. Record them as one line in docs/KNOWLEDGE_INBOX.md under `## Deferred / sub-floor`.
 
 ## Commit policy
 
 Never commit directly. Stage changes, then suggest a one-line commit message scoped to the current work iteration. The owner reviews git diff and commits.
+
+## Local Override
+
+If `.claude/agents-local/reviewer.md` exists, Read it first; its instructions override conflicting ones above.

@@ -2,6 +2,35 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Two-layer distribution: single ownership replaces merging (2026-07-23)
+
+**BREAKING CHANGE.** The distribution model is replaced end to end. Previously, CTS-managed content and consumer customizations lived in the SAME files, reconciled by a 3-way merge engine (base = content recorded at `.cts-version`). That model had structural failure modes with no fix short of redesign: `.cts-version` claims about what a project received could silently lie (phantom baselines), normalization could hide a real conflict inside a "clean" merge, and the merge engine itself needed a self-update paradox workaround (consumers ran the OLD engine to receive the NEW one).
+
+The new model: **every file is owned by exactly one side — CTS or the consumer — and is never merged.** Updates are a plain overwrite (rsync semantics) of CTS-owned files; customization happens in a separate, never-synced override layer. Detection replaces merging: two loud, non-blocking warnings (ownership violation, override rot) tell you when something needs attention — they never silently resolve anything on your behalf.
+
+### Added
+
+- **`rules/local/`, `.claude/agents-local/`, `AGENTS.local.md`, `CLAUDE.local.md`** — the new override layer. Never listed in `cts-payload.txt`, so `cts-sync.sh` never touches these paths, by construction (not a special-case guard). An override file cites the CTS content it displaces (`## Overrides <path> § "..."`, lex specialis) rather than forking the whole file.
+- **`.cts/settings.cts.json`** — the CTS-owned settings fragment (model default, MCP servers, the `Stop` hook, and the new `Edit`-deny ownership rules for `rules/cts/**`/`.cts/**`). Deep-merged into the consumer's own `.claude/settings.json` via `jq` on every sync — consumer values win on scalar conflicts, arrays are unioned. `.claude/settings.json` itself is no longer a payload file.
+- **`.cts/manifest.json`** — per-file content hashes recorded at each sync. Not a merge baseline (never diffed hunk-by-hunk, never used to decide what to write) — used only by the ownership-violation and override-rot detectors.
+- **Ownership-violation detector** — `cts-sync.sh update` now prints `OWNERSHIP WARNING: <path>` when a CTS-owned file's content no longer matches its last-recorded hash (edited outside an override file). The file is still overwritten (updates never skip wholesale) — the warning is the only signal, not a block.
+- **Override-rot detector** — prints `OVERRIDE ROT: <path> cites "<target>"` when an override file's cited CTS content actually changed this run. Grep-level, not merging — the override file is never touched.
+- **Self-update-first re-exec** — `cts-sync.sh` now overwrites its own script (atomically: temp file + `mv`) and re-execs with the new version as the very first step of `update`, before touching anything else, printing `cts-sync engine updated; re-running with the new version...`.
+- **Every `.claude/agents/*.md` file** ends with a fixed prose-tail sentence: `If .claude/agents-local/<name>.md exists, Read it first; its instructions override conflicting ones above.` Agent frontmatter (`name`/`model`/`tools`) is not layerable.
+- **`AGENTS.md`/`CLAUDE.md`** — each now `@import`s a consumer-owned local file (`AGENTS.local.md`/`CLAUDE.local.md`) at the end, with local stated to win on conflict.
+
+### Changed
+
+- **`rules/` → `rules/cts/`** — all 14 rule files moved. Every reference across `AGENTS.md`, `CLAUDE.md`, agent files, and skills updated to the new path.
+- **`.claude/scripts/cts-sync.sh`** — full rewrite. Overwrite semantics replace the 3-way merge; `.cts-version` is now an informational engine/release marker only, never a merge base. `--no-merge`/`--no-normalize` flags removed (nothing left to disable).
+- **`tests/cts-sync.test.sh`** — full rewrite: overwrite semantics, both detectors, the settings deep-merge, the self-update-first re-exec, and a contribute-round-trip no-op proof.
+- **`cts-payload.txt`** — `rules/` → `rules/cts/`; `.claude/settings.json` removed from payload, `.cts/settings.cts.json` added.
+- **`cts-update`, `cts-setup`, `cts-contribute`, `cts-rule-auditor`, `cts-review-contribution` skills** — updated to the new model. `cts-contribute`'s Case B/C hunk-classification machinery is gone: contribution is now always a whole-file copy (single ownership means the consumer's file already IS the proposed replacement — there is no partial-hunk state to negotiate), which is also what makes the sync-back round trip byte-identical by construction.
+
+### Removed
+
+- **3-way merge, baseline-integrity audit, and merge cross-check machinery** in `cts-sync.sh` — the entire class of phantom-baseline and normalization-hidden-conflict bugs is eliminated by removing merging itself, not by patching it further.
+
 ## [Unreleased] — Drop superpowers plugin dependency (2026-07-23)
 
 ### Removed

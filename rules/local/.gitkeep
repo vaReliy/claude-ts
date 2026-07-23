@@ -1,0 +1,3 @@
+Consumer-owned rule overrides live here. This directory is intentionally
+empty in the claude-ts template itself — cts-payload.txt never lists
+rules/local/**, so cts-sync.sh never touches it in a consumer project either.

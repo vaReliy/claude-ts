@@ -39,7 +39,7 @@ E2E tests live in `e2e/` and are owned by the `qa` agent.
 
 ## Running Tests
 
-Use nx targets — never invoke vitest/jest directly (see `rules/workflow.md` → Command Execution Policy).
+Use nx targets — never invoke vitest/jest directly (see `rules/cts/workflow.md` → Command Execution Policy).
 
 ```bash
 nx test api                             # run unit + integration tests for the api project

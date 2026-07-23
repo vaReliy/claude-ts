@@ -1,0 +1,5 @@
+Consumer-owned per-agent overrides live here (e.g. backend-developer.md).
+Every shipped agent in .claude/agents/*.md ends with a tail sentence that
+reads .claude/agents-local/<name>.md first, if present, and treats its
+instructions as overriding. This directory is intentionally empty in the
+claude-ts template itself.

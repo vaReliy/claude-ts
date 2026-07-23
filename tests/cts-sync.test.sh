@@ -5,6 +5,14 @@
 # bash harness: build throwaway git repos, run the engine against them,
 # assert on its output and the resulting files. Exits non-zero on any
 # failed assertion so it can be wired into CI later.
+#
+# Two-layer distribution model: the engine no longer merges — every
+# CTS-owned payload path is plain-overwritten every run. These cases cover
+# overwrite semantics, the two detectors (ownership violation, override
+# rot), the settings.json deep-merge, the self-update-first re-exec, and a
+# contribute round-trip no-op proof. There is deliberately no 3-way-merge or
+# baseline-audit coverage here — that machinery no longer exists in the
+# engine.
 set -u
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -26,7 +34,7 @@ assert_not_contains() {
 }
 assert_file_equals() {
   local file="$1" expected="$2" msg="$3"
-  if [ "$(cat "$file")" = "$expected" ]; then pass "$msg"; else fail "$msg (file: $file)"; fi
+  if [ "$(cat "$file")" = "$expected" ]; then pass "$msg"; else fail "$msg (file: $file, got: $(cat "$file" 2>/dev/null))"; fi
 }
 
 git_repo() {
@@ -37,871 +45,562 @@ git_repo() {
   git -C "$dir" config user.name "CTS Test"
 }
 
+# Every source fixture needs its own copy of the CURRENT engine under test at
+# .claude/scripts/cts-sync.sh — the self-update-first step diffs against it.
+seed_engine() {
+  local dir="$1"
+  mkdir -p "$dir/.claude/scripts"
+  cp "$SCRIPT" "$dir/.claude/scripts/cts-sync.sh"
+  chmod +x "$dir/.claude/scripts/cts-sync.sh"
+}
+
+# Every consumer fixture also needs a bootstrap copy of the engine (mirrors
+# cts-setup's curl-fetch-then-run bootstrap step) so `bash .claude/scripts/
+# cts-sync.sh ...` resolves before any sync has run.
+seed_consumer_engine() {
+  seed_engine "$1"
+}
+
 # ---------------------------------------------------------------------------
-# Case 1a: Bug A — new payload path is an APPEND_MERGE_PATHS list file
-# (.prettierignore): consumer's own lines survive, CTS's required line is
-# appended, and the collision is reported (not silently overwritten).
+# Case 1: init — installs payload, writes .cts-version/.cts-source/.ctsignore/
+# manifest, and deep-merges the CTS settings fragment into a fresh
+# .claude/settings.json.
 # ---------------------------------------------------------------------------
 src1="$WORK/src1"; consumer1="$WORK/consumer1"
 git_repo "$src1"
+mkdir -p "$src1/rules/cts" "$src1/.cts"
 {
   echo "AGENTS.md"
+  echo "rules/cts/"
+  echo ".claude/scripts/"
+  echo ".cts/settings.cts.json"
 } > "$src1/cts-payload.txt"
 echo "root agents file" > "$src1/AGENTS.md"
-git -C "$src1" add -A && git -C "$src1" commit -q -m "commit1: no .prettierignore in payload"
-OLD_SHA1=$(git -C "$src1" rev-parse HEAD)
-
-{
-  echo "AGENTS.md"
-  echo ".prettierignore"
-} > "$src1/cts-payload.txt"
-{
-  echo "# CTS-required exclusion"
-  echo ".claude/skills/postgres-best-practices/"
-} > "$src1/.prettierignore"
-git -C "$src1" add -A && git -C "$src1" commit -q -m "commit2: add .prettierignore to payload"
+echo "workflow rules" > "$src1/rules/cts/workflow.md"
+seed_engine "$src1"
+printf '{"model":"opusplan","permissions":{"deny":["Edit(./rules/cts/**)"]}}\n' > "$src1/.cts/settings.cts.json"
+git -C "$src1" add -A && git -C "$src1" commit -q -m "v1"
 
 git_repo "$consumer1"
-echo "$OLD_SHA1" > "$consumer1/.cts-version"
-{
-  echo "/dist"
-  echo "/coverage"
-  echo ".nx/**"
-} > "$consumer1/.prettierignore"
-git -C "$consumer1" add -A && git -C "$consumer1" commit -q -m "consumer baseline"
+seed_consumer_engine "$consumer1"
+git -C "$consumer1" add -A && git -C "$consumer1" commit -q -m "bootstrap"
 
-# ---------------------------------------------------------------------------
-# Case 1a-2: same as 1a, but the consumer's list file has NO trailing
-# newline (mirrors real-world .prettierignore files, e.g. penny's) — `>>` is
-# a raw byte append, so without a newline-before-append guard the first
-# appended line would concatenate onto the consumer's last existing line
-# instead of starting its own. Every other fixture in this suite is built
-# via `{ echo ...; } >`, which always ends in a newline from the last echo,
-# so this exact failure mode is structurally invisible to those — this case
-# exists specifically to exercise it.
-# ---------------------------------------------------------------------------
-consumer1a2="$WORK/consumer1a2"
-git_repo "$consumer1a2"
-echo "$OLD_SHA1" > "$consumer1a2/.cts-version"
-printf '/dist\n/coverage\n.nx/**' > "$consumer1a2/.prettierignore"
-git -C "$consumer1a2" add -A && git -C "$consumer1a2" commit -q -m "consumer baseline, no trailing newline"
-
-out1a2=$(cd "$consumer1a2" && bash "$SCRIPT" update --source "$src1" 2>&1)
-exit1a2=$?
-if [ "$exit1a2" -ne 0 ]; then
-  fail "case 1a-2: engine exited non-zero ($exit1a2): $out1a2"
-else
-  if grep -qxF ".nx/**" "$consumer1a2/.prettierignore"; then
-    pass "case 1a-2: consumer's last line stays its own line (no trailing newline in source)"
-  else
-    fail "case 1a-2: consumer's last line stays its own line (got: $(cat "$consumer1a2/.prettierignore"))"
-  fi
-  if grep -qxF "# CTS-required exclusion" "$consumer1a2/.prettierignore"; then
-    pass "case 1a-2: appended CTS comment line stays its own line (not concatenated)"
-  else
-    fail "case 1a-2: appended CTS comment line stays its own line (got: $(cat "$consumer1a2/.prettierignore"))"
-  fi
-fi
-
-out1=$(cd "$consumer1" && bash "$SCRIPT" update --source "$src1" 2>&1)
+out1=$(cd "$consumer1" && bash .claude/scripts/cts-sync.sh init --source "$src1" --force 2>&1)
 exit1=$?
-
 if [ "$exit1" -ne 0 ]; then
-  fail "case 1a: engine exited non-zero ($exit1): $out1"
+  fail "case 1: init exited non-zero ($exit1): $out1"
 else
-  assert_contains "$out1" "appended CTS-required lines (kept your own): .prettierignore" \
-    "case 1a: reports append-merge for .prettierignore"
-  pi_content=$(cat "$consumer1/.prettierignore")
-  case "$pi_content" in
-    *"/dist"*) pass "case 1a: consumer's /dist entry survives" ;;
-    *) fail "case 1a: consumer's /dist entry survives (got: $pi_content)" ;;
-  esac
-  case "$pi_content" in
-    *"/coverage"*) pass "case 1a: consumer's /coverage entry survives" ;;
-    *) fail "case 1a: consumer's /coverage entry survives" ;;
-  esac
-  case "$pi_content" in
-    *".nx/**"*) pass "case 1a: consumer's .nx/** entry survives" ;;
-    *) fail "case 1a: consumer's .nx/** entry survives" ;;
-  esac
-  case "$pi_content" in
-    *".claude/skills/postgres-best-practices/"*) pass "case 1a: CTS-required exclusion appended" ;;
-    *) fail "case 1a: CTS-required exclusion appended (got: $pi_content)" ;;
-  esac
-fi
-
-# ---------------------------------------------------------------------------
-# Case 1b: Bug A — new payload path is NOT a list file (.editorconfig):
-# flagged and left untouched, never silently overwritten.
-# ---------------------------------------------------------------------------
-src1b="$WORK/src1b"; consumer1b="$WORK/consumer1b"
-git_repo "$src1b"
-echo "AGENTS.md" > "$src1b/cts-payload.txt"
-echo "root agents file" > "$src1b/AGENTS.md"
-git -C "$src1b" add -A && git -C "$src1b" commit -q -m "commit1: no .editorconfig in payload"
-OLD_SHA1B=$(git -C "$src1b" rev-parse HEAD)
-
-{
-  echo "AGENTS.md"
-  echo ".editorconfig"
-} > "$src1b/cts-payload.txt"
-echo "root = true" > "$src1b/.editorconfig"
-git -C "$src1b" add -A && git -C "$src1b" commit -q -m "commit2: add .editorconfig to payload"
-
-git_repo "$consumer1b"
-echo "$OLD_SHA1B" > "$consumer1b/.cts-version"
-echo "consumer-local editorconfig, unrelated" > "$consumer1b/.editorconfig"
-git -C "$consumer1b" add -A && git -C "$consumer1b" commit -q -m "consumer baseline"
-
-out1b=$(cd "$consumer1b" && bash "$SCRIPT" update --source "$src1b" 2>&1)
-exit1b=$?
-
-if [ "$exit1b" -ne 0 ]; then
-  fail "case 1b: engine exited non-zero ($exit1b): $out1b"
-else
-  assert_contains "$out1b" \
-    "new payload file already exists locally, not overwritten — reconcile manually: .editorconfig" \
-    "case 1b: reports new-file collision for .editorconfig"
-  assert_contains "$out1b" ':".editorconfig") "./.editorconfig"' \
-    "case 1b: collision hint quotes its interpolated paths (space-safe copy-paste)"
-  assert_file_equals "$consumer1b/.editorconfig" "consumer-local editorconfig, unrelated" \
-    "case 1b: consumer's .editorconfig is never overwritten"
-fi
-
-# ---------------------------------------------------------------------------
-# Case 1c: append_missing_lines source-side trailing-newline drop — mirror
-# image of case 1a-2, but on the SOURCE side. `while IFS= read -r line`
-# without `|| [ -n "$line" ]` silently skips a final unterminated line, so if
-# the SOURCE's list file lacks a trailing newline, the last CTS-required line
-# is never appended and the run still reports success. Every other source
-# fixture in this suite is built via `{ echo ...; } >`, which always ends in
-# a newline — this case exists specifically to exercise the missing-newline
-# path via `printf` with no trailing `\n`.
-# ---------------------------------------------------------------------------
-src1c="$WORK/src1c"; consumer1c="$WORK/consumer1c"
-git_repo "$src1c"
-echo "AGENTS.md" > "$src1c/cts-payload.txt"
-echo "root agents file" > "$src1c/AGENTS.md"
-git -C "$src1c" add -A && git -C "$src1c" commit -q -m "commit1: no .prettierignore in payload"
-OLD_SHA1C=$(git -C "$src1c" rev-parse HEAD)
-
-{
-  echo "AGENTS.md"
-  echo ".prettierignore"
-} > "$src1c/cts-payload.txt"
-# No trailing newline after the last line — the fixture under test.
-printf '/dist\n.claude/skills/postgres-best-practices/' > "$src1c/.prettierignore"
-git -C "$src1c" add -A && git -C "$src1c" commit -q -m "commit2: add .prettierignore to payload, no trailing newline"
-
-git_repo "$consumer1c"
-echo "$OLD_SHA1C" > "$consumer1c/.cts-version"
-echo "/coverage" > "$consumer1c/.prettierignore"
-git -C "$consumer1c" add -A && git -C "$consumer1c" commit -q -m "consumer baseline"
-
-out1c=$(cd "$consumer1c" && bash "$SCRIPT" update --source "$src1c" 2>&1)
-exit1c=$?
-if [ "$exit1c" -ne 0 ]; then
-  fail "case 1c: engine exited non-zero ($exit1c): $out1c"
-else
-  if grep -qxF -e "/coverage" "$consumer1c/.prettierignore"; then
-    pass "case 1c: consumer's own entry survives"
+  assert_contains "$out1" "Done. CTS payload installed at" "case 1: init reports success"
+  assert_file_equals "$consumer1/AGENTS.md" "root agents file" "case 1: AGENTS.md installed"
+  assert_file_equals "$consumer1/rules/cts/workflow.md" "workflow rules" "case 1: rules/cts/workflow.md installed"
+  [ -f "$consumer1/.cts-version" ] && pass "case 1: .cts-version written" || fail "case 1: .cts-version written"
+  [ -f "$consumer1/.ctsignore" ] && pass "case 1: .ctsignore bootstrapped" || fail "case 1: .ctsignore bootstrapped"
+  [ -f "$consumer1/.cts/manifest.json" ] && pass "case 1: manifest written" || fail "case 1: manifest written"
+  if command -v jq >/dev/null 2>&1 && [ -f "$consumer1/.claude/settings.json" ]; then
+    model=$(jq -r '.model' "$consumer1/.claude/settings.json")
+    deny=$(jq -r '.permissions.deny | join(",")' "$consumer1/.claude/settings.json")
+    [ "$model" = "opusplan" ] && pass "case 1: settings.json received CTS model default" || fail "case 1: settings.json received CTS model default (got: $model)"
+    case "$deny" in *"Edit(./rules/cts/**)"*) pass "case 1: settings.json received CTS deny rule" ;; *) fail "case 1: settings.json received CTS deny rule (got: $deny)" ;; esac
   else
-    fail "case 1c: consumer's own entry survives (got: $(cat "$consumer1c/.prettierignore"))"
-  fi
-  if grep -qxF -e "/dist" "$consumer1c/.prettierignore"; then
-    pass "case 1c: source's first line appended"
-  else
-    fail "case 1c: source's first line appended (got: $(cat "$consumer1c/.prettierignore"))"
-  fi
-  if grep -qxF -e ".claude/skills/postgres-best-practices/" "$consumer1c/.prettierignore"; then
-    pass "case 1c: source's final (unterminated) line is still appended, not dropped"
-  else
-    fail "case 1c: source's final (unterminated) line is still appended, not dropped (got: $(cat "$consumer1c/.prettierignore"))"
+    fail "case 1: settings.json exists and is readable by jq"
   fi
 fi
 
 # ---------------------------------------------------------------------------
-# Case 1d: append_missing_lines leading-dash line — `grep -qxF "$line"`
-# (without `-e`) parses a line starting with `-` as an option rather than a
-# pattern, so grep errors, the "already present" check silently fails open,
-# and the line gets re-appended (duplicated) even though the consumer already
-# has it. Fix is `grep -qxF -e "$line"`. Asserts no duplication on the first
-# run, and that a second run stays clean (idempotent).
+# Case 2: ownership violation — a consumer hand-edits a CTS-owned file after
+# init. update overwrites it with upstream's content ("updates never skip
+# wholesale") but reports a loud OWNERSHIP WARNING first.
 # ---------------------------------------------------------------------------
-src1d="$WORK/src1d"; consumer1d="$WORK/consumer1d"
-git_repo "$src1d"
-echo "AGENTS.md" > "$src1d/cts-payload.txt"
-echo "root agents file" > "$src1d/AGENTS.md"
-git -C "$src1d" add -A && git -C "$src1d" commit -q -m "commit1: no .prettierignore in payload"
-OLD_SHA1D=$(git -C "$src1d" rev-parse HEAD)
+src2="$WORK/src2"; consumer2="$WORK/consumer2"
+git_repo "$src2"
+mkdir -p "$src2/rules/cts"
+{ echo "AGENTS.md"; echo "rules/cts/"; echo ".claude/scripts/"; } > "$src2/cts-payload.txt"
+echo "agents v1" > "$src2/AGENTS.md"
+echo "workflow v1" > "$src2/rules/cts/workflow.md"
+seed_engine "$src2"
+git -C "$src2" add -A && git -C "$src2" commit -q -m "v1"
 
-{
-  echo "AGENTS.md"
-  echo ".prettierignore"
-} > "$src1d/cts-payload.txt"
-{
-  printf -- '-n\n'
-  echo ".claude/skills/postgres-best-practices/"
-} > "$src1d/.prettierignore"
-git -C "$src1d" add -A && git -C "$src1d" commit -q -m "commit2: add .prettierignore to payload"
+git_repo "$consumer2"
+seed_consumer_engine "$consumer2"
+git -C "$consumer2" add -A && git -C "$consumer2" commit -q -m "bootstrap"
+(cd "$consumer2" && bash .claude/scripts/cts-sync.sh init --source "$src2" --force >/dev/null 2>&1)
+git -C "$consumer2" add -A && git -C "$consumer2" commit -q -m "post-init"
 
-git_repo "$consumer1d"
-echo "$OLD_SHA1D" > "$consumer1d/.cts-version"
-# Consumer already has the leading-dash line the source will also try to add.
-# NOTE: `echo "-n"` is a trap here — the shell builtin interprets `-n` as its
-# own suppress-trailing-newline flag rather than printing it literally, so
-# `printf` is required to actually write the line into the fixture.
-printf -- '-n\n' > "$consumer1d/.prettierignore"
-git -C "$consumer1d" add -A && git -C "$consumer1d" commit -q -m "consumer baseline"
+echo "consumer hand-edit, not via an override file" >> "$consumer2/rules/cts/workflow.md"
+git -C "$consumer2" add -A && git -C "$consumer2" commit -q -m "hand-edit workflow.md"
 
-out1d=$(cd "$consumer1d" && bash "$SCRIPT" update --source "$src1d" 2>&1)
-exit1d=$?
-if [ "$exit1d" -ne 0 ]; then
-  fail "case 1d: engine exited non-zero ($exit1d): $out1d"
+# upstream also moves on, unrelated change
+echo "agents v2" > "$src2/AGENTS.md"
+git -C "$src2" add -A && git -C "$src2" commit -q -m "v2"
+
+out2=$(cd "$consumer2" && bash .claude/scripts/cts-sync.sh update --source "$src2" 2>&1)
+exit2=$?
+if [ "$exit2" -ne 0 ]; then
+  fail "case 2: update exited non-zero ($exit2): $out2"
 else
-  count1d=$(grep -cxF -e "-n" "$consumer1d/.prettierignore")
-  if [ "$count1d" -eq 1 ]; then
-    pass "case 1d: leading-dash line already present is not duplicated"
-  else
-    fail "case 1d: leading-dash line already present is not duplicated (count: $count1d, got: $(cat "$consumer1d/.prettierignore"))"
-  fi
-
-  # Discriminates the stdin-swallow failure mode: an unguarded `grep -qxF
-  # "-n"` (no `-e`) consumes the read loop's redirected stdin on the
-  # leading-dash line, silently dropping every source line that follows it —
-  # so this line, listed right after "-n" in src1d's .prettierignore, never
-  # arrives if the old bug is present.
-  if grep -qxF -e ".claude/skills/postgres-best-practices/" "$consumer1d/.prettierignore"; then
-    pass "case 1d: source line following the leading-dash line still arrives"
-  else
-    fail "case 1d: source line following the leading-dash line still arrives (got: $(cat "$consumer1d/.prettierignore"))"
-  fi
-
-  # Second run: append_missing_lines fires again since it's still a
-  # NEW_COLLISIONS-eligible append-merge path each time cts-payload.txt lists
-  # it fresh relative to a stale-baseline .cts-version; re-run against the
-  # same source to confirm idempotency (no re-duplication).
-  out1d2=$(cd "$consumer1d" && bash "$SCRIPT" update --source "$src1d" 2>&1)
-  exit1d2=$?
-  if [ "$exit1d2" -ne 0 ]; then
-    fail "case 1d: second run exited non-zero ($exit1d2): $out1d2"
-  else
-    count1d2=$(grep -cxF -e "-n" "$consumer1d/.prettierignore")
-    if [ "$count1d2" -eq 1 ]; then
-      pass "case 1d: second run stays clean (idempotent, no re-duplication)"
-    else
-      fail "case 1d: second run stays clean (count: $count1d2, got: $(cat "$consumer1d/.prettierignore"))"
-    fi
-  fi
+  assert_contains "$out2" "OWNERSHIP WARNING: rules/cts/workflow.md" "case 2: ownership violation reported"
+  assert_contains "$out2" "override file" "case 2: warning points at the override-file escape hatch"
+  assert_file_equals "$consumer2/rules/cts/workflow.md" "workflow v1" "case 2: hand-edit overwritten with upstream content (no merge)"
+  assert_file_equals "$consumer2/AGENTS.md" "agents v2" "case 2: unrelated upstream change still applied"
 fi
 
 # ---------------------------------------------------------------------------
-# Case 1e: append_missing_lines leading-dash line, NOT yet present — mirror of
-# 1d but for the append path itself, not just the dedupe path: a leading-dash
-# source line the consumer does NOT already have must still be appended
-# (grep -qxF -e must correctly report "not found" and fall through to the
-# printf append, not error out and silently skip it).
-# ---------------------------------------------------------------------------
-src1e="$WORK/src1e"; consumer1e="$WORK/consumer1e"
-git_repo "$src1e"
-echo "AGENTS.md" > "$src1e/cts-payload.txt"
-echo "root agents file" > "$src1e/AGENTS.md"
-git -C "$src1e" add -A && git -C "$src1e" commit -q -m "commit1: no .prettierignore in payload"
-OLD_SHA1E=$(git -C "$src1e" rev-parse HEAD)
-
-{
-  echo "AGENTS.md"
-  echo ".prettierignore"
-} > "$src1e/cts-payload.txt"
-printf -- '-x\n' > "$src1e/.prettierignore"
-git -C "$src1e" add -A && git -C "$src1e" commit -q -m "commit2: add .prettierignore to payload"
-
-git_repo "$consumer1e"
-echo "$OLD_SHA1E" > "$consumer1e/.cts-version"
-# Consumer does NOT have the leading-dash line yet — distinct from case 1d,
-# which only covers the already-present/dedupe branch.
-printf '/dist\n' > "$consumer1e/.prettierignore"
-git -C "$consumer1e" add -A && git -C "$consumer1e" commit -q -m "consumer baseline"
-
-out1e=$(cd "$consumer1e" && bash "$SCRIPT" update --source "$src1e" 2>&1)
-exit1e=$?
-if [ "$exit1e" -ne 0 ]; then
-  fail "case 1e: engine exited non-zero ($exit1e): $out1e"
-else
-  if grep -qxF -e "/dist" "$consumer1e/.prettierignore"; then
-    pass "case 1e: consumer's own entry survives"
-  else
-    fail "case 1e: consumer's own entry survives (got: $(cat "$consumer1e/.prettierignore"))"
-  fi
-  count1e=$(grep -cxF -e "-x" "$consumer1e/.prettierignore")
-  if [ "$count1e" -eq 1 ]; then
-    pass "case 1e: not-yet-present leading-dash line is appended exactly once"
-  else
-    fail "case 1e: not-yet-present leading-dash line is appended exactly once (count: $count1e, got: $(cat "$consumer1e/.prettierignore"))"
-  fi
-fi
-
-# ---------------------------------------------------------------------------
-# Case 1f: norm_file partial-output-then-fail hazard — if a prettier binary
-# writes SOME bytes to stdout before exiting non-zero (buffering is an
-# implementation detail, not a guarantee — see the comment on norm_file in
-# cts-sync.sh), the mktemp-staged output must never leak into the consumer's
-# tree: only the `cat "$src"` fallback's bytes may land in dest. A real
-# prettier build never does this deliberately, so this uses a fake prettier
-# shim that always writes partial garbage then fails, letting the failure
-# path be exercised deterministically regardless of the real prettier's
-# actual buffering behavior.
-# ---------------------------------------------------------------------------
-# init never sets PRETTIER_BIN (update-only per cts-sync.sh), so exercise the
-# hazard via update: a brand-new payload file with no prior baseline still
-# routes through copy_one's norm_file call when a receiver prettier is
-# present.
-src1f2="$WORK/src1f2"; consumer1f2="$WORK/consumer1f2"
-git_repo "$src1f2"
-echo "AGENTS.md" > "$src1f2/cts-payload.txt"
-echo "root agents file" > "$src1f2/AGENTS.md"
-git -C "$src1f2" add -A && git -C "$src1f2" commit -q -m "commit1: no new.json in payload"
-OLD_SHA1F2=$(git -C "$src1f2" rev-parse HEAD)
-{
-  echo "AGENTS.md"
-  echo "new.json"
-} > "$src1f2/cts-payload.txt"
-printf '{\n  "a": 1\n}\n' > "$src1f2/new.json"
-git -C "$src1f2" add -A && git -C "$src1f2" commit -q -m "commit2: add new.json to payload"
-
-git_repo "$consumer1f2"
-echo "$OLD_SHA1F2" > "$consumer1f2/.cts-version"
-mkdir -p "$consumer1f2/node_modules/.bin"
-cat > "$consumer1f2/node_modules/.bin/prettier" <<'EOF'
-#!/usr/bin/env bash
-printf 'GARBAGE-PARTIAL-OUTPUT-NOT-VALID-JSON-NO-TRAILING-NEWLINE'
-exit 1
-EOF
-chmod 755 "$consumer1f2/node_modules/.bin/prettier"
-git -C "$consumer1f2" add -A && git -C "$consumer1f2" commit -q -m "consumer baseline with fake failing prettier"
-
-out1f2=$(cd "$consumer1f2" && bash "$SCRIPT" update --source "$src1f2" 2>&1)
-exit1f2=$?
-if [ "$exit1f2" -ne 0 ]; then
-  fail "case 1f: engine exited non-zero ($exit1f2): $out1f2"
-else
-  new_json_content=$(cat "$consumer1f2/new.json" 2>/dev/null || echo "MISSING")
-  expected_raw=$(printf '{\n  "a": 1\n}\n')
-  if [ "$new_json_content" = "$expected_raw" ]; then
-    pass "case 1f: prettier partial-output-then-fail falls back to raw src content, no garbage leaks in"
-  else
-    fail "case 1f: prettier partial-output-then-fail falls back to raw src content, no garbage leaks in (got: $new_json_content)"
-  fi
-  case "$new_json_content" in
-    *GARBAGE*) fail "case 1f: fake prettier's partial garbage does not leak into dest" ;;
-    *) pass "case 1f: fake prettier's partial garbage does not leak into dest" ;;
-  esac
-fi
-
-# ---------------------------------------------------------------------------
-# Case 2: renormalize — a consumer file that differs from upstream only by
-# prettier-collapsible formatting is not flagged "locally modified" when a
-# receiver prettier is detected, and IS flagged with --no-normalize.
-# Skips cleanly if no prettier binary is resolvable in this test env.
-# ---------------------------------------------------------------------------
-resolve_prettier() {
-  local c
-  for c in "$REPO_ROOT/../penny/node_modules/.bin/prettier" "$(command -v prettier 2>/dev/null || true)"; do
-    [ -n "$c" ] && [ -x "$c" ] && { echo "$c"; return 0; }
-  done
-  return 1
-}
-
-if PRETTIER_PATH=$(resolve_prettier); then
-  # The prettier binary shim resolves its module relative to its own real
-  # location (node_modules/prettier/bin/...) — symlinking just the .bin
-  # entry breaks that resolution, so symlink the whole node_modules dir.
-  PRETTIER_NODE_MODULES="$(dirname "$(dirname "$PRETTIER_PATH")")"
-  src2="$WORK/src2"
-  git_repo "$src2"
-  echo "data.json" > "$src2/cts-payload.txt"
-  printf '{\n  "a": 1,\n  "b": 2\n}\n' > "$src2/data.json"
-  git -C "$src2" add -A && git -C "$src2" commit -q -m "commit1: baseline data.json"
-  OLD_SHA2=$(git -C "$src2" rev-parse HEAD)
-
-  setup_consumer2() {
-    local dir="$1"
-    git_repo "$dir"
-    echo "$OLD_SHA2" > "$dir/.cts-version"
-    # Indentation-only difference from the baseline (4-space vs 2-space) —
-    # prettier's objectWrap:preserve default keeps single-line-vs-multi-line
-    # layout as authored, so a collapsed-to-one-line variant would NOT
-    # renormalize to the same canonical form; re-indentation does.
-    printf '{\n    "a": 1,\n    "b": 2\n}\n' > "$dir/data.json"
-    ln -s "$PRETTIER_NODE_MODULES" "$dir/node_modules"
-    git -C "$dir" add -A && git -C "$dir" commit -q -m "consumer baseline"
-  }
-
-  consumer2a="$WORK/consumer2a"
-  setup_consumer2 "$consumer2a"
-  out2a=$(cd "$consumer2a" && bash "$SCRIPT" update --source "$src2" 2>&1)
-  exit2a=$?
-  if [ "$exit2a" -ne 0 ]; then
-    fail "case 2a: engine exited non-zero ($exit2a): $out2a"
-  else
-    assert_not_contains "$out2a" "locally modified, not overwritten — diff manually: data.json" \
-      "case 2a: formatting-only diff not flagged locally modified (prettier detected)"
-  fi
-
-  consumer2b="$WORK/consumer2b"
-  setup_consumer2 "$consumer2b"
-  out2b=$(cd "$consumer2b" && bash "$SCRIPT" update --source "$src2" --no-normalize 2>&1)
-  exit2b=$?
-  if [ "$exit2b" -ne 0 ]; then
-    fail "case 2b: engine exited non-zero ($exit2b): $out2b"
-  else
-    assert_contains "$out2b" "locally modified, not overwritten — diff manually: data.json" \
-      "case 2b: --no-normalize falls back to raw comparison, flags the diff"
-    assert_contains "$out2b" '-- "data.json"' \
-      "case 2b: locally-modified hint quotes its interpolated paths (space-safe copy-paste)"
-  fi
-
-  # Case 2c: renormalize must also apply to the Bug A new-payload-path
-  # collision check (is_new_payload_collision), not just is_locally_modified/
-  # upstream_changed/merge_one — a brand-new prettier-handled payload file
-  # that differs from the consumer's copy only by formatting must not be
-  # wrongly reported as a NEW_COLLISIONS "needs attention" item.
-  src2c="$WORK/src2c"
-  git_repo "$src2c"
-  echo "AGENTS.md" > "$src2c/cts-payload.txt"
-  echo "root agents file" > "$src2c/AGENTS.md"
-  git -C "$src2c" add -A && git -C "$src2c" commit -q -m "commit1: no new.json in payload"
-  OLD_SHA2C=$(git -C "$src2c" rev-parse HEAD)
-  {
-    echo "AGENTS.md"
-    echo "new.json"
-  } > "$src2c/cts-payload.txt"
-  printf '{\n  "a": 1,\n  "b": 2\n}\n' > "$src2c/new.json"
-  git -C "$src2c" add -A && git -C "$src2c" commit -q -m "commit2: add new.json to payload"
-
-  consumer2c="$WORK/consumer2c"
-  git_repo "$consumer2c"
-  echo "$OLD_SHA2C" > "$consumer2c/.cts-version"
-  printf '{\n    "a": 1,\n    "b": 2\n}\n' > "$consumer2c/new.json"
-  ln -s "$PRETTIER_NODE_MODULES" "$consumer2c/node_modules"
-  git -C "$consumer2c" add -A && git -C "$consumer2c" commit -q -m "consumer baseline"
-
-  out2c=$(cd "$consumer2c" && bash "$SCRIPT" update --source "$src2c" 2>&1)
-  exit2c=$?
-  if [ "$exit2c" -ne 0 ]; then
-    fail "case 2c: engine exited non-zero ($exit2c): $out2c"
-  else
-    assert_not_contains "$out2c" "new payload file already exists locally, not overwritten" \
-      "case 2c: new-payload-path formatting-only diff not flagged NEW_COLLISIONS (prettier detected)"
-  fi
-else
-  echo "skip: no prettier binary resolvable in this test env — renormalize case skipped"
-fi
-
-# ---------------------------------------------------------------------------
-# Case 3: init on a fresh project still works end-to-end, and a self-script
-# (.claude/scripts/*.sh) survives the SCRIPTS_STAGE flush with its executable
-# bit intact — the non-prettier-extension cp -p path, distinct from case 2's
-# norm_file path (is_prettier_ext excludes .sh, so this always takes cp -p
-# even when a receiver prettier is present).
+# Case 3: override survives + override-rot detector — an override file in
+# rules/local/ that cites a CTS file/section is never touched by sync, and
+# fires a loud "OVERRIDE ROT" warning once its cited target's content
+# actually changes upstream.
 # ---------------------------------------------------------------------------
 src3="$WORK/src3"; consumer3="$WORK/consumer3"
-mkdir -p "$src3/.claude/scripts"
 git_repo "$src3"
-echo ".claude/scripts/" > "$src3/cts-payload.txt"
-printf '#!/usr/bin/env bash\necho hi\n' > "$src3/.claude/scripts/foo.sh"
-chmod 755 "$src3/.claude/scripts/foo.sh"
-git -C "$src3" add -A && git -C "$src3" commit -q -m "commit1: baseline script"
+mkdir -p "$src3/rules/cts"
+{ echo "rules/cts/"; echo ".claude/scripts/"; } > "$src3/cts-payload.txt"
+echo "workflow v1" > "$src3/rules/cts/workflow.md"
+seed_engine "$src3"
+git -C "$src3" add -A && git -C "$src3" commit -q -m "v1"
 
 git_repo "$consumer3"
-touch "$consumer3/.keep"
-git -C "$consumer3" add -A && git -C "$consumer3" commit -q -m "empty consumer baseline"
+seed_consumer_engine "$consumer3"
+git -C "$consumer3" add -A && git -C "$consumer3" commit -q -m "bootstrap"
+(cd "$consumer3" && bash .claude/scripts/cts-sync.sh init --source "$src3" --force >/dev/null 2>&1)
+mkdir -p "$consumer3/rules/local"
+printf '## Overrides rules/cts/workflow.md § "quality gate"\n\nreplacement text local wins\n' > "$consumer3/rules/local/workflow.md"
+git -C "$consumer3" add -A && git -C "$consumer3" commit -q -m "add override"
 
-out3=$(cd "$consumer3" && bash "$SCRIPT" init --source "$src3" 2>&1)
+echo "workflow v2 — upstream changed this section" >> "$src3/rules/cts/workflow.md"
+git -C "$src3" add -A && git -C "$src3" commit -q -m "v2"
+
+out3=$(cd "$consumer3" && bash .claude/scripts/cts-sync.sh update --source "$src3" 2>&1)
 exit3=$?
 if [ "$exit3" -ne 0 ]; then
-  fail "case 3: init exited non-zero ($exit3): $out3"
+  fail "case 3: update exited non-zero ($exit3): $out3"
 else
-  assert_contains "$out3" "Done. CTS payload installed at" "case 3: init reports success"
-  if [ -f "$consumer3/.claude/scripts/foo.sh" ]; then
-    pass "case 3: self-script copied to consumer tree"
-  else
-    fail "case 3: self-script copied to consumer tree (missing: .claude/scripts/foo.sh)"
-  fi
-  if [ -x "$consumer3/.claude/scripts/foo.sh" ]; then
-    pass "case 3: self-script executable bit preserved (cp -p path)"
-  else
-    fail "case 3: self-script executable bit preserved (cp -p path)"
-  fi
+  assert_file_equals "$consumer3/rules/local/workflow.md" \
+    "$(printf '## Overrides rules/cts/workflow.md § "quality gate"\n\nreplacement text local wins')" \
+    "case 3: override file untouched by sync"
+  assert_contains "$out3" 'OVERRIDE ROT: rules/local/workflow.md cites "rules/cts/workflow.md"' \
+    "case 3: override-rot detector fires when the cited CTS file changes"
 fi
 
 # ---------------------------------------------------------------------------
-# Case 4: merge_one's 3x norm_file() calls under a real prettier subprocess,
-# genuine 3-way conflict — regression for the EXIT-trap clobber and RETURN-
-# trap staleness bugs fixed this session. Unlike case 1f (fake prettier that
-# always fails, exercising norm_file's cat-fallback branch on a non-list
-# file, but only via copy_one's single call) and case 2 (single norm_file
-# call per side via is_locally_modified/upstream_changed), this drives
-# norm_file's live-subprocess-success branch three times in a row (base,
-# local, upstream) from inside merge_one, with merge_one's own EXIT trap
-# armed for the whole call and each norm_file call arming/firing/disarming
-# its own RETURN trap on every one of those three calls. Both local and
-# upstream diverge from base on the *same* line with different values, so
-# git merge-file cannot resolve it silently and conflict markers are left in
-# place — the genuine 3-way-conflict path, not a clean fast-forward or a
-# non-overlapping auto-merge.
+# Case 4: .ctsignore'd file is never touched, but a loud notice fires if its
+# CTS-side content changed upstream while ignored.
 # ---------------------------------------------------------------------------
-if PRETTIER_PATH4=$(resolve_prettier); then
-  PRETTIER_NODE_MODULES4="$(dirname "$(dirname "$PRETTIER_PATH4")")"
-  src4="$WORK/src4"; consumer4="$WORK/consumer4"
-  git_repo "$src4"
-  printf '{\n  "a": 1,\n  "b": 2,\n  "c": 3\n}\n' > "$src4/data4.json"
-  echo "data4.json" > "$src4/cts-payload.txt"
-  git -C "$src4" add -A && git -C "$src4" commit -q -m "commit1: baseline data4.json"
-  OLD_SHA4=$(git -C "$src4" rev-parse HEAD)
+src4="$WORK/src4"; consumer4="$WORK/consumer4"
+git_repo "$src4"
+mkdir -p "$src4/rules/cts"
+{ echo "rules/cts/"; echo ".claude/scripts/"; } > "$src4/cts-payload.txt"
+echo "docker v1" > "$src4/rules/cts/docker-commands.md"
+seed_engine "$src4"
+git -C "$src4" add -A && git -C "$src4" commit -q -m "v1"
 
-  # Upstream diverges from base: changes "b" on the same line the consumer
-  # will also change, to a DIFFERENT value — forces an overlapping,
-  # non-auto-mergeable hunk instead of a silently-combinable one.
-  printf '{\n  "a": 1,\n  "b": 20,\n  "c": 3\n}\n' > "$src4/data4.json"
-  git -C "$src4" add -A && git -C "$src4" commit -q -m "commit2: upstream changes b to 20"
+git_repo "$consumer4"
+seed_consumer_engine "$consumer4"
+git -C "$consumer4" add -A && git -C "$consumer4" commit -q -m "bootstrap"
+(cd "$consumer4" && bash .claude/scripts/cts-sync.sh init --source "$src4" --force >/dev/null 2>&1)
+echo "/rules/cts/docker-commands.md" >> "$consumer4/.ctsignore"
+echo "fully forked, project-specific" > "$consumer4/rules/cts/docker-commands.md"
+git -C "$consumer4" add -A && git -C "$consumer4" commit -q -m "fork docker-commands.md"
 
-  git_repo "$consumer4"
-  echo "$OLD_SHA4" > "$consumer4/.cts-version"
-  # Consumer diverges from the SAME base line, to yet another value — a
-  # genuine conflicting edit, not just formatting drift.
-  printf '{\n  "a": 1,\n  "b": 99,\n  "c": 3\n}\n' > "$consumer4/data4.json"
-  ln -s "$PRETTIER_NODE_MODULES4" "$consumer4/node_modules"
-  git -C "$consumer4" add -A && git -C "$consumer4" commit -q -m "consumer baseline, locally modified b"
+echo "docker v2" >> "$src4/rules/cts/docker-commands.md"
+git -C "$src4" add -A && git -C "$src4" commit -q -m "v2"
 
-  # Dedicated TMPDIR for this invocation only, so every mktemp call inside
-  # the script (SCRIPTS_STAGE, norm_file's $out, merge_one's 5 temp files)
-  # lands here — lets us assert nothing survives the run's traps.
-  TMPDIR_CASE4="$WORK/tmpdir-case4"
-  mkdir -p "$TMPDIR_CASE4"
-  out4=$(cd "$consumer4" && TMPDIR="$TMPDIR_CASE4" bash "$SCRIPT" update --source "$src4" 2>&1)
-  exit4=$?
-
-  if [ "$exit4" -ne 0 ]; then
-    fail "case 4: engine exited non-zero ($exit4): $out4"
-  else
-    pass "case 4: engine (merge_one, real prettier, 3x norm_file, genuine conflict) exits 0"
-  fi
-
-  assert_not_contains "$out4" "unbound variable" \
-    "case 4: no unbound-variable errors from RETURN/EXIT trap interaction"
-
-  assert_contains "$out4" "CONFLICT: data4.json" \
-    "case 4: merge_one reports a real conflict (overlapping same-line edits)"
-  assert_contains "$out4" "unresolved conflict markers left in: data4.json" \
-    "case 4: conflict summary line printed"
-
-  data4_content=$(cat "$consumer4/data4.json" 2>/dev/null || echo "MISSING")
-  case "$data4_content" in
-    *"<<<<<<<"*) pass "case 4: conflict markers left in data4.json for manual resolution" ;;
-    *) fail "case 4: conflict markers left in data4.json for manual resolution (got: $data4_content)" ;;
-  esac
-
-  leaked4=$(find "$TMPDIR_CASE4" -mindepth 1 2>/dev/null)
-  if [ -z "$leaked4" ]; then
-    pass "case 4: no leaked temp files under merge_one's live trap context (norm_file RETURN + merge_one EXIT)"
-  else
-    fail "case 4: no leaked temp files under merge_one's live trap context (found: $leaked4)"
-  fi
+out4=$(cd "$consumer4" && bash .claude/scripts/cts-sync.sh update --source "$src4" 2>&1)
+exit4=$?
+if [ "$exit4" -ne 0 ]; then
+  fail "case 4: update exited non-zero ($exit4): $out4"
 else
-  echo "skip: no prettier binary resolvable in this test env — case 4 (merge_one 3x norm_file, real prettier) skipped"
+  assert_file_equals "$consumer4/rules/cts/docker-commands.md" "fully forked, project-specific" \
+    "case 4: .ctsignore'd file never overwritten"
+  assert_contains "$out4" "ignored, but changed upstream — review manually: rules/cts/docker-commands.md" \
+    "case 4: ignored-but-changed-upstream notice fires"
+  assert_not_contains "$out4" "OWNERSHIP WARNING" "case 4: ignored file does not also fire an ownership warning"
 fi
 
 # ---------------------------------------------------------------------------
-# Case 5: is_ignored() trailing-newline drop — `while IFS= read -r pat`
-# without `|| [ -n "$pat" ]` silently skips the final line of a .ctsignore
-# file that lacks a trailing newline, so that last pattern is never matched
-# and the path it should ignore is synced anyway (a silent data overwrite).
-# This mirrors the append_missing_lines bug fixed in case 1c; the consumer's
-# .ctsignore is built via `printf` with no trailing `\n` to exercise the
-# failure mode.
+# Case 5: self-update-first — when the source's copy of cts-sync.sh itself
+# differs from the running one, the engine overwrites itself and re-execs
+# with the new version before doing anything else, atomically (no
+# mid-execution corruption of the running interpreter).
 # ---------------------------------------------------------------------------
 src5="$WORK/src5"; consumer5="$WORK/consumer5"
 git_repo "$src5"
-echo "AGENTS.md" > "$src5/cts-payload.txt"
-echo "root agents file from source" > "$src5/AGENTS.md"
-git -C "$src5" add -A && git -C "$src5" commit -q -m "commit1: baseline AGENTS.md"
-OLD_SHA5=$(git -C "$src5" rev-parse HEAD)
-
-echo "root agents file, version 2" > "$src5/AGENTS.md"
-git -C "$src5" add -A && git -C "$src5" commit -q -m "commit2: update AGENTS.md"
+{ echo "AGENTS.md"; echo ".claude/scripts/"; } > "$src5/cts-payload.txt"
+echo "agents" > "$src5/AGENTS.md"
+seed_engine "$src5"
+printf '\n# ENGINE-MARKER-V2\n' >> "$src5/.claude/scripts/cts-sync.sh"
+git -C "$src5" add -A && git -C "$src5" commit -q -m "v1, new engine"
 
 git_repo "$consumer5"
-echo "$OLD_SHA5" > "$consumer5/.cts-version"
-echo "consumer-local AGENTS.md content" > "$consumer5/AGENTS.md"
-# No trailing newline after the last pattern — the fixture under test.
-printf 'AGENTS.md' > "$consumer5/.ctsignore"
-git -C "$consumer5" add -A && git -C "$consumer5" commit -q -m "consumer baseline, .ctsignore no trailing newline"
+seed_consumer_engine "$consumer5"
+git -C "$consumer5" add -A && git -C "$consumer5" commit -q -m "bootstrap, old engine"
 
-out5=$(cd "$consumer5" && bash "$SCRIPT" update --source "$src5" 2>&1)
+out5=$(cd "$consumer5" && bash .claude/scripts/cts-sync.sh update --source "$src5" 2>&1)
 exit5=$?
 if [ "$exit5" -ne 0 ]; then
-  fail "case 5: engine exited non-zero ($exit5): $out5"
+  fail "case 5: update exited non-zero ($exit5): $out5"
 else
-  agents_content=$(cat "$consumer5/AGENTS.md" 2>/dev/null || echo "MISSING")
-  if [ "$agents_content" = "consumer-local AGENTS.md content" ]; then
-    pass "case 5: .ctsignore's last (unterminated) pattern 'AGENTS.md' is respected, file not overwritten"
+  assert_contains "$out5" "cts-sync engine updated; re-running with the new version" \
+    "case 5: self-update-first message printed"
+  if grep -qxF "# ENGINE-MARKER-V2" "$consumer5/.claude/scripts/cts-sync.sh"; then
+    pass "case 5: consumer's engine file replaced with the new version"
   else
-    fail "case 5: .ctsignore's last (unterminated) pattern 'AGENTS.md' is respected, file not overwritten (got: $agents_content)"
+    fail "case 5: consumer's engine file replaced with the new version"
   fi
-  assert_not_contains "$out5" "copy: AGENTS.md" \
-    "case 5: engine did not copy AGENTS.md (is_ignored correctly matched the pattern)"
+  assert_file_equals "$consumer5/AGENTS.md" "agents" "case 5: sync still completed after the re-exec (new engine ran the rest)"
 fi
 
 # ---------------------------------------------------------------------------
-# Case 6: baseline-integrity audit — a "phantom baseline": the consumer's
-# .cts-version records a commit whose content the working copy never actually
-# received (e.g. a mis-resolved conflict in an earlier sync dropped a whole
-# feature). A 3-way merge can never repair this (the gap looks like a
-# deliberate local deletion), so the engine must detect and report it.
-# Negative control: a consumer that only APPENDED its own lines (no baseline
-# content missing) must NOT be flagged.
+# Case 6: settings.json deep-merge — consumer's own scalar customizations
+# (e.g. a chosen model) win, but CTS's permissions.deny entries are always
+# present via array union, and re-running the merge is idempotent.
 # ---------------------------------------------------------------------------
-src6="$WORK/src6"; consumer6="$WORK/consumer6"; consumer6b="$WORK/consumer6b"
+src6="$WORK/src6"; consumer6="$WORK/consumer6"
 git_repo "$src6"
-echo "rules/feature.md" > "$src6/cts-payload.txt"
-mkdir -p "$src6/rules"
-{
-  echo "# Feature rules"
-  echo "intro line kept everywhere"
-  echo "ladder line one: tiered planning"
-  echo "ladder line two: foresight gate"
-  echo "ladder line three: quality gate rewrite"
-} > "$src6/rules/feature.md"
-git -C "$src6" add -A && git -C "$src6" commit -q -m "commit1: full feature shipped"
-OLD_SHA6=$(git -C "$src6" rev-parse HEAD)
-# upstream moves on but still ships the ladder lines
-echo "trailing upstream addition" >> "$src6/rules/feature.md"
-git -C "$src6" add -A && git -C "$src6" commit -q -m "commit2: unrelated addition"
+mkdir -p "$src6/.cts"
+{ echo "AGENTS.md"; echo ".claude/scripts/"; echo ".cts/settings.cts.json"; } > "$src6/cts-payload.txt"
+echo "agents" > "$src6/AGENTS.md"
+seed_engine "$src6"
+printf '{"model":"opusplan","permissions":{"deny":["Edit(./rules/cts/**)"]}}\n' > "$src6/.cts/settings.cts.json"
+git -C "$src6" add -A && git -C "$src6" commit -q -m "v1"
 
 git_repo "$consumer6"
-echo "$OLD_SHA6" > "$consumer6/.cts-version"
-mkdir -p "$consumer6/rules"
-{
-  echo "# Feature rules"
-  echo "intro line kept everywhere"
-} > "$consumer6/rules/feature.md"
-git -C "$consumer6" add -A && git -C "$consumer6" commit -q -m "consumer with phantom baseline (never received ladder lines)"
+seed_consumer_engine "$consumer6"
+git -C "$consumer6" add -A && git -C "$consumer6" commit -q -m "bootstrap"
+(cd "$consumer6" && bash .claude/scripts/cts-sync.sh init --source "$src6" --force >/dev/null 2>&1)
+if command -v jq >/dev/null 2>&1; then
+  jq '.model = "custom-model" | .permissions.deny += ["Read(./secrets/**)"] | .myExtraKey = "keep-me"' \
+    "$consumer6/.claude/settings.json" > "$consumer6/.claude/settings.json.tmp"
+  mv "$consumer6/.claude/settings.json.tmp" "$consumer6/.claude/settings.json"
+  git -C "$consumer6" add -A && git -C "$consumer6" commit -q -m "consumer customizes settings.json"
 
-out6=$(cd "$consumer6" && bash "$SCRIPT" update --source "$src6" 2>&1)
-exit6=$?
-if [ "$exit6" -ne 0 ]; then
-  fail "case 6: engine exited non-zero ($exit6): $out6"
+  out6=$(cd "$consumer6" && bash .claude/scripts/cts-sync.sh update --source "$src6" 2>&1)
+  exit6=$?
+  if [ "$exit6" -ne 0 ]; then
+    fail "case 6: update exited non-zero ($exit6): $out6"
+  else
+    model6=$(jq -r '.model' "$consumer6/.claude/settings.json")
+    deny6=$(jq -r '.permissions.deny | sort | join(",")' "$consumer6/.claude/settings.json")
+    extra6=$(jq -r '.myExtraKey' "$consumer6/.claude/settings.json")
+    [ "$model6" = "custom-model" ] && pass "case 6: consumer's scalar customization (model) wins" \
+      || fail "case 6: consumer's scalar customization (model) wins (got: $model6)"
+    case "$deny6" in *"Edit(./rules/cts/**)"*) pass "case 6: CTS deny entry still present after merge" ;; *) fail "case 6: CTS deny entry still present after merge (got: $deny6)" ;; esac
+    case "$deny6" in *"Read(./secrets/**)"*) pass "case 6: consumer's own deny entry survives (array union)" ;; *) fail "case 6: consumer's own deny entry survives (got: $deny6)" ;; esac
+    [ "$extra6" = "keep-me" ] && pass "case 6: consumer's unrelated top-level key survives" \
+      || fail "case 6: consumer's unrelated top-level key survives (got: $extra6)"
+  fi
 else
-  assert_contains "$out6" "BASELINE INTEGRITY: rules/feature.md" \
-    "case 6: phantom baseline (3 baseline lines missing locally, still shipped upstream) is reported"
-  assert_contains "$out6" "3 line(s)" \
-    "case 6: report names the number of missing baseline lines"
-  assert_contains "$out6" '| diff - "./rules/feature.md"' \
-    "case 6: baseline-integrity hint quotes its interpolated paths (space-safe copy-paste)"
+  echo "skip: jq not available — case 6 (settings deep-merge) skipped"
 fi
 
-git_repo "$consumer6b"
-echo "$OLD_SHA6" > "$consumer6b/.cts-version"
-mkdir -p "$consumer6b/rules"
-{
-  cat "$src6/rules/feature.md"
-  echo "consumer-local extra line one"
-  echo "consumer-local extra line two"
-  echo "consumer-local extra line three"
-} > "$consumer6b/rules/feature.md"
-# strip upstream's post-baseline addition so this consumer is exactly baseline + own lines
-grep -v "trailing upstream addition" "$consumer6b/rules/feature.md" > "$consumer6b/rules/feature.md.tmp" \
-  && mv "$consumer6b/rules/feature.md.tmp" "$consumer6b/rules/feature.md"
-git -C "$consumer6b" add -A && git -C "$consumer6b" commit -q -m "consumer with append-only divergence"
-
-out6b=$(cd "$consumer6b" && bash "$SCRIPT" update --source "$src6" 2>&1)
-assert_not_contains "$out6b" "BASELINE INTEGRITY" \
-  "case 6 negative: append-only local divergence is not flagged as phantom baseline"
-
 # ---------------------------------------------------------------------------
-# Case 7: merge cross-check — when upstream's change to a region is
-# formatting-only, normalization makes base == upstream there, so a local
-# deletion of that region silently wins in the normalized merge instead of
-# conflicting (the raw merge would have flagged it). The engine must rerun
-# the merge on raw blobs and report the discrepancy. Uses a fake prettier
-# that strips trailing whitespace, so the base's trailing-space line equals
-# upstream's clean line after normalization.
+# Case 7: contribute round-trip no-op — a consumer's edit to a CTS-owned
+# file (ownership violation on the FIRST sync back) is "contributed" by
+# copying its content verbatim into the CTS source (mirrors /cts-contribute
+# for a CTS-managed-file edit under this model: a straight file copy, no
+# hunk rewriting). Syncing again afterward is byte-identical: no ownership
+# warning, no content change — proving the round trip is a no-op by
+# construction.
 # ---------------------------------------------------------------------------
 src7="$WORK/src7"; consumer7="$WORK/consumer7"
 git_repo "$src7"
-echo "rules/doc.md" > "$src7/cts-payload.txt"
-mkdir -p "$src7/rules"
-{
-  echo "alpha stable line"
-  printf 'beta feature line   \n'
-  echo "gamma stable line"
-  echo "delta original wording"
-} > "$src7/rules/doc.md"
-git -C "$src7" add -A && git -C "$src7" commit -q -m "commit1: beta has trailing spaces"
-OLD_SHA7=$(git -C "$src7" rev-parse HEAD)
-{
-  echo "alpha stable line"
-  echo "beta feature line"
-  echo "gamma stable line"
-  echo "delta reworded upstream"
-} > "$src7/rules/doc.md"
-git -C "$src7" add -A && git -C "$src7" commit -q -m "commit2: beta formatting-only cleanup + real delta change"
+mkdir -p "$src7/rules/cts"
+{ echo "rules/cts/"; echo ".claude/scripts/"; } > "$src7/cts-payload.txt"
+echo "workflow v1" > "$src7/rules/cts/workflow.md"
+seed_engine "$src7"
+git -C "$src7" add -A && git -C "$src7" commit -q -m "v1"
 
 git_repo "$consumer7"
-echo "$OLD_SHA7" > "$consumer7/.cts-version"
-mkdir -p "$consumer7/rules"
-{
-  echo "alpha stable line"
-  echo "gamma stable line"
-  echo "delta original wording"
-} > "$consumer7/rules/doc.md"
-# fake prettier: strips trailing whitespace (a deterministic "normalizer")
-mkdir -p "$consumer7/node_modules/.bin"
-cat > "$consumer7/node_modules/.bin/prettier" <<'FAKE'
-#!/bin/sh
-sed 's/[[:space:]]*$//'
-FAKE
-chmod +x "$consumer7/node_modules/.bin/prettier"
-git -C "$consumer7" add -A && git -C "$consumer7" commit -q -m "consumer deleted beta line (phantom or deliberate)"
+seed_consumer_engine "$consumer7"
+git -C "$consumer7" add -A && git -C "$consumer7" commit -q -m "bootstrap"
+(cd "$consumer7" && bash .claude/scripts/cts-sync.sh init --source "$src7" --force >/dev/null 2>&1)
+git -C "$consumer7" add -A && git -C "$consumer7" commit -q -m "post-init"
 
-out7=$(cd "$consumer7" && bash "$SCRIPT" update --source "$src7" 2>&1)
-exit7=$?
-if [ "$exit7" -ne 0 ]; then
-  fail "case 7: engine exited non-zero ($exit7): $out7"
+echo "workflow v1 + consumer's own improvement" > "$consumer7/rules/cts/workflow.md"
+git -C "$consumer7" add -A && git -C "$consumer7" commit -q -m "consumer improves workflow.md"
+
+# Simulate /cts-contribute: copy the consumer's file verbatim into CTS.
+cp "$consumer7/rules/cts/workflow.md" "$src7/rules/cts/workflow.md"
+git -C "$src7" add -A && git -C "$src7" commit -q -m "v2, from consumer7"
+
+out7a=$(cd "$consumer7" && bash .claude/scripts/cts-sync.sh update --source "$src7" 2>&1)
+assert_contains "$out7a" "OWNERSHIP WARNING: rules/cts/workflow.md" \
+  "case 7: first sync after contribution still flags the pre-existing divergence"
+assert_file_equals "$consumer7/rules/cts/workflow.md" "workflow v1 + consumer's own improvement" \
+  "case 7: content is byte-identical post-contribution (overwrite is a no-op on content)"
+
+out7b=$(cd "$consumer7" && bash .claude/scripts/cts-sync.sh update --source "$src7" 2>&1)
+assert_not_contains "$out7b" "OWNERSHIP WARNING" \
+  "case 7: second sync (nothing changed) is a clean no-op — no ownership warning"
+assert_file_equals "$consumer7/rules/cts/workflow.md" "workflow v1 + consumer's own improvement" \
+  "case 7: content still byte-identical on the no-op run"
+
+# ---------------------------------------------------------------------------
+# Case 8: new-payload-path collision — a path newly added to cts-payload.txt
+# collides with a pre-existing unrelated local file. Under single ownership
+# CTS now owns the path, so it is still overwritten (no merge, no silent
+# skip) but the collision is reported loudly.
+# ---------------------------------------------------------------------------
+src8="$WORK/src8"; consumer8="$WORK/consumer8"
+git_repo "$src8"
+echo "AGENTS.md" > "$src8/cts-payload.txt"
+echo "root agents file" > "$src8/AGENTS.md"
+seed_engine "$src8"
+echo ".claude/scripts/" >> "$src8/cts-payload.txt"
+git -C "$src8" add -A && git -C "$src8" commit -q -m "commit1: no .editorconfig in payload"
+git_repo "$consumer8"
+seed_consumer_engine "$consumer8"
+git -C "$consumer8" add -A && git -C "$consumer8" commit -q -m "bootstrap"
+(cd "$consumer8" && bash .claude/scripts/cts-sync.sh init --source "$src8" --force >/dev/null 2>&1)
+
+echo "consumer-local editorconfig, predates CTS ownership" > "$consumer8/.editorconfig"
+git -C "$consumer8" add -A && git -C "$consumer8" commit -q -m "consumer's own .editorconfig"
+
+echo ".editorconfig" >> "$src8/cts-payload.txt"
+echo "root = true" > "$src8/.editorconfig"
+git -C "$src8" add -A && git -C "$src8" commit -q -m "commit2: add .editorconfig to payload"
+
+out8=$(cd "$consumer8" && bash .claude/scripts/cts-sync.sh update --source "$src8" 2>&1)
+exit8=$?
+if [ "$exit8" -ne 0 ]; then
+  fail "case 8: update exited non-zero ($exit8): $out8"
 else
-  assert_contains "$out7" "MERGE CROSS-CHECK: rules/doc.md" \
-    "case 7: normalized-vs-raw merge discrepancy is reported"
-  assert_contains "$out7" "raw 3-way merge finds" \
-    "case 7: report explains the raw merge found more conflict regions"
-  merged7=$(cat "$consumer7/rules/doc.md")
-  assert_not_contains "$merged7" "beta feature line" \
-    "case 7: normalized merge did silently drop the beta region (the hazard the warning exists for)"
-  assert_contains "$merged7" "delta reworded upstream" \
-    "case 7: upstream's real content change still applied"
-
-  # The printed hint's local side must be a stash of the *pre-sync* file, not
-  # "./rules/doc.md" — by now that path holds the already-merged result, and
-  # raw-merging it against base/upstream would come back clean (0 conflicts),
-  # falsely reading as "no conflicts" on exactly the file the warning exists
-  # to flag. Extract the hint verbatim from the engine's own output and run
-  # it for real: it must reproduce the same raw conflict count the engine
-  # itself reported above.
-  rc7=$(printf '%s\n' "$out7" | sed -n 's/.*raw 3-way merge finds \([0-9]*\) conflict.*/\1/p')
-  hint7=$(printf '%s\n' "$out7" | awk '/^MERGE CROSS-CHECK: rules\/doc\.md/{getline; print; exit}' | sed 's/^  //')
-  case "$hint7" in
-    *"-p ./rules/doc.md"*)
-      fail "case 7: printed hint uses the post-merge working-tree file (./rules/doc.md) as its local side, not a pre-sync stash" ;;
-    "") fail "case 7: could not extract the printed cross-check hint from engine output" ;;
-    *)
-      hint_out7=$(cd "$consumer7" && eval "$hint7" 2>&1)
-      hint_conflicts7=$(printf '%s\n' "$hint_out7" | grep -c '^[0-9]*:<<<<<<<')
-      if [ "$hint_conflicts7" -ge 1 ] && [ "$hint_conflicts7" = "$rc7" ]; then
-        pass "case 7: printed hint, run for real, reproduces the engine's reported raw conflict count ($rc7)"
-      else
-        fail "case 7: printed hint, run for real, reproduces the engine's reported raw conflict count (got $hint_conflicts7, expected $rc7; hint output: $hint_out7)"
-      fi
-      ;;
-  esac
+  assert_contains "$out8" "NEW PAYLOAD PATH COLLISION: .editorconfig" \
+    "case 8: new-payload-path collision reported"
+  assert_file_equals "$consumer8/.editorconfig" "root = true" \
+    "case 8: single ownership — CTS's content wins outright (no merge, no silent skip)"
 fi
 
 # ---------------------------------------------------------------------------
-# Case 7b: multiple cross-check discrepancies in the same run — the stash
-# dir (CROSSCHECK_STASH_DIR) is a single lazily-created dir shared across
-# every merge_one() call in the run, guarded by `[ -n "$CROSSCHECK_STASH_DIR" ]
-# || CROSSCHECK_STASH_DIR=$(mktemp -d)`. A second discrepancy in the same run
-# must reuse that dir (not re-mktemp over it, losing the first file's stash)
-# and land at a distinct nested path so neither file's stash clobbers the
-# other's. Two files in different subdirectories, each with the same
-# formatting-only-upstream-change-plus-local-deletion hazard as case 7.
+# Case 9: override-rot false-positive guard — an override file citing a path
+# that did NOT change this run (either a stale/nonexistent cite, or a real
+# CTS path that just wasn't touched by this sync) must never fire "OVERRIDE
+# ROT", even though other unrelated payload files did change.
 # ---------------------------------------------------------------------------
-src7b="$WORK/src7b"; consumer7b="$WORK/consumer7b"
-git_repo "$src7b"
-{
-  echo "rules/doc.md"
-  echo "other/nested/doc2.md"
-} > "$src7b/cts-payload.txt"
-mkdir -p "$src7b/rules" "$src7b/other/nested"
-{
-  echo "alpha stable line"
-  printf 'beta feature line   \n'
-  echo "gamma stable line"
-  echo "delta original wording"
-} > "$src7b/rules/doc.md"
-{
-  echo "one stable line"
-  printf 'two feature line   \n'
-  echo "three stable line"
-  echo "four original wording"
-} > "$src7b/other/nested/doc2.md"
-git -C "$src7b" add -A && git -C "$src7b" commit -q -m "commit1: both files have trailing-space beta/two lines"
-OLD_SHA7b=$(git -C "$src7b" rev-parse HEAD)
-{
-  echo "alpha stable line"
-  echo "beta feature line"
-  echo "gamma stable line"
-  echo "delta reworded upstream"
-} > "$src7b/rules/doc.md"
-{
-  echo "one stable line"
-  echo "two feature line"
-  echo "three stable line"
-  echo "four reworded upstream"
-} > "$src7b/other/nested/doc2.md"
-git -C "$src7b" add -A && git -C "$src7b" commit -q -m "commit2: both formatting-only cleanups + real content changes"
+src9="$WORK/src9"; consumer9="$WORK/consumer9"
+git_repo "$src9"
+mkdir -p "$src9/rules/cts"
+{ echo "rules/cts/"; echo ".claude/scripts/"; } > "$src9/cts-payload.txt"
+echo "workflow v1" > "$src9/rules/cts/workflow.md"
+echo "testing v1" > "$src9/rules/cts/testing.md"
+seed_engine "$src9"
+git -C "$src9" add -A && git -C "$src9" commit -q -m "v1"
 
-git_repo "$consumer7b"
-echo "$OLD_SHA7b" > "$consumer7b/.cts-version"
-mkdir -p "$consumer7b/rules" "$consumer7b/other/nested"
-{
-  echo "alpha stable line"
-  echo "gamma stable line"
-  echo "delta original wording"
-} > "$consumer7b/rules/doc.md"
-{
-  echo "one stable line"
-  echo "three stable line"
-  echo "four original wording"
-} > "$consumer7b/other/nested/doc2.md"
-mkdir -p "$consumer7b/node_modules/.bin"
-cat > "$consumer7b/node_modules/.bin/prettier" <<'FAKE'
-#!/bin/sh
-sed 's/[[:space:]]*$//'
-FAKE
-chmod +x "$consumer7b/node_modules/.bin/prettier"
-git -C "$consumer7b" add -A && git -C "$consumer7b" commit -q -m "consumer deleted beta/two lines in both files"
+git_repo "$consumer9"
+seed_consumer_engine "$consumer9"
+git -C "$consumer9" add -A && git -C "$consumer9" commit -q -m "bootstrap"
+(cd "$consumer9" && bash .claude/scripts/cts-sync.sh init --source "$src9" --force >/dev/null 2>&1)
+mkdir -p "$consumer9/rules/local"
+printf '## Overrides rules/cts/nonexistent-path.md § "made up"\n\nreplacement text\n' > "$consumer9/rules/local/stale-cite.md"
+git -C "$consumer9" add -A && git -C "$consumer9" commit -q -m "add override citing a path that never existed"
 
-out7b=$(cd "$consumer7b" && bash "$SCRIPT" update --source "$src7b" 2>&1)
-exit7b=$?
-if [ "$exit7b" -ne 0 ]; then
-  fail "case 7b: engine exited non-zero ($exit7b): $out7b"
+echo "testing v2 — unrelated file changed" >> "$src9/rules/cts/testing.md"
+git -C "$src9" add -A && git -C "$src9" commit -q -m "v2: only testing.md changes, not workflow.md or the stale cite"
+
+out9=$(cd "$consumer9" && bash .claude/scripts/cts-sync.sh update --source "$src9" 2>&1)
+exit9=$?
+if [ "$exit9" -ne 0 ]; then
+  fail "case 9: update exited non-zero ($exit9): $out9"
 else
-  assert_contains "$out7b" "MERGE CROSS-CHECK: rules/doc.md" \
-    "case 7b: first file's discrepancy is reported"
-  assert_contains "$out7b" "MERGE CROSS-CHECK: other/nested/doc2.md" \
-    "case 7b: second file's discrepancy is reported"
+  assert_not_contains "$out9" "OVERRIDE ROT" \
+    "case 9: stale cite to a nonexistent path never fires override-rot, even when other files change"
+fi
 
-  hint_doc7b=$(printf '%s\n' "$out7b" | awk '/^MERGE CROSS-CHECK: rules\/doc\.md/{getline; print; exit}' | sed 's/^  //')
-  hint_doc27b=$(printf '%s\n' "$out7b" | awk '/^MERGE CROSS-CHECK: other\/nested\/doc2\.md/{getline; print; exit}' | sed 's/^  //')
-  stash_doc7b=$(printf '%s\n' "$hint_doc7b" | sed -n 's/.*git merge-file -p "\{0,1\}\([^" ]*\)"\{0,1\} .*/\1/p')
-  stash_doc27b=$(printf '%s\n' "$hint_doc27b" | sed -n 's/.*git merge-file -p "\{0,1\}\([^" ]*\)"\{0,1\} .*/\1/p')
+# ---------------------------------------------------------------------------
+# Case 10: jq missing — cts-sync.sh depends on jq for settings deep-merge and
+# manifest bookkeeping; running with jq hidden from PATH must fail fast with
+# a clear, actionable error instead of a confusing mid-run jq: command not
+# found failure.
+# ---------------------------------------------------------------------------
+src10="$WORK/src10"; consumer10="$WORK/consumer10"
+git_repo "$src10"
+mkdir -p "$src10/rules/cts"
+{ echo "rules/cts/"; echo ".claude/scripts/"; } > "$src10/cts-payload.txt"
+echo "workflow v1" > "$src10/rules/cts/workflow.md"
+seed_engine "$src10"
+git -C "$src10" add -A && git -C "$src10" commit -q -m "v1"
 
-  if [ -n "$stash_doc7b" ] && [ -n "$stash_doc27b" ] && [ "$(dirname "$stash_doc7b")" != "$(dirname "$stash_doc27b")" ] \
-    && [ "${stash_doc7b%/rules/doc.md}" = "${stash_doc27b%/other/nested/doc2.md}" ]; then
-    pass "case 7b: both stashes share one lazily-created CROSSCHECK_STASH_DIR, at distinct nested paths"
+git_repo "$consumer10"
+seed_consumer_engine "$consumer10"
+git -C "$consumer10" add -A && git -C "$consumer10" commit -q -m "bootstrap"
+
+nojq_dir="$WORK/nojq-path"
+mkdir -p "$nojq_dir"
+for tool in bash git sed grep awk cat find mktemp mv cp chmod sha256sum mkdir printf; do
+  bin="$(command -v "$tool" 2>/dev/null)" && ln -sf "$bin" "$nojq_dir/$tool"
+done
+out10=$(cd "$consumer10" && PATH="$nojq_dir" bash .claude/scripts/cts-sync.sh init --source "$src10" --force 2>&1)
+exit10=$?
+if [ "$exit10" -eq 0 ]; then
+  fail "case 10: init with jq hidden from PATH should fail, but exited 0: $out10"
+else
+  assert_contains "$out10" "jq is required" \
+    "case 10: missing jq produces a clear, actionable error instead of a raw command-not-found failure"
+fi
+
+# ---------------------------------------------------------------------------
+# Case 11: owner-only skill in the payload must not crash a real (non-dry-run)
+# sync. Regression for a `set -e` trap: `is_owner_only_skill "$rel" && { ...;
+# return; }` in copy_one() returned whatever `$?` the last command inside the
+# block happened to leave (1, when DRY_RUN != 1, since the inner `[ "$DRY_RUN"
+# = 1 ] && echo` short-circuits false) instead of an explicit success status.
+# copy_one() is called as a bare (unguarded) statement from sync_path(), which
+# is itself called bare from the top-level payload loop — a bare function call
+# that returns nonzero trips `set -e` immediately, silently killing the whole
+# script with no output. This is a live bug in production, not just a test
+# artifact: this repo's own .claude/skills/cts-review-contribution/ is always
+# present under the .claude/skills/ payload directory entry, so every real
+# init/update run hit this exact path before the fix.
+# ---------------------------------------------------------------------------
+src11="$WORK/src11"; consumer11="$WORK/consumer11"
+git_repo "$src11"
+mkdir -p "$src11/.claude/skills/cts-review-contribution"
+{ echo "AGENTS.md"; echo ".claude/skills/"; echo ".claude/scripts/"; } > "$src11/cts-payload.txt"
+echo "agents" > "$src11/AGENTS.md"
+echo "owner-only skill content" > "$src11/.claude/skills/cts-review-contribution/SKILL.md"
+seed_engine "$src11"
+git -C "$src11" add -A && git -C "$src11" commit -q -m "v1"
+
+git_repo "$consumer11"
+seed_consumer_engine "$consumer11"
+git -C "$consumer11" add -A && git -C "$consumer11" commit -q -m "bootstrap"
+
+out11=$(cd "$consumer11" && bash .claude/scripts/cts-sync.sh init --source "$src11" --force 2>&1)
+exit11=$?
+if [ "$exit11" -ne 0 ]; then
+  fail "case 11: init exited non-zero ($exit11) when payload contains an owner-only skill: $out11"
+else
+  assert_contains "$out11" "Done. CTS payload installed at" "case 11: init completes successfully past the owner-only-skill path"
+  assert_file_equals "$consumer11/AGENTS.md" "agents" "case 11: sync still installed the rest of the payload"
+  if [ -e "$consumer11/.claude/skills/cts-review-contribution" ]; then
+    fail "case 11: owner-only skill must never be copied into the consumer tree"
   else
-    fail "case 7b: both stashes share one lazily-created CROSSCHECK_STASH_DIR, at distinct nested paths (doc: $stash_doc7b, doc2: $stash_doc27b)"
+    pass "case 11: owner-only skill correctly skipped, not copied"
   fi
+fi
 
-  hint_out_doc7b=$(cd "$consumer7b" && eval "$hint_doc7b" 2>&1)
-  hint_out_doc27b=$(cd "$consumer7b" && eval "$hint_doc27b" 2>&1)
-  rc_doc7b=$(printf '%s\n' "$hint_out_doc7b" | grep -c '^[0-9]*:<<<<<<<')
-  rc_doc27b=$(printf '%s\n' "$hint_out_doc27b" | grep -c '^[0-9]*:<<<<<<<')
-  if [ "$rc_doc7b" -ge 1 ] && [ "$rc_doc27b" -ge 1 ]; then
-    pass "case 7b: both hints independently reproduce a conflict when run for real (no cross-file clobbering)"
+# ---------------------------------------------------------------------------
+# Case 12: self-script ownership blind spot — if the consumer's local
+# cts-sync.sh was hand-edited since the last sync (its hash no longer matches
+# what that sync recorded), an upstream update to the engine must still fire
+# OWNERSHIP WARNING (matching every other CTS-owned file) before overwriting
+# it, instead of silently clobbering the hand-edit.
+# ---------------------------------------------------------------------------
+src12="$WORK/src12"; consumer12="$WORK/consumer12"
+git_repo "$src12"
+{ echo "AGENTS.md"; echo ".claude/scripts/"; } > "$src12/cts-payload.txt"
+echo "agents" > "$src12/AGENTS.md"
+seed_engine "$src12"
+git -C "$src12" add -A && git -C "$src12" commit -q -m "v1"
+
+git_repo "$consumer12"
+seed_consumer_engine "$consumer12"
+git -C "$consumer12" add -A && git -C "$consumer12" commit -q -m "bootstrap"
+(cd "$consumer12" && bash .claude/scripts/cts-sync.sh init --source "$src12" --force >/dev/null 2>&1)
+
+printf '\n# HAND-EDITED-LOCALLY\n' >> "$consumer12/.claude/scripts/cts-sync.sh"
+
+printf '\n# ENGINE-MARKER-V2-CASE12\n' >> "$src12/.claude/scripts/cts-sync.sh"
+git -C "$src12" add -A && git -C "$src12" commit -q -m "v2, new engine"
+
+out12=$(cd "$consumer12" && bash .claude/scripts/cts-sync.sh update --source "$src12" 2>&1)
+exit12=$?
+if [ "$exit12" -ne 0 ]; then
+  fail "case 12: update exited non-zero ($exit12): $out12"
+else
+  assert_contains "$out12" "OWNERSHIP WARNING: .claude/scripts/cts-sync.sh" \
+    "case 12: hand-edited self-script fires ownership warning"
+  assert_contains "$out12" "cts-contribute" \
+    "case 12: warning points at the contribute escape hatch"
+  if grep -qxF "# ENGINE-MARKER-V2-CASE12" "$consumer12/.claude/scripts/cts-sync.sh"; then
+    pass "case 12: hand-edited self-script still overwritten with upstream content"
   else
-    fail "case 7b: both hints independently reproduce a conflict when run for real (doc: $hint_out_doc7b, doc2: $hint_out_doc27b)"
+    fail "case 12: hand-edited self-script still overwritten with upstream content"
   fi
+fi
+
+# ---------------------------------------------------------------------------
+# Case 13: self-script merely stale (never hand-edited since last sync) must
+# NOT fire OWNERSHIP WARNING when an upstream update replaces it — that's the
+# normal self-update-first path, not an ownership violation.
+# ---------------------------------------------------------------------------
+src13="$WORK/src13"; consumer13="$WORK/consumer13"
+git_repo "$src13"
+{ echo "AGENTS.md"; echo ".claude/scripts/"; } > "$src13/cts-payload.txt"
+echo "agents" > "$src13/AGENTS.md"
+seed_engine "$src13"
+git -C "$src13" add -A && git -C "$src13" commit -q -m "v1"
+
+git_repo "$consumer13"
+seed_consumer_engine "$consumer13"
+git -C "$consumer13" add -A && git -C "$consumer13" commit -q -m "bootstrap"
+(cd "$consumer13" && bash .claude/scripts/cts-sync.sh init --source "$src13" --force >/dev/null 2>&1)
+
+printf '\n# ENGINE-MARKER-V2-CASE13\n' >> "$src13/.claude/scripts/cts-sync.sh"
+git -C "$src13" add -A && git -C "$src13" commit -q -m "v2, new engine"
+
+out13=$(cd "$consumer13" && bash .claude/scripts/cts-sync.sh update --source "$src13" 2>&1)
+exit13=$?
+if [ "$exit13" -ne 0 ]; then
+  fail "case 13: update exited non-zero ($exit13): $out13"
+else
+  assert_not_contains "$out13" "OWNERSHIP WARNING" \
+    "case 13: merely-stale self-script does not fire ownership warning"
+  assert_contains "$out13" "cts-sync engine updated; re-running with the new version" \
+    "case 13: self-update-first still applies for the plain-stale case"
+  if grep -qxF "# ENGINE-MARKER-V2-CASE13" "$consumer13/.claude/scripts/cts-sync.sh"; then
+    pass "case 13: stale self-script replaced with upstream version"
+  else
+    fail "case 13: stale self-script replaced with upstream version"
+  fi
+fi
+
+# ---------------------------------------------------------------------------
+# Case 14: settings-merge type-mismatch guard — a security-boundary bypass.
+# jq's deepmerge falls to "consumer value wins" on ANY shape mismatch, not
+# just genuine scalar overrides: if the consumer's existing settings.json has
+# `permissions` as a non-object (e.g. a stray string) or `permissions.deny`
+# as a non-array, the merge would silently drop the entire CTS `permissions`
+# subtree — including all four ownership-enforcement deny entries — while
+# still reporting success. The engine must instead hard-fail (non-zero exit,
+# clear error) and leave the consumer's settings.json untouched, rather than
+# ship a config that looks merged but silently lost its deny rules.
+# ---------------------------------------------------------------------------
+src14="$WORK/src14"; consumer14="$WORK/consumer14"
+git_repo "$src14"
+mkdir -p "$src14/.cts"
+{ echo "AGENTS.md"; echo ".claude/scripts/"; echo ".cts/settings.cts.json"; } > "$src14/cts-payload.txt"
+echo "agents" > "$src14/AGENTS.md"
+seed_engine "$src14"
+printf '{"model":"opusplan","permissions":{"deny":["Edit(./rules/cts/**)","Write(./rules/cts/**)","Edit(./.cts/**)","Write(./.cts/**)"]}}\n' > "$src14/.cts/settings.cts.json"
+git -C "$src14" add -A && git -C "$src14" commit -q -m "v1"
+
+git_repo "$consumer14"
+seed_consumer_engine "$consumer14"
+git -C "$consumer14" add -A && git -C "$consumer14" commit -q -m "bootstrap"
+(cd "$consumer14" && bash .claude/scripts/cts-sync.sh init --source "$src14" --force >/dev/null 2>&1)
+
+if command -v jq >/dev/null 2>&1; then
+  # Corrupt permissions into a type that would silently swallow the CTS
+  # deny array under a naive deepmerge (string instead of object).
+  echo '{"model":"custom","permissions":"none"}' > "$consumer14/.claude/settings.json"
+  before14=$(cat "$consumer14/.claude/settings.json")
+  git -C "$consumer14" add -A && git -C "$consumer14" commit -q -m "malformed permissions key"
+
+  echo "agents v2" > "$src14/AGENTS.md"
+  git -C "$src14" add -A && git -C "$src14" commit -q -m "v2"
+
+  out14=$(cd "$consumer14" && bash .claude/scripts/cts-sync.sh update --source "$src14" 2>&1)
+  exit14=$?
+  if [ "$exit14" -eq 0 ]; then
+    fail "case 14: type-mismatched permissions key should hard-fail the sync, but exited 0: $out14"
+  else
+    assert_contains "$out14" "would drop required CTS permissions.deny entries" \
+      "case 14: type-mismatch produces a clear, actionable error instead of silent success"
+    assert_file_equals "$consumer14/.claude/settings.json" "$before14" \
+      "case 14: settings.json left untouched (not partially merged) on hard-fail"
+  fi
+else
+  echo "skip: jq not available — case 14 (settings type-mismatch guard) skipped"
 fi
 
 echo

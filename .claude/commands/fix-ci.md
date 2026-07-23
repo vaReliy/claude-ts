@@ -143,7 +143,7 @@ If the debugger determined that a code fix is needed, launch the `backend-develo
 The agent prompt must instruct the developer to:
 
 - Apply the minimal fix to resolve the CI failure
-- Follow project standards: `CLAUDE.md`, `rules/code-style.md`, `rules/architecture.md`
+- Follow project standards: `CLAUDE.md`, `rules/cts/code-style.md`, `rules/cts/architecture.md`
 - For **lint failures**, run the relevant linter to verify the fix:
   ```bash
   docker compose exec app npx tsc --noEmit

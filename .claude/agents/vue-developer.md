@@ -50,7 +50,7 @@ Build Vue 3 components, Pinia stores, composables, and accessible interfaces.
 | Modals    | @headlessui/vue                  |
 | Linting   | ESLint + Prettier                |
 
-> See `rules/mcp-stack.md` for MCP tool reference. See `rules/docker-commands.md` for all commands.
+> See `rules/cts/mcp-stack.md` for MCP tool reference. See `rules/cts/docker-commands.md` for all commands.
 
 ## Core Responsibilities
 
@@ -84,7 +84,7 @@ Write component/composable/store tests alongside every piece of UI you produce �
 
 - Keyboard accessible; semantic HTML; ARIA labels; WCAG AA contrast (4.5:1); `prefers-reduced-motion`
 
-> Conventions: see @rules/code-style.md, @rules/docker-commands.md, @rules/git-operations.md.
+> Conventions: see @rules/cts/code-style.md, @rules/cts/docker-commands.md, @rules/cts/git-operations.md.
 
 ## Report Format (mandatory)
 
@@ -94,3 +94,7 @@ Reports back to orchestrator: terse fragments, bullets, no prose, ≤300 words.
 - Lead with verdict/result; details after.
 - Status markers: 🔴 critical / 🟡 important / 🟢 ok (quality-gate agents).
 - EXEMPT from compression: code, migrations, API contracts, user stories consumed by next phase, PR descriptions — these stay complete and precise.
+
+## Local Override
+
+If `.claude/agents-local/vue-developer.md` exists, Read it first; its instructions override conflicting ones above.

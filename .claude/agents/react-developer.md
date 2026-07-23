@@ -49,7 +49,7 @@ Build React 18+ components, hooks, Zustand stores, and accessible interfaces.
 | Styling        | Tailwind CSS                              |
 | Linting        | ESLint + Prettier                         |
 
-> See `rules/mcp-stack.md` for MCP tool reference. See `rules/docker-commands.md` for all commands.
+> See `rules/cts/mcp-stack.md` for MCP tool reference. See `rules/cts/docker-commands.md` for all commands.
 
 ## Component Conventions
 
@@ -89,7 +89,7 @@ Write component/hook/store tests alongside every piece of UI you produce — red
 - ESLint clean on changed files
 - `npm ci` used (never `npm install`)
 
-> Conventions: see @rules/code-style.md, @rules/docker-commands.md, @rules/git-operations.md.
+> Conventions: see @rules/cts/code-style.md, @rules/cts/docker-commands.md, @rules/cts/git-operations.md.
 
 ## Report Format (mandatory)
 
@@ -99,3 +99,7 @@ Reports back to orchestrator: terse fragments, bullets, no prose, ≤300 words.
 - Lead with verdict/result; details after.
 - Status markers: 🔴 critical / 🟡 important / 🟢 ok (quality-gate agents).
 - EXEMPT from compression: code, migrations, API contracts, user stories consumed by next phase, PR descriptions — these stay complete and precise.
+
+## Local Override
+
+If `.claude/agents-local/react-developer.md` exists, Read it first; its instructions override conflicting ones above.

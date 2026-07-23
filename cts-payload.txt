@@ -1,25 +1,41 @@
 # CTS payload manifest — paths copied into target projects by cts-sync.sh.
 # One path per line. Trailing "/" marks a directory (copied recursively).
 # Lines starting with "#" and blank lines are ignored.
+#
+# Ownership model (two-layer distribution): every payload path here is
+# CTS-owned and plain-overwritten on sync — no merging, no baselines. Consumer
+# customizations live in a SEPARATE, never-payload'd path instead: rules/cts/**
+# pairs with rules/local/**, .claude/agents/*.md pairs with
+# .claude/agents-local/*.md, AGENTS.md pairs with AGENTS.local.md, CLAUDE.md
+# pairs with CLAUDE.local.md, and .cts/settings.cts.json layers under the
+# consumer's own .claude/settings.json via jq deep-merge (see cts-sync.sh).
+# None of the "local"/consumer-owned paths are listed below, and cts-sync.sh
+# only ever touches paths listed here — so they are never synced, by
+# construction, not by a special-case guard.
 
 AGENTS.md
 CLAUDE.md
 .mcp.json
 .editorconfig
 .prettierignore
-rules/
+rules/cts/
 docs/RECIPES.md
 docs/METRICS.md
 # METRICS.md IS shipped (unlike KNOWLEDGE_INBOX.md) to seed the header/format at
-# init; cts-sync.sh's is_locally_modified() skips it once a repo appends real rows.
+# init; cts-sync.sh's ownership-violation detector skips it once its hash no
+# longer matches what a prior sync last recorded and it's an .ctsignore'd path.
 .claude/agents/
 .claude/skills/
 .claude/scripts/
 .claude/hooks/
-.claude/settings.json
+.cts/settings.cts.json
 
 # Explicitly NOT payload: README.md, CHANGELOG.md, THIRD_PARTY.md, LICENSE,
-# images, tasks/, tmp/, cts-payload.txt itself, .claude/settings.local.json,
+# images, tasks/, tmp/, cts-payload.txt itself, .claude/settings.json (consumer-
+# owned; .cts/settings.cts.json is the CTS-owned fragment merged into it),
+# .claude/settings.local.json, .cts/manifest.json (consumer-local sync-state
+# bookkeeping, never shipped), rules/local/**, .claude/agents-local/**,
+# AGENTS.local.md, CLAUDE.local.md (all consumer-owned override layers),
 # docs/KNOWLEDGE_INBOX.md (project-local, never synced to consumers),
 # .claude/skills/cts-review-contribution/ (present in this repo, excluded
 # from the .claude/skills/ payload entry by OWNER_ONLY_SKILLS in

@@ -140,7 +140,7 @@ This diagram is the T2/T3 path (`ba` required). **T1 skips Phase 1 entirely**: t
 
 ### Pre-flight obligation for technical agents
 
-When dispatching a technical agent (`backend-developer`, `angular-developer`, `tester`, `qa`, `devops`, `dba`, `debugger`, `refactoring-expert`, `integration-architect`, `queue-specialist`), the agent definition already includes mandatory pre-flight reads (`docs/KNOWLEDGE_INBOX.md` + `rules/architecture.md` + `rules/code-style.md`). Do not pass these as inline context — the agent reads them from disk so they reflect the current state of the repo.
+When dispatching a technical agent (`backend-developer`, `angular-developer`, `tester`, `qa`, `devops`, `dba`, `debugger`, `refactoring-expert`, `integration-architect`, `queue-specialist`), the agent definition already includes mandatory pre-flight reads (`docs/KNOWLEDGE_INBOX.md` + `rules/cts/architecture.md` + `rules/cts/code-style.md`). Do not pass these as inline context — the agent reads them from disk so they reflect the current state of the repo.
 
 ### Routing Mixed Infrastructure + Application Code
 
@@ -163,9 +163,9 @@ Team name: `impl-{feature-slug}` (e.g. `impl-user-registration`)
 
 **Handoff checklist (orchestrator verifies before advancing to Phase 4):**
 
-- [ ] `grep -E '"\^|"~' package.json` returns empty — no ranges introduced. Full audit procedure: `rules/dependencies.md`.
+- [ ] `grep -E '"\^|"~' package.json` returns empty — no ranges introduced. Full audit procedure: `rules/cts/dependencies.md`.
 - [ ] `npx nx build <project> --skip-nx-cache` exits 0
-- [ ] Generated tsconfig explicitly declares the strict block (the repo base omits it): `strict`, `noImplicitOverride`, `noPropertyAccessFromIndexSignature`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `forceConsistentCasingInFileNames`. For an app, also verify `module`/`moduleResolution` per `rules/nx-generators.md` — apps differ from libs, do NOT blindly copy a lib's `"bundler"` resolution.
+- [ ] Generated tsconfig explicitly declares the strict block (the repo base omits it): `strict`, `noImplicitOverride`, `noPropertyAccessFromIndexSignature`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `forceConsistentCasingInFileNames`. For an app, also verify `module`/`moduleResolution` per `rules/cts/nx-generators.md` — apps differ from libs, do NOT blindly copy a lib's `"bundler"` resolution.
 
 Passing this checklist authorizes advancing to the quality gate (Phase 4) — it does **not** authorize declaring the task done. The gate still runs.
 
@@ -242,8 +242,8 @@ Reviewer and security-scanner emit two sections in every report:
 **Orchestrator actions (deterministic — no judgment calls):**
 
 - `## Fix Now` items present → route to responsible implementation agent → restart quality gate from stage 1. Max 2 full cycles. After 2 cycles with open Fix Now items → **hard stop**: emit a continuation task via the `handoff` skill (open Fix Now items, attempt log, hypotheses) instead of a bare surface-to-user stop, do NOT self-patch.
-- `## Emit as Task` items present → orchestrator creates one task per context cluster: findings that share a module/seam/file-area become ONE task file with a findings checklist inside it; findings unrelated to each other stay as separate task files (following `rules/task-authoring.md`). Then **closes the gate** for the current task. Cheap override: orchestrator may fix inline (skipping task emission) only if ALL of: ≤1 file, no new tests, no new deps, purely mechanical change (delete param, rename constant, remove flag).
-- **Generation damping at G≥2**: At Generation ≥ 2 (a task itself emitted from another emitted task's gate — see `rules/task-authoring.md`'s Generation row), only Correctness/Security findings (per the Severity floor table below) may spawn a new G(n+1) task file. Comprehension and Consistency findings at G≥2 do NOT get their own task file — instead, record them in the sub-floor ledger (`## Deferred / sub-floor` section in `docs/KNOWLEDGE_INBOX.md`) for theme detection, using the existing ≥3-occurrences-promotes-to-a-task rule that applies to sub-floor findings (see below). This overrides the normal Severity floor only at high generation; the floor table and roadmap-prioritization rules remain unchanged.
+- `## Emit as Task` items present → orchestrator creates one task per context cluster: findings that share a module/seam/file-area become ONE task file with a findings checklist inside it; findings unrelated to each other stay as separate task files (following `rules/cts/task-authoring.md`). Then **closes the gate** for the current task. Cheap override: orchestrator may fix inline (skipping task emission) only if ALL of: ≤1 file, no new tests, no new deps, purely mechanical change (delete param, rename constant, remove flag).
+- **Generation damping at G≥2**: At Generation ≥ 2 (a task itself emitted from another emitted task's gate — see `rules/cts/task-authoring.md`'s Generation row), only Correctness/Security findings (per the Severity floor table below) may spawn a new G(n+1) task file. Comprehension and Consistency findings at G≥2 do NOT get their own task file — instead, record them in the sub-floor ledger (`## Deferred / sub-floor` section in `docs/KNOWLEDGE_INBOX.md`) for theme detection, using the existing ≥3-occurrences-promotes-to-a-task rule that applies to sub-floor findings (see below). This overrides the normal Severity floor only at high generation; the floor table and roadmap-prioritization rules remain unchanged.
 - All sections empty (`_none_`) → proceed to phase 5.
 
 **Same-session micro-resolution lane.** After the gate closes for the current task (all `## Fix Now` resolved, `## Emit as Task` list written), the orchestrator MAY resolve emitted findings immediately in the same session when ALL hold per finding:
