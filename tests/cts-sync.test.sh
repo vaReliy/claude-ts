@@ -327,12 +327,16 @@ assert_contains "$out7a" "OWNERSHIP WARNING: rules/cts/workflow.md" \
   "case 7: first sync after contribution still flags the pre-existing divergence"
 assert_file_equals "$consumer7/rules/cts/workflow.md" "workflow v1 + consumer's own improvement" \
   "case 7: content is byte-identical post-contribution (overwrite is a no-op on content)"
+assert_not_contains "$out7a" "WARNING: No manifest baseline" \
+  "case 7: init already wrote a real manifest baseline — no-baseline warning must not false-fire on a later update"
 
 out7b=$(cd "$consumer7" && bash .claude/scripts/cts-sync.sh update --source "$src7" 2>&1)
 assert_not_contains "$out7b" "OWNERSHIP WARNING" \
   "case 7: second sync (nothing changed) is a clean no-op — no ownership warning"
 assert_file_equals "$consumer7/rules/cts/workflow.md" "workflow v1 + consumer's own improvement" \
   "case 7: content still byte-identical on the no-op run"
+assert_not_contains "$out7b" "WARNING: No manifest baseline" \
+  "case 7: no-baseline warning still absent on the no-op run with an established manifest"
 
 # ---------------------------------------------------------------------------
 # Case 8: new-payload-path collision — a path newly added to cts-payload.txt
@@ -802,6 +806,51 @@ else
   else
     pass "case 17b: no conflict markers left anywhere in the consumer tree (real-baseline fixture)"
   fi
+fi
+
+# ---------------------------------------------------------------------------
+# Case 18: no-baseline first-run collision handling — a consumer with a
+# genuinely pre-refactor state (no .cts/manifest.json baseline yet) runs its
+# first `update` under the new engine with a customized, non-.ctsignore'd file
+# on disk. Every payload path is flagged as a fresh collision by the engine
+# (correct in principle — no prior baseline to compare against), but this is
+# risky: the user must manually diff each collision against pre-refactor
+# upstream to ensure pre-existing customizations won't be silently overwritten.
+# This case proves the documented warning fires and the file is flagged for
+# review rather than silently overwritten without disclosure.
+# ---------------------------------------------------------------------------
+src18="$WORK/src18"; consumer18="$WORK/consumer18"
+git_repo "$src18"
+mkdir -p "$src18/docs"
+{ echo "AGENTS.md"; echo "docs/METRICS.md"; echo ".claude/scripts/"; } > "$src18/cts-payload.txt"
+echo "root agents file v1" > "$src18/AGENTS.md"
+echo "metrics v1" > "$src18/docs/METRICS.md"
+seed_engine "$src18"
+git -C "$src18" add -A && git -C "$src18" commit -q -m "v1"
+
+git_repo "$consumer18"
+seed_consumer_engine "$consumer18"
+# Simulate pre-refactor consumer state: local customization NOT in .ctsignore
+# (old model didn't require it; .ctsignore didn't exist yet).
+mkdir -p "$consumer18/docs"
+echo "local metrics task history" > "$consumer18/docs/METRICS.md"
+git -C "$consumer18" add -A && git -C "$consumer18" commit -q -m "bootstrap with local customization"
+
+# First update run (no .cts/manifest.json baseline yet).
+out18=$(cd "$consumer18" && bash .claude/scripts/cts-sync.sh update --source "$src18" 2>&1)
+exit18=$?
+if [ "$exit18" -ne 0 ]; then
+  fail "case 18: update exited non-zero ($exit18): $out18"
+else
+  assert_contains "$out18" "WARNING: No manifest baseline found" \
+    "case 18: no-baseline warning fires on first update run"
+  assert_contains "$out18" "Every payload path below is being treated as a fresh collision" \
+    "case 18: warning explains the collision list contains every path"
+  assert_contains "$out18" "NEW PAYLOAD PATH COLLISION: docs/METRICS.md" \
+    "case 18: customized file flagged as NEW PAYLOAD PATH COLLISION"
+  assert_file_equals "$consumer18/docs/METRICS.md" "metrics v1" \
+    "case 18: pre-refactor customization overwritten with upstream content (no merge, no preservation)"
+  [ -f "$consumer18/.cts/manifest.json" ] && pass "case 18: manifest written" || fail "case 18: manifest written"
 fi
 
 echo
