@@ -2,6 +2,16 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Generic override-discovery for rules/local/<name>.md files (2026-07-23)
+
+### Changed
+
+- **12 agent Pre-flight sections** (`angular-developer.md`, `backend-developer.md`, `debugger.md`, `devops.md`, `dba.md`, `queue-specialist.md`, `refactoring-expert.md`, `integration-architect.md`, `reviewer.md`, `security-scanner.md`, `qa.md`, `tester.md`) — each now includes a generic override-discovery bullet directing agents to check for same-named `rules/local/<name>.md` files for any `rules/cts/<name>.md` they read or reference anywhere in their agent file (Pre-flight list or later `> Conventions`/`> See` notes, e.g. `docker-commands.md`, `mcp-stack.md`). Previously, only hand-picked platform-split files (e.g., `rules/local/architecture-backend.md`) were pointed out via prose, and only for the Pre-flight read-list; now the discovery is systematic and document-wide.
+
+### Rationale
+
+Consumer projects can now drop a same-named override at `rules/local/<name>.md` for any `rules/cts/<name>.md` file an agent reads, and the agent will find it automatically without requiring a hand-maintained `.claude/agents-local/*.md` pointer file. This eliminates the redundant "pointer-to-a-pointer" pattern and allows `.claude/agents-local/*.md` files (which solely existed to point at overrides) to be simplified or removed in a later consumer-side pass. Consumers still using hand-maintained `.claude/agents-local/` files retain full compatibility — the new discovery is an additive convenience, not a breaking change.
+
 ## [Unreleased] — Two-layer distribution: single ownership replaces merging (2026-07-23)
 
 **BREAKING CHANGE.** The distribution model is replaced end to end. Previously, CTS-managed content and consumer customizations lived in the SAME files, reconciled by a 3-way merge engine (base = content recorded at `.cts-version`). That model had structural failure modes with no fix short of redesign: `.cts-version` claims about what a project received could silently lie (phantom baselines), normalization could hide a real conflict inside a "clean" merge, and the merge engine itself needed a self-update paradox workaround (consumers ran the OLD engine to receive the NEW one).
