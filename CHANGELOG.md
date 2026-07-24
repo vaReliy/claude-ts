@@ -2,7 +2,9 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
-## [Unreleased] — Day-to-day operator recipes guide (2026-07-24)
+## [0.1.1] - 2026-07-24
+
+**Day-to-day operator recipes guide (2026-07-24)**
 
 ### Added
 
@@ -12,7 +14,7 @@ All notable changes to this Claude Code configuration template are documented he
 
 CTS README documents installation only; the new guide closes the gap for developers working day-to-day (running pipelines, overriding rules, syncing updates, contributing back). Recipes document the post-refactor two-layer distribution model exactly, capturing the new sync/override/contribute flow while fresh.
 
-## [Unreleased] — Generic override-discovery for rules/local/<name>.md files (2026-07-23)
+**Generic override-discovery for rules/local/<name>.md files (2026-07-23)**
 
 ### Changed
 
@@ -23,7 +25,7 @@ CTS README documents installation only; the new guide closes the gap for develop
 
 Consumer projects can now drop a same-named override at `rules/local/<name>.md` for any `rules/cts/<name>.md` file an agent reads, and the agent will find it automatically without requiring a hand-maintained `.claude/agents-local/*.md` pointer file. This eliminates the redundant "pointer-to-a-pointer" pattern and allows `.claude/agents-local/*.md` files (which solely existed to point at overrides) to be simplified or removed in a later consumer-side pass. Consumers still using hand-maintained `.claude/agents-local/` files retain full compatibility — the new discovery is an additive convenience, not a breaking change.
 
-## [Unreleased] — Two-layer distribution: single ownership replaces merging (2026-07-23)
+**Two-layer distribution: single ownership replaces merging (2026-07-23)**
 
 **BREAKING CHANGE.** The distribution model is replaced end to end. Previously, CTS-managed content and consumer customizations lived in the SAME files, reconciled by a 3-way merge engine (base = content recorded at `.cts-version`). That model had structural failure modes with no fix short of redesign: `.cts-version` claims about what a project received could silently lie (phantom baselines), normalization could hide a real conflict inside a "clean" merge, and the merge engine itself needed a self-update paradox workaround (consumers ran the OLD engine to receive the NEW one).
 
@@ -57,7 +59,7 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 - **Stale pre-refactor engine can corrupt payload on first sync** — a consumer's on-disk `.claude/scripts/cts-sync.sh` that predates the self-update-first mechanism entirely has no way to reach that mechanism (an already-running old script cannot execute detection code it doesn't contain), so invoking `update` directly ran the old 3-way-merge logic against the new payload and left `<<<<<<<` conflict markers in files like `AGENTS.md`/`CLAUDE.md`/`docs/METRICS.md`. The guard can't live inside `cts-sync.sh` for the same reason the bug exists, so it moved one layer up: `cts-update` and `cts-setup` skills now check the on-disk script for the `CTS_SYNC_REEXEC` marker as their first preflight step, and replace a stale script from the resolved source before ever invoking the engine. `tests/cts-sync.test.sh` case 16 proves this using the actual pre-refactor commit (`a2204c8`) as a fixture.
 - **First-sync-with-no-manifest warning** — when `cts-sync.sh update` runs on a consumer with no `.cts/manifest.json` baseline yet (first sync under the two-layer engine), a loud warning now prints BEFORE the collision list: "WARNING: No manifest baseline found — this appears to be the first sync under the new engine. Every payload path below is being treated as a fresh collision. If this consumer has pre-refactor customizations that were never `.ctsignore`'d (the old model didn't require it), diff each collision against the resolved pre-refactor upstream commit before trusting this list, or those customizations will be silently overwritten." — and `/cts-update` and `/cts-setup` skill preflights now document the manual diff step for first-run collisions. Closes a real one-time data-loss risk observed during HPW migration: pre-refactor customizations (`docs/METRICS.md`, `.prettierignore`) that had never been `.ctsignore`'d under the old 3-way-merge model got silently overwritten because the collision warning was not being heeded as the only gate before trusting the list. Regression test case 18 added.
 
-## [Unreleased] — Drop superpowers plugin dependency (2026-07-23)
+**Drop superpowers plugin dependency (2026-07-23)**
 
 ### Removed
 
@@ -81,19 +83,19 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 - `grep -rn "plan-writing\|tdd-iron-laws"` hits only `THIRD_PARTY.md`/`CHANGELOG.md` historical notes and `ba.md`'s `rules/task-authoring.md` pointer — no dangling skill/file references.
 - All agent skills tables resolve to existing `.claude/skills/*/` directories or external rule files.
 
-## [Unreleased] — Mandate explicit model tier on built-in agent dispatches (2026-07-23)
+**Mandate explicit model tier on built-in agent dispatches (2026-07-23)**
 
 ### Added
 
 - **`rules/workflow.md`** (Tool API, after the per-call model override): built-in agents (`Explore`, `Plan`, `general-purpose`) have no frontmatter `model:` pin and silently inherit the session model — so a deep-tier (opus/fable) session runs even mechanical file-location sweeps at deep-tier cost. New rule: every built-in-agent dispatch must pass an explicit `model` (`haiku` for mechanical sweeps, `sonnet` otherwise; exploration reads and concludes, it doesn't design). CTS's own agents are unaffected — all carry frontmatter pins per the Model Tiers table. Origin: 2026-07-23 penny session cost review with the owner.
 
-## [Unreleased] — Fix AGENTS.md on-demand rules index gap for docs-style.md (2026-07-23)
+**Fix AGENTS.md on-demand rules index gap for docs-style.md (2026-07-23)**
 
 ### Fixed
 
 - **`AGENTS.md`**: `rules/cts/docs-style.md` (added in commit `6ce4728`, pre-dating the two-layer distribution refactor) was never referenced in the "On-Demand Rules Index" section. Added the missing entry, following the same format as the other `rules/cts/**` entries. Found during code review of the two-layer distribution refactor (G0), emitted as standalone task `2026-07-23-06-fix-agents-md-docs-style-index-gap`.
 
-## [Unreleased] — Fix MERGE CROSS-CHECK hint to verify against pre-sync local content (2026-07-18)
+**Fix MERGE CROSS-CHECK hint to verify against pre-sync local content (2026-07-18)**
 
 ### Fixed
 
@@ -103,13 +105,13 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 - **`rules/shell-scripting.md`**: new "Lazy `mktemp` for Artifacts That Must Outlive the Script" section, generalizing the `CROSSCHECK_STASH_DIR` pattern — an eagerly-created-but-empty temp dir looks identical to a real leak under a "no leaked temp files" test pinning `TMPDIR`.
 - Known non-blocking residual, now fixed (task `2026-07-18-01-cts-sync-quote-hint-paths`): the printed hint interpolated `$SRC_DIR`, `$rel`, `$stash`, and `$SRC_DIR/$rel` unquoted, breaking on paths containing spaces. All four are now double-quoted; `tests/cts-sync.test.sh` case 7b's stash-path extraction regex updated to strip the new quotes. A follow-up review pass extended the same quoting to the four sibling hint lines (locally-modified `diff`, `BASELINE INTEGRITY` `diff`, new-payload-collision `diff <(...)`, ignored-but-changed-upstream `diff`), with quoted-form assertions added to existing cases 1b/2b/6 (SHA variables stay unquoted everywhere — always hex). A dedicated space-containing-path fixture was deliberately not added — no part of the test harness (payload lists, `.ctsignore` matching, etc.) currently supports space-containing paths, so an end-to-end fixture was judged out of scope for a one-line quoting fix; verified in isolation instead.
 
-## [Unreleased] — Distill live-data-probe review pattern into cts-review-contribution (2026-07-17)
+**Distill live-data-probe review pattern into cts-review-contribution (2026-07-17)**
 
 ### Added
 
 - **`.claude/skills/cts-review-contribution/SKILL.md`**: new "Live-data probe" checklist item in the Step 3 judgment pass — changes touching `cts-sync.sh` (or anything that writes to consumer working trees) require a run of the changed engine against a scratch copy (`cp -a`) of a real consumer before the gate closes; synthetic fixtures and diff review do not satisfy this. Distilled per task `2026-07-07-08` step 4 after three confirmations: the `>>` no-leading-newline append and `read` dropped-final-line bugs (both invisible to fixtures, caught only on real data) and the penny phantom-baseline investigation, whose guards were validated positively against pre-repair penny and negatively against HPW's clean baseline during the round-3 consumer-validation runs.
 
-## [Unreleased] — Silent-loss guards: baseline-integrity audit + raw-merge cross-check (2026-07-17)
+**Silent-loss guards: baseline-integrity audit + raw-merge cross-check (2026-07-17)**
 
 ### Added
 
@@ -118,7 +120,7 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 - **`.claude/skills/cts-update/SKILL.md`**: step 3 now captures both new warning types and carries dedicated triage rules — `BASELINE INTEGRITY` is blocking (per-file restore-or-acknowledge decision, `.ctsignore` to silence deliberate divergence), `MERGE CROSS-CHECK` requires inspecting the silently-resolved regions via the printed `git merge-file` hint before trusting the merged file. Step 1 gains a **self-update-first preflight**: with a locally resolvable source, stale local copies of the engine/skill are refreshed via plain `cp` and the run stops for re-invocation (a session that loaded the stale SKILL.md cannot hot-reload it) — minimal fix for the round-3 pain of stale consumer tooling forcing owner-side runs; the full re-exec/remote-source design remains task `2026-07-17-01`.
 - **`rules/nx-generators.md`**: fixed the section-numbering gap (1,2,3,5,6,7,8 → 1–7; nothing referenced the shifted numbers — only `§ 3`, unaffected).
 
-## [Unreleased] — Round-2 review residuals: RETURN-trap wording, payload phrase, fixture strengthening (2026-07-17)
+**Round-2 review residuals: RETURN-trap wording, payload phrase, fixture strengthening (2026-07-17)**
 
 ### Fixed
 
@@ -127,7 +129,7 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 - **`tests/cts-sync.test.sh` case 1d**: added an assertion that the source line following the leading-dash line still arrives in the consumer's `.prettierignore` — the existing assertions passed even against the pre-fix (`138b3f3`) engine, because the old `grep -qxF "-n"` bug consumed the read loop's redirected stdin, silently dropping all subsequent source lines without ever producing a detectable duplicate. Mutation-verified against `138b3f3`: the new assertion fails there as expected.
 - Restored prettier-clean formatting on `CHANGELOG.md`, `docs/METRICS.md`, `rules/shell-scripting.md` (unformatted since `b164b1c`/`51d1001`).
 
-## [Unreleased] — Harden cts-sync append-merge edge cases, close norm_file stdout hazard, etalon-verify against penny (2026-07-17)
+**Harden cts-sync append-merge edge cases, close norm_file stdout hazard, etalon-verify against penny (2026-07-17)**
 
 ### Fixed
 
@@ -141,7 +143,7 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 
 - **`.claude/scripts/cts-sync.sh:171` `is_ignored()`**: closed, same changeset — same trailing-newline bug class as `append_missing_lines()` above (`while IFS= read -r pat` without `|| [ -n "$pat" ]`); a `.ctsignore` file lacking a trailing newline silently dropped its last pattern. Fixed with the same `|| [ -n "$pat" ]` guard, regression-tested (case 5 in `tests/cts-sync.test.sh`). Gotcha also documented in `rules/shell-scripting.md`.
 
-## [Unreleased] — Fix cts-sync new-payload-path overwrite, add format renormalize, distill stale inbox (2026-07-16)
+**Fix cts-sync new-payload-path overwrite, add format renormalize, distill stale inbox (2026-07-16)**
 
 ### Fixed
 
@@ -172,19 +174,19 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 - **`.claude/scripts/cts-sync.sh` `copy_one()`**: the renormalize write path (`norm_file ... > "$dest"`) uses a plain redirect instead of `cp -p`, so it doesn't preserve source file permissions the way the non-prettier path does. Currently dormant — no payload file with a prettier-handled extension (`.md`/`.json`/etc.) needs to be executable today — but would silently strip the executable bit if one ever did. Same "safe by construction, revisit if inputs change" shape as the two pre-existing Emit-as-Task items below.
 - **`.claude/skills/cts-update/SKILL.md` step 5(a)**: "replace the file with the upstream side" doesn't specify the mechanism (whole-file `git show` vs. hunk-by-hunk marker resolution) — minor prose clarity gap, not a functional issue since this step is narrated by an LLM, not executed as code.
 
-## [Unreleased] — Ship `.editorconfig` to close markdown table-format drift (2026-07-16)
+**Ship `.editorconfig` to close markdown table-format drift (2026-07-16)**
 
 ### Fixed
 
 - **`.editorconfig`** (new file) + **`cts-payload.txt`**: every consumer project (`penny`, `home-pulse-watcher`) carries an `.editorconfig` with `[*.md] max_line_length = off`, but claude-ts itself never had one. Prettier reads `.editorconfig` by default (`useEditorconfig: true`) and maps `max_line_length` onto its own `printWidth` — with the setting present, wide markdown tables stay column-aligned regardless of length; without it, claude-ts's default `printWidth: 80` made Prettier collapse any table whose aligned width would exceed 80 chars into compact (unpadded, single-space) form. Two repos with byte-identical `.prettierrc` files produced different table formatting, which surfaced as dozens of spurious "formatting-only" diffs on every `/cts-update` run touching `.claude/agents/*.md` or `.claude/skills/*/SKILL.md` (anything with a wide table) — easy to mistake for real content drift or a `cts-contribute` round-trip bug (it is neither). Added the matching `.editorconfig` to claude-ts, added it to `cts-payload.txt` so it's tracked going forward, and reflowed all 75 affected files with `prettier --write` so the template's own committed state matches what consumers actually have. The earlier `proseWrap: never` prep pass (below, "Contributed from penny" entry) fixed prose reflow but didn't cover this — `.editorconfig` is a separate config surface Prettier consults, invisible if you only diff `.prettierrc`.
 
-## [Unreleased] — Fix cts-contribute's false round-trip no-op promise (2026-07-16)
+**Fix cts-contribute's false round-trip no-op promise (2026-07-16)**
 
 ### Fixed
 
 - **`.claude/skills/cts-contribute/SKILL.md`**: Step 7's summary claimed `Run /cts-update here — should be a no-op (you are already the source)`, which is false whenever any hunk went through the Step 4 "edit before export" path (stripping project-specific wording before it lands in CTS) — that path only writes the cleaned text into CTS, never back into the consumer's own copy. Replaced the false promise with case-specific guidance, verified against `.claude/scripts/cts-sync.sh`'s actual `copy_one()` logic (which checks `.ctsignore` before the merge path, so an ignored file can never produce a `CONFLICT:` marker): on **Case B** (CTS-managed, non-ignored) files the next `/cts-update` reports a real `CONFLICT:`; on **Case C** (`.ctsignore`'d) files it instead reports `ignored, but changed upstream — review manually`, triaged through Step 4, not Step 5. Added a matching case-split warning at the "edit before export" option in Step 4, and merged the pre-existing "locally modified, not overwritten" triage note in `.claude/skills/cts-update/SKILL.md` Step 3 with a new one covering both the Case B (`CONFLICT:`) and Case C (`ignored, but changed upstream`) round-trip signals, so both skills describe the same round-trip behavior consistently. An initial pass of this fix asserted `CONFLICT:` universally for both cases — caught and corrected via `reviewer` agent verification against the sync script before landing. Chose the messaging-only fix (Option A) over closing the loop by writing back to the consumer's own files (Option B) — the latter gives a "push" skill new write scope into tracked consumer files and needs its own review; left as a possible follow-up.
 
-## [Unreleased] — CTS-owner review-contribution skill (2026-07-16)
+**CTS-owner review-contribution skill (2026-07-16)**
 
 ### Added
 
@@ -192,7 +194,7 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 - **`.claude/scripts/cts-sync.sh`**: new `OWNER_ONLY_SKILLS` array (mirrors the existing `NEVER_PAYLOAD` pattern) plus an `is_owner_only_skill()` check in `copy_one()`, so `.claude/skills/cts-review-contribution/` is excluded from the `.claude/skills/` payload directory on both `init` and `update` sync paths even though the payload entry itself stays a whole-directory line. A hard-error guard catches the failure mode of someone later re-listing that path as its own explicit `cts-payload.txt` entry (mirrors the `NEVER_PAYLOAD` guard's style, adapted because the forbidden path here is a subpath _within_ a directory entry rather than a whole entry).
 - **`cts-payload.txt`**: documented the exclusion in the existing "Explicitly NOT payload" comment block.
 
-## [Unreleased] — Guess-note resolution lifecycle (2026-07-16)
+**Guess-note resolution lifecycle (2026-07-16)**
 
 ### Added
 
@@ -203,7 +205,7 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 
 - **`.claude/skills/distill-inbox/SKILL.md`** Step 3's ledger obligation unconditionally required appending to `docs/CLAUDE_TS_CHANGELOG.md` for template-inherited targets, but that file doesn't exist/apply when this skill runs in the claude-ts host repo itself. Step 3 now branches on repo kind using the same `cts-payload.txt` + `.cts-version` detection Step 1.5 Option 2 already established: consumer projects still append to `docs/CLAUDE_TS_CHANGELOG.md`; the template repo itself appends to its own root `CHANGELOG.md` instead.
 
-## [Unreleased] — Contributed from penny (2026-07-16 round)
+**Contributed from penny (2026-07-16 round)**
 
 ### Added
 
@@ -235,14 +237,14 @@ The new model: **every file is owned by exactly one side — CTS or the consumer
 
 Contributed from penny via `/cts-contribute`. Deliberately excluded: `.claude/agents/{tester,qa,angular-developer,reviewer,security-scanner}.md` (upstream is ahead on the TDD-shift; exporting penny's older copies would regress them — needs a 3-way `/cts-update` merge instead), and several undocumented local simplifications in penny's `rules/workflow.md`/`CLAUDE.md` (a dropped Tiered Planning Ladder, dropped `handoff`-skill hard-stop, dropped Generation damping) that were never logged as intentional upstream changes. The `rules/architecture.md` kernel→contracts doc-drift fix and the code-style/architecture platform-split were also skipped — both require the deferred structural split session, since CTS's current single-file `rules/architecture.md`/`rules/code-style.md` have no Nx-tag/`depConstraints` system to attach the fix to.
 
-## [Unreleased] — Task-file handling rules
+**Task-file handling rules**
 
 ### Changed
 
 - **`rules/task-authoring.md`**: three fixes closing gaps observed during round-3 execution: (1) explicit "plain `mv`, never `git mv`" rule for moving task files — the directories were already documented as git-excluded, but the operational consequence wasn't spelled out, and executors repeatedly tried `git mv` (which fails on untracked paths); (2) the canonical and continuation-template `On completion` rows now read "Do NOT commit. **Do NOT move this file.**" — some executors moved their own task file to `done/`, preempting the owner's review-commit-move confirmation step; (3) Standing Completion Rule rewritten with the exact completion-report shape the executor must emit ("All acceptance criteria met. Suggested commit message: `…`. After committing, move this task file to `done/`.").
 - **`rules/workflow.md`**, **`docs/METRICS.md`**: METRICS ledger wording updated from "one line per task" to "one table row per task" — the Entries section is now a markdown table (renders properly, still trivially parseable) rather than pipe-delimited raw lines; append-only semantics unchanged.
 
-## [Unreleased] — cts-sync 3-way merge
+**cts-sync 3-way merge**
 
 ### Added
 
@@ -261,13 +263,13 @@ Contributed from penny via `/cts-contribute`. Deliberately excluded: `.claude/ag
 
 - **`.claude/scripts/cts-sync.sh`**: `merge_one`'s two `mktemp` temp files are now cleaned up on both the normal exit path and error exit via a `trap ... EXIT` that's explicitly cleared (`trap - EXIT`) right before the function's single return, instead of the old explicit `rm -f` before each of several early returns (which leaked the temp files if `git show`/`cp` failed under `set -euo pipefail`). The trap's temp-path variables (`MERGE_BASE`/`MERGE_RESULT`) are deliberately module-level globals, not `local` — testing showed that when `set -e` unwinds out of the function on a failed command, bash tears down the function's local scope _before_ running the EXIT trap, so a trap referencing `local` vars crashes with "unbound variable" under `set -u` at exactly the moment cleanup is needed. Verified against a scratch repo covering fast-forward, preserve, merge, conflict, `--no-merge`, dry-run, and a forced `cp` permission-denied failure. Closes the follow-up tracked in `tasks/todo/2026-07-07-11-cts-sync-mergeone-trap-cleanup.md` (authored as `…-08-…`, renamed to resolve a per-date sequence collision with the consumer-validation task).
 
-## [Unreleased] — Stale tester-role descriptions
+**Stale tester-role descriptions**
 
 ### Fixed
 
 - **`.claude/agents/{ba,dba,ddd-architect,debugger,devops,docs-writer,integration-architect,queue-specialist,refactoring-expert,security-scanner}.md`**: frontmatter `description` (and `docs-writer.md`'s scope-boundary line) reworded from generic "tests (tester)" to "test verification/coverage audits (tester)" — the TDD-shift task (`2026-07-07-02-tdd-shift-quality-gate`) redefined `tester` as the verify/coverage-audit stage rather than primary test author, but that redefinition had only reached `ba.md`/`debugger.md`'s body notes, not the frontmatter descriptions dispatchers actually read for routing. Closes `tasks/todo/2026-07-07-10-stale-tester-role-references.md`.
 
-## [Unreleased] — Metrics ledger
+**Metrics ledger**
 
 ### Added
 
@@ -278,7 +280,7 @@ Contributed from penny via `/cts-contribute`. Deliberately excluded: `.claude/ag
 - **`rules/workflow.md`**: Phase 6 gains an append-one-line obligation for `docs/METRICS.md`, alongside the existing `docs/CLAUDE_TS_CHANGELOG.md` obligation.
 - **`CLAUDE.md`**: Hard tool limits' knowledge-ledger docs list (orchestrator Edit/Write allowlist) gains `docs/METRICS.md`.
 
-## [Unreleased] — Operator recipes guide
+**Operator recipes guide**
 
 ### Added
 
@@ -290,21 +292,21 @@ Contributed from penny via `/cts-contribute`. Deliberately excluded: `.claude/ag
 - **`CLAUDE.md`**: knowledge-capture line clarified — the `docs/CLAUDE_TS_CHANGELOG.md` instruction is consumer-project-only (that file logs template divergences for `/cts-contribute` to port upstream); in the claude-ts template repo itself, template-inherited-file changes are logged in this `CHANGELOG.md` instead.
 - **`.claude/agents/docs-writer.md`**: added a "Post-Edit Check" step — after rewording/renaming any phrase, `grep -n` the entire file (not just the edited section) to catch stale duplicate occurrences before reporting done. Closes a gap where a prior docs-writer pass reworded one of two identical phrase occurrences in the same file, caught only by the `reviewer` quality-gate pass.
 
-## [Unreleased] — Task-authoring provenance rows and emission control
+**Task-authoring provenance rows and emission control**
 
 ### Changed
 
 - **`rules/task-authoring.md`**: canonical task header grows from 5 to 8 rows, adding `Planning tier` (T0–T3, per `rules/workflow.md`'s ladder), `Planning` (role-granular `ba`/`devil`/`ddd-architect` status — `done` only if the source session produced that role's artifact, `required`, or `skipped` for the T1 no-`ba` case), and `Generation` (G0 = feature work, G1+ = tasks emitted from a prior gate). Added the executor obey-the-stamp rule (dispatch only roles marked `required`, never re-judge planning recorded at authoring time) and a seam-vs-stamp contradiction guard (task body visibly touches a seam but tier says T0/T1 → executor STOPs and flags, does not silently proceed or re-triage). Added a continuation-task template for the quality-gate hard-stop case, wrapping the `handoff` skill's attempt-log/hypotheses output in the canonical header (tier/generation inherited, `Planning: done`).
 - **`rules/workflow.md`**: Quality Gate's Emit-as-Task rule reworded from "one task per finding" to "one task per context cluster" — findings sharing a module/seam/file-area collapse into one task file with a findings checklist; unrelated findings stay separate. Added a generation-damping rule: at Generation ≥2, only Correctness/Security findings may spawn a new task file — Comprehension/Consistency findings instead go to the existing sub-floor ledger (`docs/KNOWLEDGE_INBOX.md`) and follow its existing ≥3-occurrences-promotes rule. Bug Fix Pipeline's parallel "create task file per finding" wording updated to point at the same context-cluster rule instead of duplicating the old phrasing.
 
-## [Unreleased] — Tiered planning ladder (T0–T3)
+**Tiered planning ladder (T0–T3)**
 
 ### Changed
 
 - **`rules/workflow.md`**: replaced the flat "First Action: Triage" decision tree, the standalone "Pipeline Trigger: REQUIRED When ANY Applies" list, and the separately-triggered "Foresight gate" section with a single T0–T3 tiered ladder. T0 (trivial, ≤2 files, no executable config) → direct + `reviewer` only. T1 (local, ≤3 files, foresight gate does not fire, no new endpoint/migration) → orchestrator writes 5-line acceptance criteria directly, skips `ba`, full quality gate still runs. T2 (foresight gate fires — new seam/contract/endpoint/migration/auth) → `ba` required. T3 (architecture decision — structural tradeoffs/domain boundaries/topology) → full Planning Team (`ba`+`ddd-architect`+`devil`). The foresight gate is now the sole tier selector — no second file-count/risk heuristic layered on top (R3-D2, R3-D5). Planning Team section re-keyed to trigger on T3 specifically, with T2 running `ba` alone (plus `ddd-architect` when the seam spans domain layers). Quality gate hard-stop (after 2 failed restart cycles) changed from a bare "surface to user" to invoking the `handoff` skill to emit a continuation task (open Fix-Now items, per-cycle attempt log, hypotheses) saved under `todo/`; the Bug Fix Pipeline's hard-stop now references the same behavior instead of duplicating it.
 - **`CLAUDE.md`**: Triage block compressed to mirror the same T0–T3 ladder, delegating full tier definitions and the foresight gate to `rules/workflow.md`.
 
-## [Unreleased] — TDD-shift quality gate
+**TDD-shift quality gate**
 
 ### Changed
 
@@ -313,7 +315,7 @@ Contributed from penny via `/cts-contribute`. Deliberately excluded: `.claude/ag
 - **`.claude/agents/tester.md`**: redefined as verify/coverage-audit stage; scope-boundary table now shows implementation agents as primary test authors; TDD workflow section scoped to gap-filling tests only (a failing gap-fill test is a `## Fix Now` finding routed back to the implementation agent, not something tester patches itself).
 - **`.claude/agents/backend-developer.md`, `vue-developer.md`, `react-developer.md`, `angular-developer.md`**: each gained a mandatory "Tests-with-Code" obligation referencing the `tdd` skill; the three frontend agents also gained a `tdd` row in their Skills-to-Activate table.
 
-## [Unreleased] — Skill imports wave 1
+**Skill imports wave 1**
 
 ### Added
 
@@ -323,13 +325,13 @@ Contributed from penny via `/cts-contribute`. Deliberately excluded: `.claude/ag
 - **`THIRD_PARTY.md`**: entries for all three imports above, plus attribution details on the `grill-me`/`grilling` merge.
 - **`README.md`**: skill inventory bumped to 30, with dedup notes inline for the three new skills.
 
-## [Unreleased] — Contributed from penny
+**Contributed from penny**
 
 ### Fixed
 
 - **`.prettierrc`** (new) + 40 files under `.claude/skills/**` and `rules/migrations-queue.md`: reformatted embedded code examples to `singleQuote: true`, matching both consumer projects' own Prettier config (Penny, HPW). CTS had no `.prettierrc` of its own, so its code fences drifted to Prettier's double-quote default while consumers reformatted their synced copies to their project style — producing phantom diffs on every `/cts-contribute` run. Content is otherwise byte-identical; this is a pure formatting alignment, no semantic changes.
 
-## [Unreleased] — Contributed from penny (workflow & agent enhancements)
+**Contributed from penny (workflow & agent enhancements)**
 
 ### Added
 
