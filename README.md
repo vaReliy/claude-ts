@@ -202,6 +202,21 @@ Run `bash .claude/scripts/cts-sync.sh update --dry-run` to preview without touch
 
 </details>
 
+## Using CTS Day-to-Day
+
+For real-world development workflows beyond the Quick Start, see **[`docs/USAGE.md`](./docs/USAGE.md)** — eight copy-pasteable recipes for:
+
+1. Idea → task session (grill mode)
+2. Direct chat pipeline session (triage, tier routing, quality gate)
+3. Implement-a-task session (executor model, clean session execution)
+4. Standalone-skill sessions (TDD, refactoring, brainstorming outside the pipeline)
+5. Receive CTS updates (ownership warnings, override rot, sync semantics)
+6. Override a CTS rule/agent (lex specialis, rules/local, agents-local)
+7. Contribute back (discovery, review, round-trip verification)
+8. Model/cost tips (frontmatter pins, opusplan, per-dispatch overrides)
+
+Each recipe is self-contained and links to deeper rules files for reference.
+
 ## Customization
 
 ### Add a New Agent

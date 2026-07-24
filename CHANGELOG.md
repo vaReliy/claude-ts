@@ -2,6 +2,16 @@
 
 All notable changes to this Claude Code configuration template are documented here.
 
+## [Unreleased] — Day-to-day operator recipes guide (2026-07-24)
+
+### Added
+
+- **`docs/USAGE.md`** — eight copy-pasteable operator recipes for real-world CTS development workflows: idea-to-task grill sessions, direct-chat tier triage and pipeline routing, clean-session task execution, standalone-skill usage, receiving CTS updates (ownership/override-rot handling), creating project-specific rule/agent overrides (lex specialis pattern), contributing improvements back, and model/cost optimization tips. Each recipe is self-contained with command examples and links to deeper rule files. Added to `AGENTS.md`'s On-Demand Rules Index and linked from `README.md`.
+
+### Rationale
+
+CTS README documents installation only; the new guide closes the gap for developers working day-to-day (running pipelines, overriding rules, syncing updates, contributing back). Recipes document the post-refactor two-layer distribution model exactly, capturing the new sync/override/contribute flow while fresh.
+
 ## [Unreleased] — Generic override-discovery for rules/local/<name>.md files (2026-07-23)
 
 ### Changed
